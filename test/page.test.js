@@ -39,7 +39,7 @@ test("the page has no inline scripts, inline styles or inline event handlers", (
   assert.doesNotMatch(html, /\sstyle="/i);
   assert.doesNotMatch(html, /\son[a-z]+\s*=/i);
   assert.doesNotMatch(html, /javascript:/i);
-  [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].forEach(([, src]) => assert.match(src, /^js\/[\w.-]+\.js$/, "scripts come from this site only: " + src));
+  [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].forEach(([, src]) => assert.match(src, /^js\/[\w.-]+\.js\?v=dev$/, "scripts come from this site only, with the version the deploy stamps: " + src));
 });
 
 test("the only outside addresses the page mentions are Google Fonts and the GitHub token page", () => {
