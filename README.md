@@ -2,7 +2,7 @@
 
 Turn any GitHub username into a profile README that stands out: a themed banner, stats, a contribution heatmap, a language card, a timeline, project cards and link buttons, all as plain SVG files in your own profile repo. Pick a theme, check the result in a GitHub-style preview, then publish it in one click or download a zip.
 
-- **No workflows.** Nothing runs in GitHub Actions.
+- **No workflows required for the core app.** An optional daily-update workflow can be generated for your own profile repo.
 - **No third-party services.** No badge or stats APIs. Data comes straight from `api.github.com`, and every card is drawn in your browser.
 - **Three ways to use it.** A static web page, a command-line tool, and share links. All share one engine (`js/core.js`).
 
@@ -48,11 +48,34 @@ The **Download zip** button gives you everything: `README.md`, `banner.svg` and 
 
 Opening `index.html` directly from disk also works in most browsers. "Use sample data" works without a network.
 
-### Host it on GitHub Pages (no Actions needed)
+### Host it on GitHub Pages
 
-1. Push this folder to a repo.
-2. Repo **Settings → Pages → Build and deployment → Source: Deploy from a branch**, pick `main` and `/ (root)`.
-3. Your tool is live at `https://<user>.github.io/<repo>/`.
+1. Push this folder to a GitHub repository.
+2. Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. The repository workflow deploys the static root directly.
+4. The site is live at `https://<user>.github.io/<repo>/`.
+
+For this repository, the deployed site is **https://sandeepkomal.github.io/README-Glassfolio/**. See [docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md) for deployment and troubleshooting.
+
+## Hosted site
+
+README-Glassfolio is deployed as a static GitHub Pages site:
+
+**https://sandeepkomal.github.io/README-Glassfolio/**
+
+Deployment is handled by the repository workflow at `.github/workflows/pages.yml`. The application itself does not require a backend or build service.
+
+## Documentation
+
+- [Documentation hub](docs/README.md)
+- [GitHub Pages deployment guide](docs/GITHUB_PAGES.md)
+- [Security policy](SECURITY.md)
+
+## Security and license
+
+The project is released under the **MIT License**. See [LICENSE](LICENSE).
+
+The browser application uses a restrictive Content-Security-Policy, keeps publishing tokens in memory, and includes security-focused tests. See [SECURITY.md](SECURITY.md).
 
 ## Use the CLI
 
