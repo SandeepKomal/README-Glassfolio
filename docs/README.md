@@ -6,6 +6,7 @@ README-Glassfolio is a static, browser-first GitHub profile README generator. It
 
 | Guide | Purpose |
 | --- | --- |
+| [How to use](HOW_TO_USE.md) ([PDF](Patch-your-profile-guide.pdf)) | Step-by-step guide with screenshots: profile repository, token, generating, publishing and daily updates |
 | [GitHub Pages](GITHUB_PAGES.md) | Deployment, configuration, verification, and maintenance of the hosted site |
 | [Security](../SECURITY.md) | Security model, token handling, CSP, publishing permissions, and reporting guidance |
 
@@ -16,6 +17,7 @@ The `docs/` directory also contains the project's existing screenshots and previ
 - `website-preview.jpg`
 - `mobile-preview.jpg`
 - `example-readme-dark-and-light.jpg`
+- `guide/`: the numbered screenshots used by the how-to guide
 
 These assets are part of the project documentation and should be preserved when documentation is updated.
 
