@@ -1,0 +1,14 @@
+{
+  "name": "readme-diff",
+  "version": "1.0.0",
+  "description": "Paste a GitHub profile URL, get a complete README.md. Browser app and CLI, no workflows, no third-party services.",
+  "license": "MIT",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "bin": { "readme-diff": "cli.js" },
+  "scripts": {
+    "test": "node --test",
+    "cli": "node cli.js",
+    "serve": "python3 -m http.server 8080"
+  }
+}

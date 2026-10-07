@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- The browser enforces this: scripts only from this site, network requests only to this site and api.github.com, no frames, no plugins, no form posts. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.github.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#060913">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patch your profile: a glass-style GitHub profile README generator</title>
+<meta name="description" content="Turn any GitHub username into a premium profile README with themed glass cards, a contribution heatmap, stats and a timeline. Free, runs in your browser, no server and no third-party service.">
+<meta property="og:title" content="Patch your profile: premium GitHub profile README generator">
+<meta property="og:description" content="Themed glass cards, contribution heatmap, stats and timeline for your GitHub profile. Free and runs in your browser.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2338e8ff'/%3E%3Cstop offset='1' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%23060913'/%3E%3Cpath d='M20 16v32M20 24c0-6 24-2 24-8M44 40c0 6-24 2-24 8' fill='none' stroke='url(%23g)' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the tool</a>
+<div class="wrap">
+  <h1><span class="minus">Template</span> <span class="plus">Patch</span> your profile</h1>
+  <p class="lede">Turn any GitHub username into a profile README that people actually stop and look at: themed glass cards, a contribution heatmap, real stats and a timeline. Free, runs in your browser, with no server and no third-party service.</p>
+
+  <form class="ask" id="ask">
+    <input type="text" id="url" placeholder="https://github.com/your-username" aria-label="GitHub profile URL or username" autocomplete="off" spellcheck="false">
+    <button type="submit" id="go">Generate README</button>
+  </form>
+  <p class="try">No username handy? <button type="button" id="sample">Use sample data</button> (works offline).</p>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+  <main class="grid" id="main">
+    <aside aria-label="Options">
+      <details class="grp" open>
+        <summary>Look</summary>
+        <label class="f" id="themeLabel">Theme</label>
+        <div class="themes" id="themes" role="radiogroup" aria-labelledby="themeLabel"></div>
+        <div class="custom" id="customRow" hidden>
+          <label for="accent1">Accent 1<input type="color" id="accent1" value="#38e8ff"></label>
+          <label for="accent2">Accent 2<input type="color" id="accent2" value="#8b5cf6"></label>
+          <p class="hint">Any two colours work. Text and accents are adjusted automatically so they always stay readable, in dark and light.</p>
+        </div>
+        <div class="chk"><input type="checkbox" id="o-adaptive"><label for="o-adaptive">Day and night: follow each visitor's light or dark mode</label></div>
+        <p class="hint">Adds a light twin of every image. A visitor whose device (or GitHub) is in light mode sees light cards; in dark mode, dark ones. Many phones and computers switch to dark at sunset by themselves, so your profile follows each visitor's day and night. About twice the files.</p>
+        <div class="chk"><input type="checkbox" id="o-animate" checked><label for="o-animate">Subtle motion</label></div>
+        <label class="f" for="style">Layout</label>
+        <select id="style">
+          <option value="showcase">Showcase: project cards</option>
+          <option value="changelog">Changelog: projects as release notes</option>
+        </select>
+      </details>
+
+      <details class="grp" open>
+        <summary>About you</summary>
+        <label class="f" for="role">Job title (shown right after your name)</label>
+        <input type="text" id="role" maxlength="80" placeholder="Cloud Engineer">
+        <label class="f" for="tagline">Tagline (optional, smaller line below)</label>
+        <input type="text" id="tagline" maxlength="120">
+        <label class="f" for="stack">Skills and tools (comma separated)</label>
+        <input type="text" id="stack" maxlength="160" placeholder="AWS, Terraform, Docker">
+        <label class="f" for="linkedin">LinkedIn (username or URL)</label>
+        <input type="text" id="linkedin" maxlength="120">
+      </details>
+
+      <details class="grp" id="orderGrp">
+        <summary>Order &amp; projects</summary>
+        <label class="f" id="orderLabel">Section order</label>
+        <ol class="order" id="orderList" aria-labelledby="orderLabel"></ol>
+        <label class="f" id="featLabel">Featured projects</label>
+        <p class="hint" id="featHint">Pick up to 6, in the order you want them. Pick none to show your most-starred repos.</p>
+        <div class="feat" id="featList" role="group" aria-labelledby="featLabel"></div>
+        <button type="button" class="linkish" id="featClear">Use my most-starred repos</button>
+      </details>
+
+      <details class="grp" id="dailyGrp">
+        <summary>Daily updates</summary>
+        <div class="chk"><input type="checkbox" id="o-daily" disabled><label for="o-daily">Keep my stats fresh every day</label></div>
+        <p class="hint" id="dailyHint">Load your own profile to turn this on.</p>
+        <div id="dailyMore" hidden>
+          <p class="hint">Publishing saves a <strong>snapshot</strong>. This also adds a small GitHub Action to your profile repo that rebuilds everything on a schedule and commits only when something changed. It uses <strong>no third-party actions</strong>: a copy of the generator goes into your repo, where you can read every line.</p>
+          <ul class="hint dlist">
+            <li><code>.github/workflows/update-readme.yml</code></li>
+            <li><code>.readme-patch/</code> (your choices and the generator)</li>
+          </ul>
+          <p class="hint">Your README is then rewritten daily from these choices, so change things here rather than by hand. Stop it any time by deleting the workflow file.</p>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>Sections</summary>
+        <div class="chk"><input type="checkbox" id="o-banner" checked><label for="o-banner">Banner</label></div>
+        <div class="chk"><input type="checkbox" id="o-cards" checked><label for="o-cards">Visual cards (stats, streak, projects)</label></div>
+        <div class="chk"><input type="checkbox" id="o-heatmap" checked><label for="o-heatmap">Contribution heatmap</label></div>
+        <div class="chk"><input type="checkbox" id="o-timeline" checked><label for="o-timeline">Timeline</label></div>
+        <div class="chk"><input type="checkbox" id="o-proj" checked><label for="o-proj">Projects</label></div>
+        <div class="chk"><input type="checkbox" id="o-links" checked><label for="o-links">Connect links</label></div>
+        <div class="chk"><input type="checkbox" id="o-bars" checked><label for="o-bars">Language bars (text mode)</label></div>
+        <div class="chk"><input type="checkbox" id="o-pie"><label for="o-pie">Language pie chart (Mermaid)</label></div>
+        <div class="chk"><input type="checkbox" id="o-recent"><label for="o-recent">Recently pushed</label></div>
+        <div class="chk"><input type="checkbox" id="o-credit" checked><label for="o-credit">Footer credit link</label></div>
+      </details>
+
+      <details class="grp" id="dataGrp">
+        <summary>Exact data: add a token</summary>
+        <label class="f" for="token">GitHub token (optional, no scopes needed)</label>
+        <input type="password" id="token" autocomplete="off" placeholder="Stays in your browser, never stored">
+        <p class="hint">Without a token, streaks come from your last 90 days of public activity. With one, you get a full-year heatmap and a higher rate limit. Click Generate again after adding it.</p>
+      </details>
+
+      <div class="polish" id="polish" hidden>
+        <div class="polish-head">
+          <svg class="ring" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" class="ring-bg"/><circle cx="22" cy="22" r="18" class="ring-fg" id="ringFg" stroke-dasharray="0 113"/></svg>
+          <div><div class="polish-title">Make it even better</div><div class="polish-sub" id="polishSub"></div></div>
+        </div>
+        <ul id="polishList"></ul>
+      </div>
+
+      <div class="aside-foot">
+        <button type="button" class="linkish" id="reset">Reset all options</button>
+        <span>Your choices are saved in this browser only.</span>
+      </div>
+    </aside>
+
+    <section class="diff" aria-label="Preview">
+      <div class="dhead">
+        <div class="mono path">README.md <span class="stat" id="stat"></span></div>
+        <div class="dactions">
+          <button type="button" id="pub" disabled>Publish to GitHub</button>
+          <button type="button" class="ghost" id="dlzip" disabled>Download zip</button>
+          <button type="button" class="ghost" id="share" disabled>Copy share link</button>
+        </div>
+      </div>
+      <div class="publish" id="publish" hidden>
+        <p>Commit the README, banner and cards to <span class="mono" id="pubRepo"></span> in one go. Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> limited to that repository with <strong>Contents: Read and write</strong>, or a classic token with the <strong>public_repo</strong> scope. It's sent only to GitHub and never stored.</p>
+        <p class="hint" id="pubWfNote" hidden><strong>Daily updates are on,</strong> so the token must also be allowed to write workflows: <strong>Workflows: Read and write</strong> for a fine-grained token, or the <strong>workflow</strong> scope for a classic one.</p>
+        <div class="pubrow">
+          <input type="password" id="pubToken" autocomplete="off" placeholder="github_pat_…" aria-label="GitHub token for publishing">
+          <button type="button" id="pubGo">Publish</button>
+        </div>
+        <div class="msg" id="pubMsg" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Preview type">
+        <button type="button" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="true" data-tab="profile">Profile</button>
+        <button type="button" role="tab" id="tab-files" aria-controls="panel-files" aria-selected="false" tabindex="-1" data-tab="files">Files <span class="count" id="fileCount"></span></button>
+        <button type="button" role="tab" id="tab-markdown" aria-controls="panel-markdown" aria-selected="false" tabindex="-1" data-tab="markdown">Markdown</button>
+      </div>
+
+      <div role="tabpanel" id="panel-profile" aria-labelledby="tab-profile">
+        <div class="pbar">
+          <span>Preview as it appears on GitHub</span>
+          <div class="pctl">
+            <div class="seg" role="group" aria-label="Device">
+              <button type="button" id="dev-desktop" aria-pressed="true">Desktop</button>
+              <button type="button" id="dev-phone" aria-pressed="false">Phone</button>
+            </div>
+            <div class="seg" role="group" aria-label="GitHub appearance">
+              <button type="button" id="gh-light" aria-pressed="true">Light</button>
+              <button type="button" id="gh-dark" aria-pressed="false">Dark</button>
+            </div>
+          </div>
+        </div>
+        <p class="pnote" id="pnote" hidden>Phones are about 360px wide. Paired cards stack at close to full size; the wide cards (heatmap, timeline, languages) are scaled down to fit.</p>
+        <div class="stage" id="stage" data-scheme="light" data-device="desktop">
+          <div class="gh">
+            <div class="gh-head"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M2 2.75C2 1.78 2.78 1 3.75 1h8.5c.97 0 1.75.78 1.75 1.75v10.5A1.75 1.75 0 0 1 12.25 15h-8.5A1.75 1.75 0 0 1 2 13.25ZM3.75 2.5a.25.25 0 0 0-.25.25v10.5c0 .14.11.25.25.25h8.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25ZM5 5h6v1.5H5Zm0 3h6v1.5H5Z"/></svg><span id="ghUser">your-username</span> <span class="slash">/</span> README.md</div>
+            <article class="gh-body" id="ghBody" aria-live="polite"></article>
+          </div>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="panel-files" aria-labelledby="tab-files" hidden>
+        <div class="fileshead">
+          <p>Every image is an SVG. Use <strong>PNG</strong> where a site won't take SVG (LinkedIn, X, Slack). PNGs are exported at 2&times; size.</p>
+          <button type="button" class="ghost" id="dlPngs">Download all as PNG (zip)</button>
+        </div>
+        <div class="assets" id="assets"></div>
+        <div class="extras" id="extras">
+          <h3>Share image</h3>
+          <p class="hint">A 1280&times;640 picture for LinkedIn, X or a repository's social preview. It isn't part of your README or the publish commit.</p>
+          <figure class="share"><img id="shareImg" alt="Share image preview"><figcaption class="fig-actions" id="shareActions"></figcaption></figure>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="panel-markdown" aria-labelledby="tab-markdown" hidden>
+        <div class="meta mono" id="meta"></div>
+        <div class="code" id="code"><div class="empty">Your README appears here as added lines.</div></div>
+      </div>
+    </section>
+  </main>
+  <section class="band" id="gallery" aria-labelledby="galleryTitle">
+    <h2 id="galleryTitle">Pick a look</h2>
+    <p class="sub">Seven themes plus an Auto mode that picks colours from your username. Every card changes with it. Tap one to try it on the preview above.</p>
+    <div class="gallery" id="galleryGrid"></div>
+  </section>
+
+  <section class="band" aria-labelledby="howTitle">
+    <h2 id="howTitle">How it works</h2>
+    <ol class="steps">
+      <li><span class="num">1</span><h3>Paste your username</h3><p>We read your public GitHub data in your browser: repos, languages, stars and activity. Add a token for a full-year heatmap and exact streaks.</p></li>
+      <li><span class="num">2</span><h3>Make it yours</h3><p>Choose a theme, add your job title and skills, and switch sections on or off. The preview updates instantly.</p></li>
+      <li><span class="num">3</span><h3>Publish in one click</h3><p>Commit everything to your profile repo in a single commit, or download a zip and upload it yourself.</p></li>
+    </ol>
+  </section>
+
+  <section class="band" aria-labelledby="whyTitle">
+    <h2 id="whyTitle">Built to stand out</h2>
+    <div class="features">
+      <div><h3>Glass design</h3><p>Banner, stats, streak, heatmap, languages, timeline, projects and link buttons, all in one consistent style.</p></div>
+      <div><h3>Real data</h3><p>Commits, pull requests, issues, stars, streaks and a contribution heatmap, not placeholder numbers.</p></div>
+      <div><h3>Gentle motion</h3><p>Aurora light drifts, rings draw in, the orbit turns. It switches off for anyone who prefers reduced motion.</p></div>
+      <div><h3>Private by design</h3><p>Everything runs in your browser. No account, no server and no third-party image service. Your token is never stored.</p></div>
+      <div><h3>Your repo, your files</h3><p>Cards are plain SVG files in your own profile repo, so they keep working and you can edit them.</p></div>
+      <div><h3>Open and scriptable</h3><p>MIT licensed, with a command-line version for automation.</p></div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="faqTitle">
+    <h2 id="faqTitle">Questions</h2>
+    <details><summary>How will it look on a phone?</summary><p>Use the <strong>Phone</strong> switch above the preview to see it at a phone's width. Paired cards (stats and streak, projects, link buttons) stack and stay readable. The wide cards (heatmap, timeline, languages) shrink to fit, so their small text is harder to read on a small screen.</p></details>
+    <details><summary>Is my token safe?</summary><p>It's used only to talk to api.github.com from your browser tab and is never stored or sent anywhere else. That's enforced by the browser, not just promised: the page ships a strict security policy that only allows network requests to api.github.com and blocks injected scripts. Create a fine-grained token limited to your profile repo with Contents: Read and write, and delete it after publishing if you like.</p></details>
+    <details><summary>Why are there image files next to the README?</summary><p>GitHub won't display images embedded inside a README, but it does show images stored in the repo. So the README and its SVG cards travel together, and Publish handles that for you.</p></details>
+    <details><summary>How do the numbers stay up to date?</summary><p>Publishing saves a snapshot, so on its own the numbers go stale. Tick <strong>Daily updates</strong> and publishing also adds a small GitHub Action to your profile repo that rebuilds everything once a day and commits only when something changed. It uses no third-party actions: a copy of the generator goes into your repo so you can read it. You can also just open the tool and publish again whenever you like.</p></details>
+    <details><summary>What does my browser remember?</summary><p>Only your option choices (theme, job title, skills and so on), saved locally so they're there next time. Your tokens are never saved, and nothing is sent anywhere. "Reset all options" clears it.</p></details>
+    <details><summary>Can my profile be light in the morning and dark at night?</summary><p>Yes, for each visitor. Tick <strong>Day and night</strong> and every image gets a light twin. GitHub shows the dark set to visitors whose device or GitHub is in dark mode, and the light set to everyone else. Many phones and computers switch to dark at sunset by themselves (and back at sunrise), and an open page swaps live when they do. A README can't read the clock itself, because GitHub removes scripts, so it follows each visitor's own setting rather than a time you choose. A visitor who keeps their device in one mode always sees that one. It costs about twice as many files.</p></details>
+    <details><summary>Can I use my own colours, or choose which repos are shown?</summary><p>Yes. Pick <strong>Custom</strong> in the theme list to choose two accent colours (they're adjusted automatically so text stays readable). Under <strong>Order &amp; projects</strong> you can reorder the sections and tick up to six repos to feature, in the order you want them.</p></details>
+    <details><summary>How do I get a PNG or a picture to share?</summary><p>Open the <strong>Files</strong> tab. Every image has SVG and PNG buttons, and there's a ready-made 1280&times;640 share image for LinkedIn, X or a repository social preview. You can also download every image as a PNG zip.</p></details>
+    <details><summary>Does it need a GitHub Action or a server?</summary><p>The tool itself is a static page: no server, nothing hosted for you. A GitHub Action is needed only if you want the stats to refresh by themselves, and that's optional. If you turn it on, it lives in your own repo, uses no third-party actions, and you can delete it any time.</p></details>
+    <details><summary>Will it show private contributions?</summary><p>With a token it uses your contribution calendar, which follows your GitHub setting for showing private contributions. Without a token it uses public activity only.</p></details>
+  </section>
+
+  <p class="note">The README is built only from public data: your profile, your repos, their languages and topics. <strong>Publish</strong> commits everything straight to your <span class="mono">username/username</span> repo. Or download the zip and upload all of it yourself (README.md, banner.svg and the cards folder): a missing image shows as a broken picture. GitHub allows 60 anonymous API requests an hour per network, and each profile uses about 8 without a token.</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/core.js"></script>
+<script src="js/github.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/automation.js"></script>
+<script src="js/zip.js"></script>
+<script src="js/preview.js"></script>
+<script src="js/publish.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
