@@ -169,7 +169,7 @@ async function main() {
     const res = await publish(files, { token: process.env.GITHUB_TOKEN, owner: model.login, message: "Update profile README (Patch your profile)" });
     console.log("Published " + res.files + " files to " + res.url);
     if (res.skipped === "daily") {
-      console.error("Daily updates were not added: GITHUB_TOKEN needs the workflow scope (classic) or Workflows: Read and write (fine-grained). Publish again with --daily once it has it.");
+      console.error("Daily updates were not added: GitHub refused the workflow from GITHUB_TOKEN. " + res.advice);
       process.exitCode = 1;
     }
   }
