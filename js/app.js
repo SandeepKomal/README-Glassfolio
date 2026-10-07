@@ -10,8 +10,17 @@
   var STORE_KEY = "patch-your-profile.v1";
 
   /* ---------- saved settings (this browser only; never the token) ---------- */
+  // Bump SETTINGS_VERSION when a default changes, and list the switches it changed in NEW_DEFAULTS: settings saved under
+  // an older version then take those defaults once (everything else the person chose is kept), instead of quietly
+  // pinning returning visitors to the old look. 2: the wave header/footer and the 3D universe became on by default.
+  var SETTINGS_VERSION = 2, NEW_DEFAULTS = { 2: ["wave", "universe"] };
+  function upgrade(saved) {
+    var from = saved.v || 1;
+    if (saved.opts) for (var v = from + 1; v <= SETTINGS_VERSION; v++) (NEW_DEFAULTS[v] || []).forEach(function (k) { delete saved.opts[k]; });
+    return saved;
+  }
   var store = {
-    get: function () { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } },
+    get: function () { try { return upgrade(JSON.parse(localStorage.getItem(STORE_KEY)) || {}); } catch (e) { return {}; } },
     set: function (obj) { try { localStorage.setItem(STORE_KEY, JSON.stringify(obj)); } catch (e) { /* private mode: just don't save */ } },
     clear: function () { try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ } }
   };
@@ -43,7 +52,7 @@
 
   function persist() {
     var o = opts(); delete o.siteUrl;
-    store.set({ opts: o, scheme: state.scheme, device: state.device, tab: state.tab });
+    store.set({ v: SETTINGS_VERSION, opts: o, scheme: state.scheme, device: state.device, tab: state.tab });
   }
 
   function resetOptions() {
