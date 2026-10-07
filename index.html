@@ -105,7 +105,7 @@
         <summary>Exact data: add a token</summary>
         <label class="f" for="token">GitHub token (optional, no scopes needed)</label>
         <input type="password" id="token" autocomplete="off" placeholder="Stays in your browser, never stored">
-        <p class="hint">Without a token, streaks come from your last 90 days of public activity. With one, you get a full-year heatmap and a higher rate limit. Click Generate again after adding it.</p>
+        <p class="hint">Without a token, streaks come from your last 90 days of public activity. With one, you get a full-year heatmap and a higher rate limit. Click Generate again after adding it. Give it Contents: Read and write on your profile repo and the same token also publishes, so you only paste it once.</p>
       </details>
 
       <div class="polish" id="polish" hidden>
@@ -132,7 +132,7 @@
         </div>
       </div>
       <div class="publish" id="publish" hidden>
-        <p>Commit the README, banner and cards to <span class="mono" id="pubRepo"></span> in one go. Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> limited to that repository with <strong>Contents: Read and write</strong>, or a classic token with the <strong>public_repo</strong> scope. It's sent only to GitHub and never stored.</p>
+        <p>Commit the README, banner and cards to <span class="mono" id="pubRepo"></span> in one go. Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> limited to that repository with <strong>Contents: Read and write</strong>, or a classic token with the <strong>public_repo</strong> scope. It's sent only to GitHub and never stored. If you already added a token under <strong>Exact data</strong>, it's used here too, so leave this box empty; it just needs the write access above.</p>
         <p class="hint" id="pubWfNote" hidden><strong>Daily updates are on,</strong> so the token must also be allowed to write workflows: <strong>Workflows: Read and write</strong> for a fine-grained token, or the <strong>workflow</strong> scope for a classic one.</p>
         <div class="pubrow">
           <input type="password" id="pubToken" autocomplete="off" placeholder="github_pat_…" aria-label="GitHub token for publishing">

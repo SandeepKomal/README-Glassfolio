@@ -617,15 +617,12 @@ test("motion is on by default, switchable off, and never changes the still desig
   });
 });
 
-test("every keyframe sets only a start state, so the final frame is the designed image", () => {
+test("motion never hides content: only ambient loops, no entrance effects that replay on every page view", () => {
   const css = core.fxStyle({ anim: true }, 860);
-  const frames = [...css.matchAll(/@keyframes (\w+)\{([^@]*?)\}(?=@|\.)/g)];
-  ["fxin", "fxring", "fxbar", "fxdraw", "fxcell"].forEach((name) => {
-    const body = css.match(new RegExp("@keyframes " + name + "\\{(.*?\\}\\})?"));
-    assert.ok(new RegExp("@keyframes " + name + "\\{from\\{").test(css), name + " must be a from-only keyframe");
-    assert.doesNotMatch(css.match(new RegExp("@keyframes " + name + "\\{[^}]*\\}"))[0], /to\{/);
-  });
-  assert.ok(frames.length >= 5);
+  assert.doesNotMatch(css, /opacity:0[;}]|scaleY\(0\)|stroke-dasharray:0|stroke-dashoffset/, "no fade-in, grow-in or draw-in start states");
+  [...css.matchAll(/\.fx-[a-z0-9]+\{[^}]*\}/g)].forEach(([rule]) => assert.match(rule, /infinite/, rule + " must be an ambient loop"));
+  const all = [core.buildBanner(core.SAMPLE, {})].concat(cards.buildCards(core.SAMPLE, {}).map((f) => f.data));
+  all.forEach((svg) => assert.doesNotMatch(svg, /animation-delay/, "nothing waits before it appears"));
 });
 
 test("animated files stay light and contain nothing that could run code", () => {

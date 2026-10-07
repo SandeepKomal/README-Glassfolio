@@ -301,29 +301,20 @@
 
   /* ---------- motion layer ----------
    * CSS animations inside an SVG keep running when GitHub shows it as an image, and scripts are not needed.
-   * Every keyframe only sets the START state, so the still image is always the finished design, and anyone who
-   * prefers reduced motion (or a viewer that ignores CSS) just sees that still image. */
+   * Only ambient loops (drift, pulse, shine, spin) are used, never entrance effects: GitHub re-creates every README
+   * image on each page view, so fade-ins and grow-ins replayed on every visit and made the cards look slow to load.
+   * Content is fully visible from the first frame, and reduced motion (or a viewer that ignores CSS) gets the same still. */
   function fxStyle(p, W) {
     if (!p.anim) return "";
     return "<style>" +
-      "@keyframes fxin{from{opacity:0;transform:translateY(8px)}}" +
       "@keyframes fxd1{0%,100%{transform:translate(0,0)}50%{transform:translate(-34px,20px)}}" +
       "@keyframes fxd2{0%,100%{transform:translate(0,0)}50%{transform:translate(36px,-18px)}}" +
       "@keyframes fxpulse{0%,100%{opacity:1}50%{opacity:.3}}" +
-      "@keyframes fxring{from{stroke-dasharray:0 1000}}" +
-      "@keyframes fxbar{from{transform:scaleY(0)}}" +
-      "@keyframes fxdraw{from{stroke-dashoffset:1}}" +
-      "@keyframes fxcell{from{opacity:0}}" +
       "@keyframes fxspin{to{transform:rotate(360deg)}}" +
       "@keyframes fxshine{from{transform:translateX(-" + Math.round(W * 0.4) + "px)}to{transform:translateX(" + W + "px)}}" +
-      ".fx-in{animation:fxin .9s cubic-bezier(.2,.7,.2,1) both}" +
       ".fx-d1{animation:fxd1 18s ease-in-out infinite}" +
       ".fx-d2{animation:fxd2 22s ease-in-out infinite}" +
       ".fx-pulse{animation:fxpulse 2.8s ease-in-out infinite}" +
-      ".fx-ring{animation:fxring 1.6s cubic-bezier(.2,.7,.2,1) both}" +
-      ".fx-bar{transform-box:fill-box;transform-origin:50% 100%;animation:fxbar .9s cubic-bezier(.2,.7,.2,1) both}" +
-      ".fx-draw{stroke-dasharray:1;animation:fxdraw 1.8s ease-out both}" +
-      ".fx-cell{animation:fxcell .7s ease-out both}" +
       ".fx-spin{animation:fxspin 120s linear infinite}" +
       ".fx-shine{animation:fxshine 9s ease-in-out infinite}" +
       "@media (prefers-reduced-motion:reduce){*{animation:none!important}}" +
@@ -674,7 +665,7 @@
     var handle = ["@" + m.login.toUpperCase()];
     if (m.location) handle.push(m.location.toUpperCase().slice(0, 22));
     if (m.since) handle.push("SINCE " + m.since);
-    out.push("<g" + fx(p, "in") + ">");
+    out.push("<g>");
     out.push('<circle cx="70" cy="64" r="4.5" fill="' + p.a1 + '" filter="url(#glow)"' + fx(p, "pulse") + "/>");
     out.push('<text x="86" y="71" font-family="' + MONO + '" font-size="20" letter-spacing="2.5" fill="' + p.a1 + '">' + esc(handle.join(" · ")) + "</text>");
     var name = m.name.length > 22 ? m.name.slice(0, 21) + "…" : m.name;
