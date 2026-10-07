@@ -30,6 +30,10 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 
+      # Browsers keep the site's scripts for a while; a new address per deploy makes every visitor load the new code
+      - name: Stamp asset versions
+        run: sed -i "s/?v=dev\"/?v=${GITHUB_SHA::12}\"/g" index.html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
