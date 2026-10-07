@@ -368,15 +368,41 @@ test("the copied generator is closed under its own imports: nothing it loads at 
   assert.match(cli, /^\s{4,}const auto = require\("\.\/js\/automation\.js"\);/m, "automation.js is loaded lazily, inside --daily");
 });
 
-test("the daily update keeps the 3D universe fresh: no extra workflow, the one daily run rebuilds it", () => {
+test("the 3D universe gets its own workflow next to the daily one, and both keep it fresh", () => {
   const files = auto.buildAutomationFiles("DevopsNimbus", Object.assign({}, OPTS, { universe: true }), sources());
-  assert.deepStrictEqual(files.filter((f) => f.name.startsWith(".github/workflows/")).map((f) => f.name), [auto.WORKFLOW], "one workflow does everything");
-  assert.strictEqual(JSON.parse(files.find((f) => f.name.endsWith("config.json")).data).universe, true, "the choice is saved for the daily run");
-  assert.ok(files.some((f) => f.name === ".readme-patch/js/universe.js"), "the daily run has the universe renderer");
+  assert.deepStrictEqual(files.filter((f) => f.name.startsWith(".github/workflows/")).map((f) => f.name), [auto.WORKFLOW, auto.UNIVERSE_WORKFLOW]);
+  assert.ok(!auto.buildAutomationFiles("DevopsNimbus", OPTS, sources()).some((f) => f.name === auto.UNIVERSE_WORKFLOW), "only when the universe is on");
+  assert.strictEqual(JSON.parse(files.find((f) => f.name.endsWith("config.json")).data).universe, true, "the choice is saved for both workflows");
+  assert.ok(files.some((f) => f.name === ".readme-patch/js/universe.js"), "the copied generator has the universe renderer");
+  const yml = files.find((f) => f.name === auto.UNIVERSE_WORKFLOW).data;
+  assert.match(yml, /--universe-only/);
+  assert.match(yml, /group: update-profile-readme/, "takes turns with the daily workflow");
+  assert.doesNotMatch(yml, /uses:|secrets\./, "no third-party action and no extra token");
+  // run both the way the workflows do: the daily run writes everything, the universe run touches only the universe
   const dir = tmp("universe");
   files.forEach((f) => { const d = path.join(dir, f.name); fs.mkdirSync(path.dirname(d), { recursive: true }); fs.writeFileSync(d, f.data); });
-  const r = spawnSync(process.execPath, [path.join(dir, ".readme-patch", "cli.js"), "--sample", "--config", path.join(dir, ".readme-patch", "config.json"), "--clean", "--out", dir], { encoding: "utf8", cwd: dir });
-  assert.strictEqual(r.status, 0, r.stderr);
+  const cli = (extra) => spawnSync(process.execPath, [path.join(dir, ".readme-patch", "cli.js"), "--sample", "--config", path.join(dir, ".readme-patch", "config.json"), "--out", dir].concat(extra), { encoding: "utf8", cwd: dir });
+  const daily = cli(["--clean"]);
+  assert.strictEqual(daily.status, 0, daily.stderr);
   ["cards/universe.svg", "cards/universe-light.svg"].forEach((n) => assert.ok(fs.existsSync(path.join(dir, n)), "the daily run writes " + n));
   assert.match(fs.readFileSync(path.join(dir, "README.md"), "utf8"), /cards\/universe-light\.svg/);
+  const before = fs.readFileSync(path.join(dir, "README.md"), "utf8");
+  fs.unlinkSync(path.join(dir, "cards/universe.svg"));
+  const only = cli(["--universe-only"]);
+  assert.strictEqual(only.status, 0, only.stderr);
+  assert.match(only.stdout, /Wrote 2 files .*cards\/universe\.svg, cards\/universe-light\.svg/);
+  assert.ok(fs.existsSync(path.join(dir, "cards/universe.svg")));
+  assert.strictEqual(fs.readFileSync(path.join(dir, "README.md"), "utf8"), before, "the universe run leaves the README alone");
+  assert.notStrictEqual(cli(["--universe-only", "--clean"]).status, 0, "it never deletes other cards");
+});
+
+test("universe workflow: valid YAML, plain shell steps, every 6 hours", (t) => {
+  const r = spawnSync("python3", ["-c", "import sys, yaml, json; d = yaml.safe_load(sys.stdin.read()); print(json.dumps({str(k): v for k, v in d.items()}))"], { input: auto.universeWorkflowYaml("DevopsNimbus"), encoding: "utf8" });
+  if (r.status !== 0 && /No module named 'yaml'/.test(r.stderr)) return t.skip("PyYAML isn't installed here");
+  assert.strictEqual(r.status, 0, r.stderr);
+  const d = JSON.parse(r.stdout), on = d.on || d.True;
+  assert.match(on.schedule[0].cron, /^\d+ [0-5]-23\/6 \* \* \*$/);
+  assert.deepStrictEqual(d.jobs.universe.steps.map((s) => s.name), ["Get this repository", "Redraw the 3D universe", "Commit if it changed"]);
+  d.jobs.universe.steps.forEach((s) => { assert.ok(s.run); assert.ok(!("uses" in s)); });
+  assert.strictEqual(d.permissions.contents, "write");
 });

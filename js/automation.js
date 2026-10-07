@@ -23,6 +23,7 @@
 
   var DIR = ".readme-patch";
   var WORKFLOW = ".github/workflows/update-readme.yml";
+  var UNIVERSE_WORKFLOW = ".github/workflows/update-universe.yml";
   /** The files the daily job needs from this tool, and nothing else (no preview, zip or page code). */
   var RUNTIME = ["cli.js", "js/core.js", "js/universe.js", "js/cards.js", "js/github.js", "js/publish.js"];
 
@@ -104,6 +105,73 @@
     ].join("\n");
   }
 
+  /**
+   * The 3D contribution universe's own workflow, added only when the universe is switched on. The daily workflow
+   * rebuilds it too; this one refreshes just the universe tile every 6 hours in between, like Git3D Universe's own
+   * workflow does, but with this generator (so it keeps the profile's theme) and no third-party action or extra token.
+   * It shares the daily job's concurrency group, so the two never push at the same time.
+   */
+  function universeWorkflowYaml(login) {
+    var t = schedule(login), h = t.hour % 6;
+    return [
+      "# Keeps the 3D contribution universe (cards/universe.svg) fresh. Written by \"Patch your profile\"; this file is yours to read, change or delete.",
+      "#",
+      "# Every 6 hours it redraws only the universe tile from " + DIR + "/config.json and commits only if it changed.",
+      "# The daily \"Update profile README\" workflow redraws everything, including the universe, once a day.",
+      "# It uses NO third-party actions and no extra token: every step is plain shell, running the copy in " + DIR + "/.",
+      "#",
+      "# To stop it: delete this file, or switch the workflow off in the Actions tab.",
+      "name: Update 3D universe",
+      "",
+      "on:",
+      "  schedule:",
+      "    - cron: \"" + t.minute + " " + h + "-23/6 * * *\"   # every 6 hours, starting " + two(h) + ":" + two(t.minute) + " UTC",
+      "  workflow_dispatch: {}                      # also lets you run it by hand from the Actions tab",
+      "",
+      "permissions:",
+      "  contents: write",
+      "",
+      "concurrency:",
+      "  group: update-profile-readme             # the same group as the daily workflow: they take turns",
+      "  cancel-in-progress: false",
+      "",
+      "jobs:",
+      "  universe:",
+      "    runs-on: ubuntu-latest",
+      "    timeout-minutes: 10",
+      "    steps:",
+      "      - name: Get this repository",
+      "        env:",
+      "          GITHUB_TOKEN: ${{ github.token }}",
+      "        run: |",
+      "          set -euo pipefail",
+      "          auth=\"$(printf 'x-access-token:%s' \"$GITHUB_TOKEN\" | base64 -w0)\"",
+      "          git -c \"http.https://github.com/.extraheader=AUTHORIZATION: basic $auth\" clone --depth 1 \"https://github.com/${GITHUB_REPOSITORY}.git\" .",
+      "          git config --local \"http.https://github.com/.extraheader\" \"AUTHORIZATION: basic $auth\"",
+      "",
+      "      - name: Redraw the 3D universe",
+      "        env:",
+      "          GITHUB_TOKEN: ${{ github.token }}",
+      "        run: |",
+      "          set -euo pipefail",
+      "          node " + DIR + "/cli.js \"$GITHUB_REPOSITORY_OWNER\" --config " + DIR + "/config.json --require-activity --universe-only --out .",
+      "",
+      "      - name: Commit if it changed",
+      "        run: |",
+      "          set -euo pipefail",
+      "          git config user.name \"github-actions[bot]\"",
+      "          git config user.email \"41898282+github-actions[bot]@users.noreply.github.com\"",
+      "          git add cards/universe*.svg",
+      "          if git diff --cached --quiet; then",
+      "            echo \"The universe hasn't changed.\"",
+      "          else",
+      "            git commit -m \"Update 3D universe\"",
+      "            git push",
+      "          fi",
+      ""
+    ].join("\n");
+  }
+
   function folderReadme(login) {
     var t = schedule(login);
     return [
@@ -139,10 +207,12 @@
   function buildAutomationFiles(login, options, sources) {
     var files = [
       { name: WORKFLOW, data: workflowYaml(login) },
+      options && options.universe ? { name: UNIVERSE_WORKFLOW, data: universeWorkflowYaml(login) } : null,
       { name: DIR + "/config.json", data: configJson(options) },
       { name: DIR + "/package.json", data: JSON.stringify({ private: true, type: "commonjs", description: "Generator used by the daily profile update" }, null, 2) + "\n" },
       { name: DIR + "/README.md", data: folderReadme(login) }
     ];
+    files = files.filter(Boolean);
     RUNTIME.forEach(function (p) {
       if (!sources || typeof sources[p] !== "string" || !sources[p]) throw new Error("Missing generator file: " + p);
       files.push({ name: DIR + "/" + p, data: sources[p] });
@@ -151,8 +221,8 @@
   }
 
   return {
-    DIR: DIR, WORKFLOW: WORKFLOW, RUNTIME: RUNTIME,
-    schedule: schedule, configJson: configJson, workflowYaml: workflowYaml, folderReadme: folderReadme,
+    DIR: DIR, WORKFLOW: WORKFLOW, UNIVERSE_WORKFLOW: UNIVERSE_WORKFLOW, RUNTIME: RUNTIME,
+    schedule: schedule, configJson: configJson, workflowYaml: workflowYaml, universeWorkflowYaml: universeWorkflowYaml, folderReadme: folderReadme,
     buildAutomationFiles: buildAutomationFiles
   };
 });
