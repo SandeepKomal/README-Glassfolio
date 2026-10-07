@@ -280,7 +280,7 @@
    * A link like ?user=DevopsNimbus&theme=cyber reopens the tool with the same choices, so people can share their setup. */
   var SHARE_TEXT = ["role", "tagline", "stack", "linkedin"];
   var SHARE_ACCENTS = ["accent1", "accent2"];
-  var SHARE_FLAGS = ["adaptive", "animate", "heatmap", "credit", "banner", "cards", "bars", "pie", "timeline", "proj", "recent", "links", "universe"];
+  var SHARE_FLAGS = ["adaptive", "animate", "heatmap", "credit", "banner", "cards", "bars", "pie", "timeline", "proj", "recent", "links", "universe", "wave"];
 
   /** Only values that differ from the defaults go into the link, so links stay short. */
   function toQuery(user, options) {
@@ -344,7 +344,7 @@
 
   var DEFAULTS = {
     style: "showcase", theme: "auto", accent1: "", accent2: "", order: "", featured: "", adaptive: true, mode: "", suffix: "", animate: true, heatmap: true, credit: true, siteUrl: "", tagline: "", role: "", stack: "", linkedin: "",
-    banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true, universe: false
+    banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true, universe: false, wave: false
   };
   function withDefaults(o) {
     var out = {}, k;
@@ -617,7 +617,8 @@
       connect: function () { return o.links ? links(m, o) : []; }
     };
     sectionOrder(o).forEach(function (k) { L = L.concat(parts[k]()); });
-    L.push("---", footer(o), "");
+    if (o.wave && o.cards) L.push('<div align="center">', "", pic(o, "cards/footer.svg", 'alt="" width="100%"'), "", footer(o), "", "</div>", "");
+    else L.push("---", footer(o), "");
     return L.join("\n");
   }
 
@@ -631,9 +632,78 @@
     return (out || String(m.login).charAt(0)).toUpperCase();
   }
 
+  /* ---------- wave header and footer ----------
+   * A gradient band in the theme's accents with gently drifting waves along its edge, the profile name and title
+   * centred on it. Everything outside the waves is transparent, so it melts into GitHub's light or dark page.
+   * Self-drawn (no outside image service); the waves move with CSS, so reduced motion gets a still picture. */
+  function waveColours(p) {
+    // white text must stay readable on every part of the band, so each stop is darkened just enough (3:1, large text)
+    function deep(c) { var t = 0, x = c; while (contrast(x, "#ffffff") < 3 && t < 0.9) { t += 0.05; x = mixHex(c, "#000000", t); } return x; }
+    return [deep(mixHex(p.a2, "#0b1020", 0.62)), deep(p.a2), deep(p.a1)];
+  }
+  /** A wave two widths long (one hump up and one down per width), so sliding it by one width loops seamlessly. */
+  function wavePath(W, H, y, amp, fillBelow) {
+    var d = "M0," + y + " Q" + (W / 4) + "," + (y - 2 * amp) + " " + (W / 2) + "," + y;
+    for (var x = W; x <= 2 * W; x += W / 2) d += " T" + x + "," + y;
+    return d + (fillBelow ? " L" + 2 * W + "," + H + " L0," + H : " L" + 2 * W + ",0 L0,0") + " Z";
+  }
+  function waveLayers(W, H, p, layers) {
+    var style = p.anim
+      ? "<style>@keyframes wvl{to{transform:translateX(-" + W + "px)}}@keyframes wvr{from{transform:translateX(-" + W + "px)}to{transform:translateX(0)}}" +
+        ".wv-l{animation:wvl 22s linear infinite}.wv-r{animation:wvr 31s linear infinite}" +
+        "@media (prefers-reduced-motion:reduce){*{animation:none!important}}</style>"
+      : "";
+    // the gradient stays put on the band; each moving wave is only a mask that cuts its shape out of it
+    return style + layers.map(function (l, i) {
+      return '<mask id="wm' + i + '" maskUnits="userSpaceOnUse" x="0" y="0" width="' + W + '" height="' + H + '"><g' + (p.anim ? ' class="' + l.cls + '"' : "") + '><path d="' + wavePath(W, H, l.y, l.amp, l.below) + '" fill="#ffffff"/></g></mask>' +
+        '<rect width="' + W + '" height="' + H + '" fill="url(#wave)" mask="url(#wm' + i + ')"' + (l.op < 1 ? ' fill-opacity="' + l.op + '"' : "") + "/>";
+    }).join("");
+  }
+  function waveDefs(p) {
+    var c = waveColours(p);
+    return "<defs>" +
+      '<linearGradient id="wave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + c[0] + '"/><stop offset="0.48" stop-color="' + c[1] + '"/><stop offset="1" stop-color="' + c[2] + '"/></linearGradient>' +
+      '<filter id="lift" x="-10%" y="-30%" width="120%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#000000" flood-opacity="0.28"/></filter>' +
+      "</defs>";
+  }
+  /** Largest font size (up to max) at which text of this length fits the width, roughly, for a bold sans face. */
+  function fitSize(text, max, min, width, k) { return Math.max(min, Math.min(max, Math.floor(width / (Math.max(1, String(text).length) * k)))); }
+  function clip(text, size, width, k) { var n = Math.floor(width / (size * k)); return text.length > n ? text.slice(0, Math.max(1, n - 1)) + "\u2026" : text; }
+
+  function buildWaveBanner(m, o, p) {
+    var W = 1200, H = 260, SANS = "system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+    var sub = subtitle(m, o), line2 = [sub.main].concat(list(o.stack).slice(0, 3)).filter(Boolean).join(" | "), line3 = sub.main ? sub.extra : "";
+    var name = m.name || m.login, ns = fitSize(name, 64, 30, 1080, 0.6), ss = fitSize(line2, 22, 14, 1080, 0.56);
+    var out = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(name + (line2 ? ", " + line2 : "")) + '" font-family="' + SANS + '">' +
+      waveDefs(p) +
+      waveLayers(W, H, p, [
+        { cls: "wv-r", y: 222, amp: 15, op: p.light ? 0.45 : 0.6 },
+        { cls: "wv-l", y: 206, amp: 11, op: 1 }
+      ]);
+    var ty = line2 ? (line3 ? 96 : 108) : 122;
+    out += '<g fill="#ffffff" text-anchor="middle" filter="url(#lift)">' +
+      '<text x="' + W / 2 + '" y="' + ty + '" font-size="' + ns + '" font-weight="700" letter-spacing="-0.5">' + esc(clip(name, ns, 1100, 0.6)) + "</text>" +
+      (line2 ? '<text x="' + W / 2 + '" y="' + (ty + 50) + '" font-size="' + ss + '" font-weight="600">' + esc(clip(line2, ss, 1100, 0.56)) + "</text>" : "") +
+      (line3 ? '<text x="' + W / 2 + '" y="' + (ty + 82) + '" font-size="16" fill-opacity="0.85">' + esc(clip(line3, 16, 1000, 0.52)) + "</text>" : "") +
+      "</g></svg>";
+    return out;
+  }
+  /** The footer: the same waves, flipped, filling the bottom edge. */
+  function buildWaveFooter(m, options) {
+    var o = withDefaults(options), p = paletteFor(m.login, o), W = 1200, H = 120;
+    p.anim = o.animate !== false;
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Footer">' +
+      waveDefs(p) +
+      waveLayers(W, H, p, [
+        { cls: "wv-l", y: 34, amp: 13, op: p.light ? 0.45 : 0.6, below: true },
+        { cls: "wv-r", y: 52, amp: 10, op: 1, below: true }
+      ]) + "</svg>";
+  }
+
   function buildBanner(m, options) {
     var o = withDefaults(options), p = paletteFor(m.login, o), r = rng(p.seed), L = p.light, I = p.ink;
     p.anim = o.animate !== false;
+    if (o.wave) return buildWaveBanner(m, o, p);
     var W = 1200, H = 320, out = [];
     var SANS = "system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
     var MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
@@ -738,7 +808,7 @@
 
   return {
     parseUser: parseUser, buildModel: buildModel, buildReadme: buildReadme,
-    buildBanner: buildBanner, SAMPLE: SAMPLE, DEFAULTS: DEFAULTS,
+    buildBanner: buildBanner, buildWaveFooter: buildWaveFooter, SAMPLE: SAMPLE, DEFAULTS: DEFAULTS,
     palette: palette, streaks: streaks, weeklyCounts: weeklyCounts, daysFromEvents: daysFromEvents,
     makeActivity: makeActivity, MAX_PROJECT_CARDS: MAX_PROJECT_CARDS, toolList: toolList, connectItems: connectItems, designation: designation,
     THEMES: THEMES, THEME_ORDER: THEME_ORDER, fxStyle: fxStyle, fx: fx,

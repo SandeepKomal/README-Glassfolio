@@ -1296,3 +1296,35 @@ test("the universe turns the daily counts into Sunday-first weeks and the same n
   assert.deepStrictEqual([st.total, st.active, st.longest, st.current, st.max], [15, 5, 2, 2, 5]);
   assert.deepStrictEqual([0, 1, 4, 9, 10].map((c) => u.levelOf(c, 10)), [0, 1, 2, 4, 4]);
 });
+
+/* ---------- wave header and footer ---------- */
+test("wave header and footer: opt-in, both halves of Day and night, footer above the credit", () => {
+  assert.strictEqual(core.DEFAULTS.wave, false);
+  assert.doesNotMatch(core.buildBanner(core.SAMPLE, {}), /id="wave"/, "the orbit banner stays the default");
+  const files = cards.buildFiles(core.SAMPLE, { wave: true, role: "SRE", stack: "AWS, Go", tagline: "Ship it" }), names = files.map((f) => f.name), md = files[0].data;
+  ["banner.svg", "banner-light.svg", "cards/footer.svg", "cards/footer-light.svg"].forEach((n) => assert.ok(names.includes(n), n));
+  const banner = files.find((f) => f.name === "banner.svg").data;
+  assert.match(banner, />DevopsNimbus</); assert.match(banner, />SRE at Northwind \| AWS \| Go</); assert.match(banner, />Ship it</);
+  const tail = md.slice(md.lastIndexOf("cards/footer"));
+  assert.match(tail, /Patched together/, "the credit sits under the wave footer");
+  assert.doesNotMatch(md, /\n---\n<sub>/, "no plain rule when the wave footer is on");
+  assert.doesNotMatch(core.buildReadme(core.SAMPLE, { wave: true, cards: false }), /footer\.svg/, "text mode has no images");
+  assert.match(core.toQuery("x", { wave: true }), /wave=1/);
+});
+
+test("wave: readable white text on every gradient stop, the gradient stays put, and motion follows the rules", () => {
+  ["aurora", "cyber", "sunset", "emerald", "royal", "graphite", "paper"].forEach((theme) => {
+    cards.buildFiles(core.SAMPLE, { wave: true, theme }).filter((f) => /^banner/.test(f.name)).forEach((f) => {
+      const stops = [...f.data.match(/<linearGradient id="wave"[^]*?<\/linearGradient>/)[0].matchAll(/stop-color="(#[0-9a-f]{6})"/g)].map((m) => m[1]);
+      assert.strictEqual(stops.length, 3);
+      stops.forEach((c) => assert.ok(core.contrast(c, "#ffffff") >= 3, theme + " " + f.name + ": " + c));
+    });
+  });
+  const svg = core.buildBanner(core.SAMPLE, { wave: true }), still = core.buildBanner(core.SAMPLE, { wave: true, animate: false });
+  assert.match(svg, /<mask id="wm0"[^>]*><g class="wv-r">/, "the waves move inside masks, not the gradient");
+  assert.match(svg, /prefers-reduced-motion:reduce/);
+  assert.doesNotMatch(still, /<style|class="wv-/);
+  assert.doesNotMatch(svg + core.buildWaveFooter(core.SAMPLE, {}), /<script|onload=|href="http|<image/i);
+  const long = core.buildBanner(Object.assign({}, core.SAMPLE, { name: "A".repeat(90) }), { wave: true });
+  assert.match(long, /font-size="30"[^>]*>A+…</, "a very long name shrinks, then is cut short instead of overflowing");
+});
