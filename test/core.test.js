@@ -16,7 +16,7 @@ test("parseUser accepts URLs, handles and usernames", () => {
 
 test("every layout produces the expected sections from sample data", () => {
   for (const style of ["showcase", "changelog", "manifest", "plain"]) {      // manifest and plain are legacy names for showcase
-    const md = core.buildReadme(core.SAMPLE, { style });
+    const md = core.buildReadme(core.SAMPLE, { style, adaptive: false });
     assert.doesNotMatch(md, /## About/);
     assert.match(md, /<img src="\.\/banner\.svg"/);
     assert.match(md, /<div align="center">/);
@@ -226,7 +226,7 @@ test("buildCards returns stats, streak and one card per project, all well-formed
 });
 
 test("every card the README references exists, and nothing else is referenced", () => {
-  const o = { style: "manifest" };
+  const o = { style: "manifest", adaptive: false };
   const md = core.buildReadme(core.SAMPLE, o);
   const refs = (md.match(/\.\/cards\/[\w-]+\.svg/g) || []).map((r) => r.slice(2));
   const have = cards.buildCards(core.SAMPLE, o).map((f) => f.name);
@@ -246,7 +246,7 @@ test("without activity there is no streak card, and the stats card still has 6 t
   assert.ok(!files.some((f) => f.name === "cards/streak.svg"));
   const stats = files.find((f) => f.name === "cards/stats.svg").data;
   assert.strictEqual((stats.match(/font-size="34"/g) || []).length, 6);
-  assert.match(core.buildReadme(model, {}), /width="400"/);
+  assert.match(core.buildReadme(model, {}), /width="412"/);
 });
 
 test("project cards escape markup and wrap long descriptions", () => {
@@ -454,7 +454,7 @@ test("connect buttons exist only for links we actually have", () => {
 });
 
 test("connect buttons link to the right URLs and match the files", () => {
-  const o = { linkedin: "https://www.linkedin.com/in/devopsnimbus/" };
+  const o = { linkedin: "https://www.linkedin.com/in/devopsnimbus/", adaptive: false };
   const md = core.buildReadme(core.SAMPLE, o);
   assert.match(md, /<a href="https:\/\/github\.com\/DevopsNimbus"><img src="\.\/cards\/connect-github\.svg"/);
   assert.match(md, /<a href="https:\/\/www\.linkedin\.com\/in\/devopsnimbus\/">/);
@@ -465,8 +465,8 @@ test("connect buttons link to the right URLs and match the files", () => {
 });
 
 test("connect buttons scale: four links fit one row, others use thirds", () => {
-  assert.match(core.buildReadme(core.SAMPLE, { linkedin: "a" }), /connect-github\.svg" alt="GitHub" width="196"/);
-  assert.match(core.buildReadme(core.SAMPLE, {}), /connect-github\.svg" alt="GitHub" width="260"/);
+  assert.match(core.buildReadme(core.SAMPLE, { linkedin: "a" }), /connect-github(-light)?\.svg" alt="GitHub" width="204"/);
+  assert.match(core.buildReadme(core.SAMPLE, {}), /connect-github(-light)?\.svg" alt="GitHub" width="270"/);
 });
 
 test("connect handles are escaped and truncated; cards off gives a plain text row", () => {
@@ -552,7 +552,7 @@ test("every image the README references is generated, in every layout and option
     {}, { style: "changelog" }, { banner: false }, { timeline: false }, { proj: false }, { links: false },
     { linkedin: "devopsnimbus" }, { role: "SRE", stack: "AWS, Go" }, { cards: false }
   ];
-  variants.forEach((o) => {
+  variants.map((o) => Object.assign({ adaptive: false }, o)).forEach((o) => {    // adaptive sets are covered further down
     [core.SAMPLE, core.buildModel({ login: "bare", created_at: "2026-01-01T00:00:00Z" }, [])].forEach((m) => {
       const md = core.buildReadme(m, o);
       const have = ["banner.svg"].concat(cards.buildCards(m, o).map((f) => f.name));
@@ -751,11 +751,12 @@ test("adaptive README uses <picture> for every image and points at both sets", (
     assert.match(p, /^<picture><source media="\(prefers-color-scheme: dark\)" srcset="\.\/([^"]+)\.svg"><img src="\.\/\1-light\.svg" /);
   });
   assert.match(md, /<a href="https:\/\/github\.com\/DevopsNimbus\/tf-guardrails"><picture>/);       // clickable cards stay clickable
-  assert.doesNotMatch(core.buildReadme(core.SAMPLE, {}), /<picture>/);
+  assert.doesNotMatch(core.buildReadme(core.SAMPLE, { adaptive: false }), /<picture>/);
+  assert.match(core.buildReadme(core.SAMPLE, {}), /<picture>/, "on by default, so cards match GitHub's light page as well as its dark one");
 });
 
 test("buildFiles returns README, banner and cards; adaptive doubles the images and every reference resolves", () => {
-  const plain = cards.buildFiles(core.SAMPLE, {});
+  const plain = cards.buildFiles(core.SAMPLE, { adaptive: false });
   assert.strictEqual(plain[0].name, "README.md");
   assert.ok(plain.some((f) => f.name === "banner.svg"));
   assert.ok(!plain.some((f) => /-light\.svg$/.test(f.name)));
@@ -792,8 +793,10 @@ test("adaptive survives every option combination", () => {
 
 test("adaptive is remembered by share links and CLI", () => {
   assert.strictEqual(core.fromQuery("?adaptive=1").opts.adaptive, true);
-  assert.match(core.toQuery("x", { adaptive: true }), /adaptive=1/);
+  assert.strictEqual(core.fromQuery("?adaptive=0").opts.adaptive, false);
+  assert.match(core.toQuery("x", { adaptive: false }), /adaptive=0/);
   assert.doesNotMatch(core.toQuery("x", {}), /adaptive/);
+  assert.doesNotMatch(core.toQuery("x", { adaptive: true }), /adaptive/, "on is the default, so links stay short");
 });
 
 /* ---------- profile tips ---------- */
@@ -836,17 +839,17 @@ test("tips: counts undescribed projects correctly with correct grammar, and poin
 
 
 /* ---------- spacing: rows of cards are separate paragraphs, not <br> hacks ---------- */
-test("the heatmap sits in its own paragraph under the stats row, with no <br> spacing hack", () => {
-  [{}, { adaptive: true }].forEach((o) => {
+test("stats, streak and heatmap form one grid: one paragraph, so every gap between cards is the same", () => {
+  [{}, { adaptive: false }].forEach((o) => {
     const md = core.buildReadme(core.SAMPLE, o);
     const section = md.split("## GitHub stats")[1].split("## Stack")[0];
     assert.doesNotMatch(section, /<br>/);
     const blocks = section.split(/\n\s*\n/).map((b) => b.trim()).filter((b) => b && !/^<\/?div/.test(b));
-    assert.strictEqual(blocks.length, 2, "stats+streak in one paragraph, heatmap in the next");
-    assert.match(blocks[0], /stats[^"]*\.svg/); assert.match(blocks[0], /streak[^"]*\.svg/);
-    assert.match(blocks[1], /activity[^"]*\.svg/); assert.doesNotMatch(blocks[1], /stats|streak/);
+    assert.strictEqual(blocks.length, 1, "no paragraph margin between the pair and the heatmap");
+    const at = (name) => blocks[0].search(new RegExp(name + "[^\"]*\\.svg"));
+    assert.ok(at("stats") < at("streak") && at("streak") < at("activity"), "pair first, heatmap underneath");
   });
-  const noHeat = core.buildReadme(core.SAMPLE, { heatmap: false }).split("## GitHub stats")[1].split("## Stack")[0];
+const noHeat = core.buildReadme(core.SAMPLE, { heatmap: false }).split("## GitHub stats")[1].split("## Stack")[0];
   assert.doesNotMatch(noHeat, /activity/);
 });
 
@@ -931,7 +934,7 @@ test("order works in text-only mode and with the changelog layout too", () => {
 });
 
 /* ---------- featured projects ---------- */
-const featuredNames = (md) => [...md.matchAll(/<a href="https:\/\/github\.com\/DevopsNimbus\/([\w-]+)"><img/g)].map((m) => m[1]);
+const featuredNames = (md) => [...md.matchAll(/<a href="https:\/\/github\.com\/DevopsNimbus\/([\w-]+)"><(?:img|picture)/g)].map((m) => m[1]);
 
 test("featured projects: shown in the chosen order, names are case-insensitive, unknown and repeated names ignored", () => {
   assert.deepStrictEqual(core.pickProjects(core.SAMPLE, { featured: "dotfiles, SLO-CALC, nope, dotfiles" }).map((r) => r.name), ["dotfiles", "slo-calc"]);
@@ -1136,7 +1139,7 @@ test("recently pushed is an opt-in that works in every layout, and the default R
   assert.doesNotMatch(core.buildReadme(core.SAMPLE, {}), /Recently pushed/);
   assert.strictEqual(core.DEFAULTS.recent, false);
   ["showcase", "changelog"].forEach((style) => {
-    const md = core.buildReadme(core.SAMPLE, { style, recent: true });
+    const md = core.buildReadme(core.SAMPLE, { style, recent: true, adaptive: false });
     assert.match(md, /## Recently pushed\n\n<div align="center">\n\n<img src="\.\/cards\/recent\.svg"/, style);
     assert.ok(cards.buildFiles(core.SAMPLE, { style, recent: true }).some((f) => f.name === "cards/recent.svg"), style);
   });
@@ -1147,7 +1150,7 @@ test("recently pushed is an opt-in that works in every layout, and the default R
 });
 
 test("the Changelog layout is a card when cards are on, and stays a text list in text mode", () => {
-  const md = core.buildReadme(core.SAMPLE, { style: "changelog" });
+  const md = core.buildReadme(core.SAMPLE, { style: "changelog", adaptive: false });
   assert.match(md, /## Changelog\n\n<div align="center">\n\n<img src="\.\/cards\/changelog\.svg"/);
   assert.doesNotMatch(md, /\*\*Added\*\*|### 20/);
   assert.ok(!cards.buildFiles(core.SAMPLE, { style: "showcase" }).some((f) => f.name === "cards/changelog.svg"));
@@ -1201,11 +1204,13 @@ test("paired cards use pixel widths no larger than their design, so a phone stac
 
 test("a row of paired cards fits across a desktop column, and wraps on a narrower one", () => {
   const rowFits = (n, w) => n * w + (n - 1) * 4 <= GITHUB_CONTENT_PX;               // 4px is the space between inline images
-  assert.ok(rowFits(2, 400), "stats + streak, and project cards, sit side by side");
-  const connect = (n) => Number(core.buildReadme(Object.assign({}, core.SAMPLE), { linkedin: n > 3 ? "a" : "" }).match(/connect-github\.svg" alt="GitHub" width="(\d+)"/)[1]);
+  const half = Number(core.buildReadme(core.SAMPLE, {}).match(/stats-light\.svg" alt="[^"]*" width="(\d+)"/)[1]);
+  assert.ok(rowFits(2, half), "stats + streak, and project cards, sit side by side");
+  assert.ok(2 * half + 4 >= GITHUB_CONTENT_PX - 8, "and span the column, lining up with the full-width cards");
+  const connect = (n) => Number(core.buildReadme(Object.assign({}, core.SAMPLE), { linkedin: n > 3 ? "a" : "" }).match(/connect-github-light\.svg" alt="GitHub" width="(\d+)"/)[1]);
   assert.ok(rowFits(4, connect(4)) && rowFits(3, connect(3)), "3 or 4 buttons fit in one row");
   assert.ok(!rowFits(2, 420) || 2 * 420 + 4 <= GITHUB_CONTENT_PX, "the design size itself would also fit");
-  assert.ok(2 * 400 + 4 > 356, "on a phone (about 356px of text width) the pair cannot sit side by side, so it stacks");
+  assert.ok(2 * half + 4 > 356, "on a phone (about 356px of text width) the pair cannot sit side by side, so it stacks");
 });
 
 /* ---------- monogram initials ---------- */

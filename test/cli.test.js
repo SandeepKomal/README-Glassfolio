@@ -76,7 +76,7 @@ test("cli: options combine, and the output stays complete and consistent", () =>
 
 test("cli: --help lists the new options", () => {
   const r = spawnSync(process.execPath, [CLI, "--help"], { encoding: "utf8" });
-  ["--colors", "--order", "--featured", "--share-image", "--adaptive"].forEach((f) => assert.ok(r.stdout.includes(f), f));
+  ["--colors", "--order", "--featured", "--share-image", "--no-adaptive"].forEach((f) => assert.ok(r.stdout.includes(f), f));
 });
 
 test("cli: --recent adds the Recently pushed card in either layout, and it is off by default", () => {

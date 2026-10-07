@@ -328,7 +328,7 @@
   }
 
   var DEFAULTS = {
-    style: "showcase", theme: "auto", accent1: "", accent2: "", order: "", featured: "", adaptive: false, mode: "", suffix: "", animate: true, heatmap: true, credit: true, siteUrl: "", tagline: "", role: "", stack: "", linkedin: "",
+    style: "showcase", theme: "auto", accent1: "", accent2: "", order: "", featured: "", adaptive: true, mode: "", suffix: "", animate: true, heatmap: true, credit: true, siteUrl: "", tagline: "", role: "", stack: "", linkedin: "",
     banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true
   };
   function withDefaults(o) {
@@ -339,6 +339,10 @@
   }
 
   /* ---------- README sections ---------- */
+  /** Width of a half-column card, in pixels so a phone still stacks them at near full size. Two of them plus the
+   * 4px space between fill GitHub's 832px desktop README column (828px), so their outer edges line up with a 100% card. */
+  var HALF = "412";
+
   function statsRow(m) {
     var heads = ["Repos", "Followers"], vals = [m.publicRepos, m.followers];
     if (m.since) { heads.push("On GitHub since"); vals.push(m.since); }
@@ -505,11 +509,12 @@
     var two = !!m.activity;
     var out = ["## GitHub stats", "", '<div align="center">', ""];
     var heat = o.heatmap && m.activity && m.activity.daily && m.activity.daily.length;
-    var row = pic(o, "cards/stats.svg", 'alt="GitHub stats for ' + esc(m.login) + '" width="400"');
-    if (two) row += "\n" + pic(o, "cards/streak.svg", 'alt="Contribution streak for ' + esc(m.login) + '" width="400"');
-    out.push(row, "");
-    // its own paragraph, so the gap under the cards is a real margin on any renderer (a <br> only leaves a few pixels)
-    if (heat) out.push(pic(o, "cards/activity.svg", 'alt="Contribution heatmap for ' + esc(m.login) + '" width="100%"'), "");
+    // one paragraph for the whole grid: side by side and stacked cards get the same small gutter, and the
+    // half-width pair lines up with the full-width heatmap's edges instead of sitting indented inside it
+    var grid = [pic(o, "cards/stats.svg", 'alt="GitHub stats for ' + esc(m.login) + '" width="' + HALF + '"')];
+    if (two) grid.push(pic(o, "cards/streak.svg", 'alt="Contribution streak for ' + esc(m.login) + '" width="' + HALF + '"'));
+    if (heat) grid.push(pic(o, "cards/activity.svg", 'alt="Contribution heatmap for ' + esc(m.login) + '" width="100%"'));
+    out.push(grid.join("\n"), "");
     out.push("</div>", "");
     return out;
   }
@@ -519,7 +524,7 @@
     if (!top.length) return [];
     var out = ["## Projects", "", '<div align="center">', ""];
     top.forEach(function (r, i) {
-      out.push('<a href="' + esc(r.url) + '">' + pic(o, "cards/project-" + (i + 1) + ".svg", 'alt="' + esc(r.name) + '" width="400"') + "</a>");
+      out.push('<a href="' + esc(r.url) + '">' + pic(o, "cards/project-" + (i + 1) + ".svg", 'alt="' + esc(r.name) + '" width="' + HALF + '"') + "</a>");
     });
     out.push("", "</div>", "");
     return out;
@@ -559,7 +564,7 @@
   function links(m, o) {
     var items = connectItems(m, o);
     if (o.cards) {
-      var w = items.length === 4 ? "196" : "260";   // pixels: 3 fit across a desktop column (4 if narrower buttons), and on a phone they stack at near full size
+      var w = items.length === 4 ? "204" : "270";   // pixels: 3 (or 4 narrower) span the 832px desktop column like the cards above, and on a phone they stack at near full size
       var out = ["## Connect", "", '<div align="center">', ""];
       items.forEach(function (it) {
         out.push('<a href="' + esc(it.url) + '">' + pic(o, "cards/connect-" + it.key + ".svg", 'alt="' + esc(it.label) + '" width="' + w + '"') + "</a>");
