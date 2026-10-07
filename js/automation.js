@@ -192,7 +192,7 @@
       "",
       "## Stopping it",
       "",
-      "Delete `.github/workflows/update-readme.yml`, or open the **Actions** tab and disable the *Update profile README* workflow. Your README and images stay as they are.",
+      "Delete `.github/workflows/update-readme.yml` (and `update-universe.yml`, if the 3D universe is on), or open the **Actions** tab and disable the workflows. Your README and images stay as they are.",
       "",
       "## Good to know",
       "",

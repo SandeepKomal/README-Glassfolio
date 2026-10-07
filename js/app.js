@@ -505,7 +505,7 @@
     box.disabled = !ok;
     if (!ok) box.checked = false;
     $("#dailyHint").textContent = ok
-      ? (box.checked ? "On: it will run every day at " + runTime() + ", and you can also run it from the Actions tab." : "Off. Tick to add a daily refresh at " + runTime() + " (your own time, so profiles don't all run at once).")
+      ? (box.checked ? "On: it will run every day at " + runTime() + ", and you can also run it from the Actions tab." + ($("#o-universe").checked ? " The 3D universe also gets its own workflow that refreshes it every 6 hours." : "") : "Off. Tick to add a daily refresh at " + runTime() + " (your own time, so profiles don't all run at once).")
       : "Load your own profile to turn this on.";
     $("#dailyMore").hidden = !ok;
     $("#pubWfNote").hidden = !(ok && box.checked);
@@ -530,6 +530,7 @@
     });
   }
   $("#o-daily").addEventListener("change", updateDaily);
+  $("#o-universe").addEventListener("change", updateDaily);
 
   /* ---------- publish ---------- */
   $("#pub").addEventListener("click", function () {

@@ -134,6 +134,7 @@ A published README is a **snapshot**: the numbers are as of the moment you publi
 
 - `.github/workflows/update-readme.yml`: runs once a day, at a time derived from your username so profiles don't all run at once (shown in the page, for example 22:26 UTC), and whenever you press *Run workflow* in the Actions tab.
 - `.readme-patch/`: your saved choices (`config.json`) and a copy of this generator, so your repo is self-contained and you can read every line that runs.
+- `.github/workflows/update-universe.yml`, only when the [3D contribution universe](#look-and-options) is on: redraws just `cards/universe.svg` (and its light twin) every 6 hours, and commits only if it changed (as *Update 3D universe*). It takes turns with the daily workflow, so they never push at the same time.
 
 Each run reads your public GitHub data, rebuilds `README.md` and the images, and commits **only if something changed** (as `github-actions[bot]`).
 
@@ -145,7 +146,7 @@ What to know before you switch it on:
 - **Your token needs one more permission** to add the workflow file: *Workflows: Read and write* for a fine-grained token, or the `workflow` scope for a classic one (see [Token setup](#token-setup)). Without it, your README and cards are still published, but daily updates are left out and the page tells you exactly what to add.
 - **It's free** for public repositories. A run takes well under a minute.
 - **GitHub pauses scheduled workflows** in a public repo after 60 days without activity. Re-enable it in the Actions tab if that happens.
-- **To stop it**, delete the workflow file or disable it in the Actions tab. Your README and images stay as they are.
+- **To stop it**, delete the workflow file (and `update-universe.yml`, if you have it) or disable them in the Actions tab. Your README and images stay as they are.
 - The commits come from `github-actions[bot]`, so they don't count towards your contribution graph.
 
 `config.json` contains your choices (theme, job title, skills, LinkedIn name), so it's visible in your public repo.
@@ -189,7 +190,7 @@ Both layouts can include a banner, stats, streak and heatmap cards, a Languages 
 
 **3D contribution universe.** Tick *3D contribution universe* (or use `--universe`) to add a full-width card under the heatmap: your contribution calendar as a 3D terrain on a plate, your top repos orbiting it as planets sized by stars and coloured by language, and a panel with totals, streaks and a weekly sparkline. It's ported from Git3D Universe (`SandeepKomal/Git3D-Universe` on GitHub, MIT licence, Copyright (c) 2026 Sandeep Komal Pothu) and reworked to fit this project:
 
-- **No extra token, no extra workflow.** It's drawn from the same data as the other cards, so a fine-grained token isn't required, nothing new is added to `.github/workflows/`, and [daily updates](#keep-the-stats-fresh-every-day) refresh it together with everything else. If you used the standalone Git3D Universe Action before, you can delete its workflow from your profile repo.
+- **Kept fresh, no extra token.** It's drawn from the same data as the other cards. With [daily updates](#keep-the-stats-fresh-every-day) on, the daily workflow redraws it with everything else, and publishing also adds `.github/workflows/update-universe.yml`, which redraws just the universe tile every 6 hours in between. Neither needs a token beyond the one you publish with, and neither uses a third-party action. If you used the standalone Git3D Universe Action before (for example `git3d-universe.yml` or `test-git3d-universe.yml`), you can delete its workflow from your profile repo.
 - **Follows your template.** Its colours come from the theme you pick (including Custom colours), and with *Day and night* it gets a light twin on GitHub's white page and a dark one with a starfield on GitHub's dark page, exactly like the other cards.
 - **Respects reduced motion.** The planets orbit with CSS, so visitors who prefer reduced motion see them standing still, and *Subtle motion* off gives a still picture.
 - With a token it covers the past year; without one it shows the last 90 days with bigger cells.
