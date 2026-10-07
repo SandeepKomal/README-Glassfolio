@@ -400,7 +400,13 @@ test("README references the languages card only when it exists", () => {
 
 test("pie chart is opt-in and cards-off falls back to text bars", () => {
   assert.doesNotMatch(core.buildReadme(core.SAMPLE, {}), /pie showData/);
-  assert.match(core.buildReadme(core.SAMPLE, { pie: true }), /pie showData/);
+  assert.doesNotMatch(core.buildReadme(core.SAMPLE, { pie: true }), /pie showData/, "with cards on it is part of the languages card");
+  assert.match(core.buildReadme(core.SAMPLE, { pie: true, cards: false }), /pie showData/, "text mode keeps the Mermaid pie");
+  const lang = (o) => cards.buildCards(core.SAMPLE, o).find((f) => f.name === "cards/languages.svg").data;
+  const ring = lang({ pie: true });
+  assert.strictEqual((ring.match(/stroke-dasharray="[\d.]+ [\d.]+" stroke-dashoffset/g) || []).length, core.SAMPLE.langs.length, "one donut segment per language");
+  assert.match(ring, />REPOS</);
+  assert.doesNotMatch(lang({}), /stroke-dashoffset/, "without the option the card keeps its bar");
   const text = core.buildReadme(core.SAMPLE, { cards: false });
   assert.match(text, /█/);
   assert.doesNotMatch(text, /languages\.svg/);
@@ -775,12 +781,19 @@ test("buildFiles returns README, banner and cards; adaptive doubles the images a
 test("the light set is genuinely light and the dark set genuinely dark", () => {
   const dual = cards.buildFiles(core.SAMPLE, { adaptive: true, theme: "cyber" });
   const get = (n) => dual.find((f) => f.name === n).data;
-  assert.ok(get("banner.svg").includes(core.THEMES.cyber.bg1));
-  assert.ok(get("banner-light.svg").includes(core.THEMES.paper.bg1));
+  // each half sits on GitHub's own page colour, with GitHub's border, and keeps the theme's accents
+  ["banner.svg", "cards/stats.svg"].forEach((n) => {
+    assert.ok(get(n).includes('stop-color="#0d1117"') && get(n).includes('stroke="#3d444d"'), n + " uses GitHub's dark surface");
+    assert.ok(get(n).includes(core.THEMES.cyber.a1), n + " keeps the cyber accent");
+  });
+  ["banner-light.svg", "cards/stats-light.svg"].forEach((n) => assert.ok(get(n).includes('stop-color="#ffffff"') && get(n).includes('stroke="#d1d9e0"'), n + " uses GitHub's light surface"));
   assert.ok(get("cards/stats-light.svg").includes('fill="#0f172a"'));
   assert.ok(!get("cards/stats.svg").includes('fill="#0f172a"'));
   const paperDual = cards.buildFiles(core.SAMPLE, { adaptive: true, theme: "paper" });
-  assert.ok(paperDual.find((f) => f.name === "banner.svg").data.includes(core.THEMES.royal.bg1), "a Paper profile still gets a dark twin");
+  assert.ok(paperDual.find((f) => f.name === "banner.svg").data.includes(core.THEMES.royal.a1), "a Paper profile still gets a dark twin");
+  // a single set can land on either page, so it keeps the full themed background
+  const single = cards.buildFiles(core.SAMPLE, { adaptive: false, theme: "cyber" });
+  assert.ok(single.find((f) => f.name === "banner.svg").data.includes(core.THEMES.cyber.bg1));
 });
 
 test("adaptive survives every option combination", () => {
@@ -887,7 +900,7 @@ test("custom theme: a good colour is kept as chosen, hex is case-insensitive, ba
 test("custom theme: reaches the banner and every card, in both halves of an adaptive set", () => {
   const o = { theme: "custom", accent1: "#ff8800", accent2: "#00c2a8", adaptive: true, animate: false };
   const files = cards.buildFiles(core.SAMPLE, o), get = (n) => files.find((f) => f.name === n).data;
-  const dark = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "dark" })), light = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "light" }));
+  const dark = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "dark", native: true })), light = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "light", native: true }));
   assert.ok(get("banner.svg").includes(dark.a1) && get("banner.svg").includes(dark.bg1));
   assert.ok(get("banner-light.svg").includes(light.a1) && get("banner-light.svg").includes(light.bg1));
   files.filter((f) => /cards\/.*\.svg$/.test(f.name) && !/-light/.test(f.name)).forEach((f) => assert.ok(f.data.includes(dark.a1), f.name));
@@ -1163,7 +1176,7 @@ test("both new cards follow the theme, light twin, custom colours and motion rul
   const o = { style: "changelog", recent: true, adaptive: true, theme: "custom", accent1: "#ff8800", accent2: "#00c2a8" };
   const files = cards.buildFiles(core.SAMPLE, o), names = files.map((f) => f.name);
   ["cards/changelog.svg", "cards/changelog-light.svg", "cards/recent.svg", "cards/recent-light.svg"].forEach((n) => assert.ok(names.includes(n), n));
-  const dark = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "dark" })), light = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "light" }));
+  const dark = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "dark", native: true })), light = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "light", native: true }));
   ["changelog", "recent"].forEach((n) => {
     const d = files.find((f) => f.name === "cards/" + n + ".svg").data, l = files.find((f) => f.name === "cards/" + n + "-light.svg").data;
     assert.ok(d.includes(dark.a1) && d.includes(dark.bg1), n + " dark");

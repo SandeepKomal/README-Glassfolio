@@ -93,18 +93,20 @@
     var L = p.light;
     return "<defs>" +
       '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + p.bg1 + '"/><stop offset="1" stop-color="' + p.bg2 + '"/></linearGradient>' +
-      '<radialGradient id="au1"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="' + (L ? 0.28 : 0.42) + '"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></radialGradient>' +
-      '<radialGradient id="au2"><stop offset="0" stop-color="' + p.a2 + '" stop-opacity="' + (L ? 0.26 : 0.4) + '"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="au1"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="' + (p.native ? (L ? 0.1 : 0.16) : (L ? 0.28 : 0.42)) + '"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="au2"><stop offset="0" stop-color="' + p.a2 + '" stop-opacity="' + (p.native ? (L ? 0.09 : 0.14) : (L ? 0.26 : 0.4)) + '"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></radialGradient>' +
       '<linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + (L ? "#ffffff" : p.ink) + '" stop-opacity="' + (L ? 0.95 : 0.42) + '"/><stop offset="0.45" stop-color="' + p.ink + '" stop-opacity="0.07"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="' + (L ? 0.5 : 0.55) + '"/></linearGradient>' +
       '<linearGradient id="hl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="' + (L ? 0.95 : 0.6) + '"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>' +
       '<linearGradient id="acc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + p.a1 + '"/><stop offset="1" stop-color="' + p.a2 + '"/></linearGradient>' +
       '<linearGradient id="accv" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="' + p.a2 + '"/><stop offset="1" stop-color="' + p.a1 + '"/></linearGradient>' +
       '<linearGradient id="fade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="0.6"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></linearGradient>' +
       '<filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
-      '<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="' + p.ink + '" stroke-opacity="' + (L ? 0.05 : 0.04) + '"/></pattern>' +
-      '<clipPath id="clip"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath>' +
+      '<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="' + p.ink + '" stroke-opacity="' + (p.native ? 0.025 : (L ? 0.05 : 0.04)) + '"/></pattern>' +
+      '<clipPath id="clip"><rect width="' + W + '" height="' + H + '" rx="' + RADIUS(p) + '"/></clipPath>' +
       "</defs>" + core.fxStyle(p, W);
   }
+
+  function RADIUS(p) { return p.native ? 12 : 18; }
 
   function frame(W, H, label, p, body) {
     var R = Math.max(W, H);
@@ -115,11 +117,15 @@
       '<rect width="' + W + '" height="' + H + '" fill="url(#grid)"/>' +
       "<g" + core.fx(p, "d1") + '><circle cx="' + (W * 0.92).toFixed(0) + '" cy="' + (-H * 0.18).toFixed(0) + '" r="' + (R * 0.6).toFixed(0) + '" fill="url(#au1)"/></g>' +
       "<g" + core.fx(p, "d2") + '><circle cx="' + (W * 0.04).toFixed(0) + '" cy="' + (H * 1.18).toFixed(0) + '" r="' + (R * 0.55).toFixed(0) + '" fill="url(#au2)"/></g>' +
-      '<rect width="' + W + '" height="' + H + '" fill="' + p.ink + '" fill-opacity="0.035"/>' +
-      '<rect x="28" y="0.6" width="' + (W - 56) + '" height="1.2" fill="url(#hl)"/>' +
+      (p.native ? "" :
+        '<rect width="' + W + '" height="' + H + '" fill="' + p.ink + '" fill-opacity="0.035"/>' +
+        '<rect x="28" y="0.6" width="' + (W - 56) + '" height="1.2" fill="url(#hl)"/>') +
       '<rect x="0" y="0.5" width="' + Math.round(W * 0.28) + '" height="1.6" fill="url(#hl)"' + core.fx(p, "shine") + "/>" +
       "</g>" +
-      '<rect x="0.75" y="0.75" width="' + (W - 1.5) + '" height="' + (H - 1.5) + '" rx="17.5" fill="none" stroke="url(#edge)" stroke-width="1.5"/>' +
+      // a native-surface card gets GitHub's own 1px border, like the boxes around it; a themed one keeps its glass edge
+      (p.native
+        ? '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="' + (RADIUS(p) - 0.5) + '" fill="none" stroke="' + p.line + '"/>'
+        : '<rect x="0.75" y="0.75" width="' + (W - 1.5) + '" height="' + (H - 1.5) + '" rx="17.5" fill="none" stroke="url(#edge)" stroke-width="1.5"/>') +
       "<g>" + body + "</g></svg>";
   }
 
@@ -301,7 +307,10 @@
     body += title(p, langs.length ? "LANGUAGES" : "TOOLS & TOPICS", langs.length ? "BY NUMBER OF REPOS" : "", W);
     y = 52;
 
-    if (items.length) {
+    if (items.length && o.pie) {
+      var d = donut(items, total, p, W);
+      body += d.svg; y = d.end;
+    } else if (items.length) {
       var barY = 76, x = 28, segs = "";
       items.forEach(function (it) {
         var w = it.frac * inner;
@@ -340,6 +349,35 @@
       y += 36;
     }
     return frame(W, y + 26, "Languages and tools for " + m.login, p, body);
+  }
+
+  /**
+   * The "pie" option in card mode: a donut of repos by language with the total in the middle and a legend beside it,
+   * drawn like the rest of the card instead of GitHub's default Mermaid pie. Returns its markup and the y where it ends.
+   */
+  function donut(items, total, p, W) {
+    var cx = 104, cy = 142, r = 54, sw = 16, C = 2 * Math.PI * r, gap = items.length > 1 ? 3 : 0, at = 0, out = "";
+    out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.07" stroke-width="' + sw + '"/>';
+    items.forEach(function (it) {
+      var len = Math.max(0.5, it.frac * C - gap);
+      out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + it.color + '" stroke-width="' + sw + '" stroke-dasharray="' + len.toFixed(1) + " " + C.toFixed(1) + '" stroke-dashoffset="' + (-at).toFixed(1) + '" transform="rotate(-90 ' + cx + " " + cy + ')"/>';
+      at += it.frac * C;
+    });
+    out = '<g filter="url(#glow)">' + out + "</g>";
+    out += '<text x="' + cx + '" y="' + (cy + 6) + '" text-anchor="middle" font-family="' + SANS + '" font-size="28" font-weight="700" fill="' + p.ink + '">' + esc(fmt(total)) + "</text>";
+    out += '<text x="' + cx + '" y="' + (cy + 26) + '" text-anchor="middle" font-family="' + MONO + '" font-size="11" letter-spacing="1.5" fill="' + p.ink + '" fill-opacity="0.55">' + (total === 1 ? "REPO" : "REPOS") + "</text>";
+    // legend: one row per language, two columns when it gets long, each row with a thin share bar
+    var lx = 210, cols = items.length > 5 ? 2 : 1, colW = (W - 28 - lx) / cols, rows = Math.ceil(items.length / cols);
+    var rowH = 38, top = cy - Math.min(rows, 5) * rowH / 2 + 12;
+    items.forEach(function (it, i) {
+      var x = lx + Math.floor(i / rows) * colW, yy = top + (i % rows) * rowH, bw = colW - 40;
+      out += '<circle cx="' + (x + 6) + '" cy="' + (yy - 5) + '" r="5" fill="' + it.color + '"/>';
+      out += '<text x="' + (x + 20) + '" y="' + yy + '" font-family="' + SANS + '" font-size="16" font-weight="600" fill="' + p.ink + '">' + esc(trunc(it.name, cols > 1 ? 18 : 30)) + "</text>";
+      out += '<text x="' + (x + 20 + bw) + '" y="' + yy + '" text-anchor="end" font-family="' + MONO + '" font-size="14" fill="' + p.ink + '" fill-opacity="0.62">' + it.pct + "%</text>";
+      out += '<rect x="' + (x + 20) + '" y="' + (yy + 9) + '" width="' + bw + '" height="3" rx="1.5" fill="' + p.ink + '" fill-opacity="0.08"/>';
+      out += '<rect x="' + (x + 20) + '" y="' + (yy + 9) + '" width="' + Math.max(3, it.frac * bw).toFixed(1) + '" height="3" rx="1.5" fill="' + it.color + '"/>';
+    });
+    return { svg: out, end: Math.max(cy + r + sw / 2, top + (rows - 1) * rowH + 12) + 26 };
   }
 
   /* ---------- timeline card ---------- */
@@ -644,7 +682,7 @@
     variants.forEach(function (v) {
       var oo = {};
       for (var key in o) oo[key] = o[key];
-      oo.mode = v.mode; oo.suffix = v.suffix;
+      oo.mode = v.mode; oo.suffix = v.suffix; oo.native = !!v.mode;   // each half is shown only on its matching GitHub page
       if (o.banner) files.push({ name: "banner" + v.suffix + ".svg", data: core.buildBanner(m, oo) });
       Array.prototype.push.apply(files, buildCards(m, oo));
     });
