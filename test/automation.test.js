@@ -91,7 +91,7 @@ test("config: flags beat the file; a bad file or wrong type is a clear error; un
 
 test("package: exactly the expected files, safe paths, and a self-contained generator that runs on its own", () => {
   const files = auto.buildAutomationFiles("DevopsNimbus", OPTS, sources()), names = files.map((f) => f.name);
-  assert.deepStrictEqual(names.sort(), [".github/workflows/update-readme.yml", ".readme-patch/README.md", ".readme-patch/cards/../x".replace("/cards/../x", "/cli.js"), ".readme-patch/config.json", ".readme-patch/js/cards.js", ".readme-patch/js/core.js", ".readme-patch/js/github.js", ".readme-patch/js/publish.js", ".readme-patch/package.json"].sort());
+  assert.deepStrictEqual(names.sort(), [".github/workflows/update-readme.yml", ".readme-patch/README.md", ".readme-patch/cards/../x".replace("/cards/../x", "/cli.js"), ".readme-patch/config.json", ".readme-patch/js/cards.js", ".readme-patch/js/core.js", ".readme-patch/js/github.js", ".readme-patch/js/publish.js", ".readme-patch/js/universe.js", ".readme-patch/package.json"].sort());
   names.forEach((n) => assert.ok(!n.startsWith("/") && !n.includes("..") && !n.includes("\\"), n));
   assert.throws(() => auto.buildAutomationFiles("DevopsNimbus", OPTS, Object.assign(sources(), { "js/cards.js": "" })), /Missing generator file: js\/cards\.js/);
   const dir = tmp("self");

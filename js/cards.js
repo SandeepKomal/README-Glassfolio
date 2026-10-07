@@ -5,11 +5,11 @@
  * ReadmeCards.buildCards(model, options) -> [{ name: "cards/stats.svg", data: "<svg…>" }, …]
  */
 (function (root, factory) {
-  var core = (typeof module === "object" && module.exports) ? require("./core.js") : root.ReadmeCore;
-  var api = factory(core);
-  if (typeof module === "object" && module.exports) module.exports = api;
+  var node = typeof module === "object" && module.exports;
+  var api = factory(node ? require("./core.js") : root.ReadmeCore, node ? require("./universe.js") : root.ReadmeUniverse);
+  if (node) module.exports = api;
   else root.ReadmeCards = api;
-})(typeof self !== "undefined" ? self : this, function (core) {
+})(typeof self !== "undefined" ? self : this, function (core, universe) {
   "use strict";
 
   var SANS = "system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -381,6 +381,14 @@
     return { svg: out, end: Math.max(cy + r + sw / 2, top + (rows - 1) * rowH + 12) + 26 };
   }
 
+  /** The 3D contribution universe (universe.js), fed from the same model as the other cards: no extra token or request. */
+  function universeCard(m, o, p) {
+    var repos = m.all.slice().sort(function (a, b) { return b.stars - a.stars; }).map(function (r, i) {
+      return { name: r.name, stars: r.stars || 0, color: r.lang ? langColor(r.lang, i, p) : null };
+    });
+    return universe.buildUniverse({ name: m.name || m.login, login: m.login, weeks: universe.toWeeks(m.activity.daily, m.activity.start), repos: repos }, p, { animate: p.anim });
+  }
+
   /* ---------- timeline card ---------- */
   function timelineCard(m, p) {
     var repos = m.all.filter(function (r) { return r.created; })
@@ -660,6 +668,7 @@
         files.push({ name: "cards/project-" + (i + 1) + ".svg", data: projectCard(m, r, p) });
       });
     }
+    if (core.wantsUniverse(m, o)) files.push({ name: "cards/universe.svg", data: universeCard(m, o, p) });
     if (o.links) {
       core.connectItems(m, o).forEach(function (it) {
         files.push({ name: "cards/connect-" + it.key + ".svg", data: connectCard(m, it, p) });

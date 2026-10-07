@@ -1250,3 +1250,49 @@ test("initials: always something sensible, never empty, and always capitals", ()
   assert.strictEqual(ini("jane doe", "x"), "JD");
   ["DevopsNimbus", "a", "A B", "x-y", "9 lives", "--", "😀"].forEach((n) => assert.match(ini(n, "login"), /^[A-Z0-9]{1,2}$/, n));
 });
+
+/* ---------- 3D contribution universe (ported from Git3D Universe) ---------- */
+test("the universe is opt-in, sits in the stats grid, and gets a light twin like every other card", () => {
+  assert.strictEqual(core.DEFAULTS.universe, false);
+  assert.doesNotMatch(core.buildReadme(core.SAMPLE, {}), /universe\.svg/);
+  const files = cards.buildFiles(core.SAMPLE, { universe: true }), names = files.map((f) => f.name), md = files[0].data;
+  assert.ok(names.includes("cards/universe.svg") && names.includes("cards/universe-light.svg"));
+  const section = md.split("## GitHub stats")[1].split("## Stack")[0];
+  assert.ok(section.indexOf("activity") < section.indexOf("universe"), "under the heatmap");
+  assert.match(section, /universe-light\.svg" alt="Contribution universe for DevopsNimbus" width="100%"/);
+  assert.doesNotMatch(core.buildReadme(core.SAMPLE, { universe: true, cards: false }), /universe/, "text mode has no images");
+  const quiet = Object.assign({}, core.SAMPLE, { activity: null });
+  assert.doesNotMatch(core.buildReadme(quiet, { universe: true }), /universe/, "nothing to draw without activity");
+  assert.match(core.toQuery("x", { universe: true }), /universe=1/);
+  assert.strictEqual(core.fromQuery("?universe=1").opts.universe, true);
+});
+
+test("the universe follows the chosen theme and GitHub's page colours, and stays light and safe", () => {
+  const get = (o, n) => cards.buildFiles(core.SAMPLE, Object.assign({ universe: true }, o)).find((f) => f.name === n).data;
+  const dark = get({ theme: "sunset" }, "cards/universe.svg"), light = get({ theme: "sunset" }, "cards/universe-light.svg");
+  assert.ok(dark.includes(core.THEMES.sunset.a1), "sunset accent in the dark set");
+  assert.ok(dark.includes('stroke="#3d444d"') && dark.includes('stop-color="#0d1117"'), "sits on GitHub's dark page");
+  assert.ok(light.includes('stroke="#d1d9e0"') && light.includes('stop-color="#ffffff"'), "sits on GitHub's light page");
+  assert.ok(!light.includes('fill="#fff" opacity'), "no starfield on the light page");
+  const single = get({ theme: "cyber", adaptive: false }, "cards/universe.svg");
+  assert.ok(single.includes(core.THEMES.cyber.bg1), "a single set keeps the themed background");
+  [dark, light].forEach((svg) => {
+    assert.doesNotMatch(svg, /<script|onload=|javascript:|<foreignObject|<image|href="http/i);
+    assert.ok(svg.length < 200000, "a reasonable size: " + svg.length);
+    assert.match(svg, /prefers-reduced-motion:reduce/);
+    assert.match(svg, /class="u-orbit"/);
+  });
+  const still = get({ animate: false }, "cards/universe.svg");
+  assert.doesNotMatch(still, /<style|class="u-|animation/);
+  assert.match(still, /transform="rotate\(/, "planets keep their places when motion is off");
+});
+
+test("the universe turns the daily counts into Sunday-first weeks and the same numbers as the other cards", () => {
+  const u = require("../js/universe.js");
+  const weeks = u.toWeeks([1, 0, 2, 3, 0, 0, 4, 5], "2026-10-07");          // a Wednesday
+  assert.deepStrictEqual(weeks[0].map((d) => d && d.count), [null, null, null, 1, 0, 2, 3]);
+  assert.strictEqual(weeks[0][3].date, "2026-10-07");
+  const st = u.stats(weeks.map((w) => w.filter(Boolean)));
+  assert.deepStrictEqual([st.total, st.active, st.longest, st.current, st.max], [15, 5, 2, 2, 5]);
+  assert.deepStrictEqual([0, 1, 4, 9, 10].map((c) => u.levelOf(c, 10)), [0, 1, 2, 4, 4]);
+});

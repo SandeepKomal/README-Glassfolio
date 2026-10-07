@@ -23,6 +23,7 @@ index.html        The page
 css/style.css     Glass / neon theme for the page
 js/core.js        Engine: parse input, build the model, write the README and banner (no network, no DOM)
 js/cards.js       Draws the stats, streak, heatmap, languages, timeline, project and connect cards as SVG files
+js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe)
 js/github.js      Fetches profile, repos and activity from the GitHub API
 js/preview.js     Shows the README as a GitHub profile page would (safe, whitelist-based renderer)
 js/publish.js     Commits the README, banner and cards to <user>/<user> in one commit
@@ -107,7 +108,7 @@ Every card is an SVG image file that sits next to `README.md` in your profile re
 
 One fine-grained token covers everything: reading your data, publishing, and adding [daily updates](#keep-the-stats-fresh-every-day). Create it at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new):
 
-**Repository access:** choose *Only select repositories* and pick your profile repository, for example `SandeepKomal/SandeepKomal`.
+**Repository access:** choose *Only select repositories* and pick your profile repository, for example `your-username/your-username`.
 
 **Repository permissions:**
 
@@ -185,6 +186,13 @@ Both layouts can include a banner, stats, streak and heatmap cards, a Languages 
 **Downloads.** The *Files* tab has SVG and PNG buttons on every image, and *Download all as PNG (zip)*. PNGs are 2× size and are always the finished design (an animated SVG would otherwise be caught at its first, faded-out frame). Use PNG where a site won't take SVG, such as LinkedIn, X or Slack.
 
 **Share image.** Under the files there's a 1280×640 picture with your name, title, skills and four headline numbers, ready for LinkedIn, X or a repository's social preview. It always uses your theme, light/dark choice and custom colours, is never animated, and is deliberately kept out of the README package, the zip and the publish commit. From the terminal: `--share-image`.
+
+**3D contribution universe.** Tick *3D contribution universe* (or use `--universe`) to add a full-width card under the heatmap: your contribution calendar as a 3D terrain on a plate, your top repos orbiting it as planets sized by stars and coloured by language, and a panel with totals, streaks and a weekly sparkline. It's ported from Git3D Universe (`SandeepKomal/Git3D-Universe` on GitHub, MIT licence, Copyright (c) 2026 Sandeep Komal Pothu) and reworked to fit this project:
+
+- **No extra token, no extra workflow.** It's drawn from the same data as the other cards, so a fine-grained token isn't required, nothing new is added to `.github/workflows/`, and [daily updates](#keep-the-stats-fresh-every-day) refresh it together with everything else. If you used the standalone Git3D Universe Action before, you can delete its workflow from your profile repo.
+- **Follows your template.** Its colours come from the theme you pick (including Custom colours), and with *Day and night* it gets a light twin on GitHub's white page and a dark one with a starfield on GitHub's dark page, exactly like the other cards.
+- **Respects reduced motion.** The planets orbit with CSS, so visitors who prefer reduced motion see them standing still, and *Subtle motion* off gives a still picture.
+- With a token it covers the past year; without one it shows the last 90 days with bigger cells.
 
 **Recently pushed.** Tick *Recently pushed* (or use `--recent`) to add a card with your five latest pushes, each with its language and date, and a pulsing marker on the newest. It's off by default, works in every layout, and moves with the other sections. With cards switched off it becomes a plain list.
 

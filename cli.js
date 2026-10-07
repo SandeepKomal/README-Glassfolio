@@ -23,6 +23,7 @@ Options:
   --linkedin <text>     LinkedIn username or URL
   --no-banner --no-cards --no-bars --pie --no-timeline --no-projects --no-links
   --recent              Add a "Recently pushed" card (your latest five repos, in any layout)
+  --universe            Add the 3D contribution universe (from Git3D Universe) under the stats
   --no-adaptive         One card set only. By default there are dark and light sets, and GitHub shows the one matching the viewer
   --no-animation        Static cards (no motion)
   --no-heatmap          Leave out the contribution heatmap
@@ -92,6 +93,7 @@ function parseArgs(argv) {
       case "--share-image": o.shareImage = true; break;
       case "--adaptive": o.opts.adaptive = true; break;
       case "--no-adaptive": o.opts.adaptive = false; break;
+      case "--universe": o.opts.universe = true; break;
       case "--no-animation": o.opts.animate = false; break;
       case "--no-heatmap": o.opts.heatmap = false; break;
       case "--no-credit": o.opts.credit = false; break;
