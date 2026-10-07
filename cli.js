@@ -168,6 +168,10 @@ async function main() {
     if (args.sample) throw new Error("--publish needs a real profile, not --sample");
     const res = await publish(files, { token: process.env.GITHUB_TOKEN, owner: model.login, message: "Update profile README (Patch your profile)" });
     console.log("Published " + res.files + " files to " + res.url);
+    if (res.skipped === "daily") {
+      console.error("Daily updates were not added: GITHUB_TOKEN needs the workflow scope (classic) or Workflows: Read and write (fine-grained). Publish again with --daily once it has it.");
+      process.exitCode = 1;
+    }
   }
 }
 
