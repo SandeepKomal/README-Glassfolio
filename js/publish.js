@@ -3,7 +3,7 @@
  * Uses the GitHub API with a token the user pastes in; the token is only sent to api.github.com.
  * Needs a fine-grained token with: Repository access = only <user>/<user>, Contents = Read and write.
  *
- * Browser: ReadmePublish.publish(files, { token, owner })
+ * Browser: ReadmePublish.publish(files, { token, owner, message, messageWithoutDaily })
  * Node:    require("./publish.js").publish(files, { token, owner, fetch })
  */
 (function (root, factory) {
@@ -109,7 +109,9 @@
     return publishAll(files, opts || {}).catch(function (e) {
       var rest = (files || []).filter(function (f) { return !isAutomation(f); });
       if (!(e.status === 403 || e.status === 404 || e.status === 422) || rest.length === (files || []).length || !rest.length) throw e;
-      return publishAll(rest, opts).then(function (result) {
+      var retry = {}; for (var k in opts) retry[k] = opts[k];
+      if (opts.messageWithoutDaily) retry.message = opts.messageWithoutDaily;   // the commit must not claim what it left out
+      return publishAll(rest, retry).then(function (result) {
         result.skipped = "daily";
         return result;
       }, function (e2) {

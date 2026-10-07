@@ -67,8 +67,10 @@ const DAILY = FILES.concat([{ name: ".github/workflows/update-readme.yml", data:
 
 test("a token that can't write workflows still publishes the README and cards, and says daily updates were skipped", async () => {
   const { f, log } = fakeRepo({ noWorkflowScope: true });
-  const res = await publish(DAILY, { token: "tok", owner: "DevopsNimbus", fetch: f });
+  const res = await publish(DAILY, { token: "tok", owner: "DevopsNimbus", fetch: f, message: "README and daily updates", messageWithoutDaily: "README only" });
   assert.strictEqual(res.skipped, "daily");
+  const commits = log.filter((l) => l.method === "POST" && l.path.endsWith("/git/commits")).map((l) => l.body.message);
+  assert.deepStrictEqual(commits, ["README and daily updates", "README only"], "the commit that lands doesn't claim daily updates");
   assert.strictEqual(res.files, 3);
   const trees = log.filter((l) => l.path.endsWith("/git/trees")).map((l) => l.body.tree.map((t) => t.path));
   assert.deepStrictEqual(trees[1], ["README.md", "banner.svg", "cards/stats.svg"], "the retry leaves out the workflow and the generator copy it would run");
