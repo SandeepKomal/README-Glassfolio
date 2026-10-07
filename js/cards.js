@@ -120,7 +120,7 @@
       '<rect x="0" y="0.5" width="' + Math.round(W * 0.28) + '" height="1.6" fill="url(#hl)"' + core.fx(p, "shine") + "/>" +
       "</g>" +
       '<rect x="0.75" y="0.75" width="' + (W - 1.5) + '" height="' + (H - 1.5) + '" rx="17.5" fill="none" stroke="url(#edge)" stroke-width="1.5"/>' +
-      "<g" + core.fx(p, "in") + ">" + body + "</g></svg>";
+      "<g>" + body + "</g></svg>";
   }
 
   /** HUD-style header: glowing status dot, label, right-hand meta, fading rule. */
@@ -166,10 +166,10 @@
   }
 
   /* ---------- streak card ---------- */
-  function ring(p, cx, cy, r, frac, delay) {
+  function ring(p, cx, cy, r, frac) {
     var C = 2 * Math.PI * r, f = Math.max(0, Math.min(1, frac));
     return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + p.ink + '" fill-opacity="0.03" stroke="' + p.ink + '" stroke-opacity="0.09" stroke-width="6"/>' +
-      (f > 0 ? '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="url(#acc)" stroke-width="6" stroke-linecap="round" stroke-dasharray="' + (f * C).toFixed(1) + " " + C.toFixed(1) + '" transform="rotate(-90 ' + cx + " " + cy + ')" filter="url(#glow)"' + core.fx(p, "ring", delay) + "/>" : "");
+      (f > 0 ? '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="url(#acc)" stroke-width="6" stroke-linecap="round" stroke-dasharray="' + (f * C).toFixed(1) + " " + C.toFixed(1) + '" transform="rotate(-90 ' + cx + " " + cy + ')" filter="url(#glow)"/>' : "");
   }
 
   function streakCard(m, p) {
@@ -184,7 +184,7 @@
     ];
     cols.forEach(function (c, i) {
       var cx = (28 + 364 / 3 * (i + 0.5)).toFixed(1), cy = 102;
-      body += ring(p, cx, cy, 30, c.frac, i * 0.15);
+      body += ring(p, cx, cy, 30, c.frac);
       body += '<text x="' + cx + '" y="' + (cy + 9) + '" text-anchor="middle" font-family="' + SANS + '" font-size="26" font-weight="700" fill="' + p.ink + '">' + esc(fmt(c.v)) + "</text>";
       body += '<text x="' + cx + '" y="160" text-anchor="middle" font-family="' + SANS + '" font-size="14" fill="' + p.ink + '" fill-opacity="0.62">' + c.label + "</text>";
     });
@@ -194,7 +194,7 @@
       var total = n * bw + (n - 1) * gap, x0 = 28 + (364 - total) / 2, bars = "";
       weeks.forEach(function (w, i) {
         var h = w ? Math.max(4, w / max * 24) : 2;
-        bars += '<rect x="' + (x0 + i * (bw + gap)).toFixed(1) + '" y="' + (204 - h).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2" fill="' + (w ? "url(#accv)" : p.ink) + '" fill-opacity="' + (w ? 0.95 : 0.1) + '"' + core.fx(p, "bar", (0.4 + i * 0.03).toFixed(2)) + "/>";
+        bars += '<rect x="' + (x0 + i * (bw + gap)).toFixed(1) + '" y="' + (204 - h).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2" fill="' + (w ? "url(#accv)" : p.ink) + '" fill-opacity="' + (w ? 0.95 : 0.1) + '"/>';
       });
       body += '<g filter="url(#glow)">' + bars + "</g>";
     }
@@ -245,7 +245,7 @@
       var lv = level(v);
       (columns[col] = columns[col] || []).push('<rect x="' + (x0 + col * (cell + gap)).toFixed(1) + '" y="' + (y0 + row * (cell + gap)).toFixed(1) + '" width="' + cell.toFixed(1) + '" height="' + cell.toFixed(1) + '" rx="' + (cell > 16 ? 5 : 2.5) + '" fill="' + (lv ? p.a1 : p.ink) + '" fill-opacity="' + OPACITY[lv] + '"/>');
     }
-    columns.forEach(function (g, ci) { body += "<g" + core.fx(p, "cell", (0.2 + ci * 0.012).toFixed(3)) + ">" + g.join("") + "</g>"; });
+    columns.forEach(function (g, ci) { body += "<g>" + g.join("") + "</g>"; });
 
     // legend
     var legendY = y0 + gh + 26, lx = wide ? W - 28 - (5 * 18 + 76) : x0;
@@ -361,8 +361,8 @@
     // userSpaceOnUse: a gradient on a perfectly horizontal line has a zero-height bounding box and would not render
     body += '<defs><linearGradient id="tl" gradientUnits="userSpaceOnUse" x1="' + lx1 + '" y1="' + cy + '" x2="' + lx2 + '" y2="' + cy + '"><stop offset="0" stop-color="' + p.a1 + '"/><stop offset="1" stop-color="' + p.a2 + '"/></linearGradient></defs>';
     // filters also use the bounding box, so the glow is built from a wide soft line instead
-    body += '<line x1="' + lx1 + '" y1="' + cy + '" x2="' + lx2 + '" y2="' + cy + '" stroke="url(#tl)" stroke-opacity="0.28" stroke-width="9" stroke-linecap="round" pathLength="1"' + core.fx(p, "draw") + "/>";
-    body += '<line x1="' + lx1 + '" y1="' + cy + '" x2="' + lx2 + '" y2="' + cy + '" stroke="url(#tl)" stroke-width="2.5" stroke-linecap="round" pathLength="1"' + core.fx(p, "draw") + "/>";
+    body += '<line x1="' + lx1 + '" y1="' + cy + '" x2="' + lx2 + '" y2="' + cy + '" stroke="url(#tl)" stroke-opacity="0.28" stroke-width="9" stroke-linecap="round"/>';
+    body += '<line x1="' + lx1 + '" y1="' + cy + '" x2="' + lx2 + '" y2="' + cy + '" stroke="url(#tl)" stroke-width="2.5" stroke-linecap="round"/>';
     nodes.forEach(function (n, i) {
       var x = (single ? W / 2 : left + i * step).toFixed(1), above = i % 2 === 0;
       var sy1 = above ? cy - 34 : cy + 13, sy2 = above ? cy - 13 : cy + 34;
@@ -395,12 +395,12 @@
   function changelogCard(m, p) {
     var years = core.changelogData(m);
     if (!years.length) return null;
-    var W = 860, cursor = 84, firstDot = null, lastDot = 0, blocks = "", row = 0;
+    var W = 860, cursor = 84, firstDot = null, lastDot = 0, blocks = "";
     years.forEach(function (yr) {
       var dotY = cursor;
       if (firstDot === null) firstDot = dotY;
       lastDot = dotY;
-      blocks += "<g" + core.fx(p, "cell", (row++ * 0.08).toFixed(2)) + ">" +
+      blocks += "<g>" +
         '<circle cx="44" cy="' + dotY + '" r="12" fill="' + p.a1 + '" fill-opacity="0.16"/>' +
         '<circle cx="44" cy="' + dotY + '" r="6.5" fill="' + p.a1 + '" stroke="' + p.bg1 + '" stroke-width="2.5" filter="url(#glow)"/>' +
         '<text x="72" y="' + (dotY + 8) + '" font-family="' + SANS + '" font-size="25" font-weight="700" letter-spacing="-0.5" fill="' + p.ink + '">' + esc(yr.year) + "</text>" +
@@ -409,7 +409,7 @@
       yr.entries.slice(0, CHANGELOG_PER_YEAR).forEach(function (r) {
         var cy = cursor, name = trunc(r.name, 48);
         var desc = trunc(r.desc || (r.topics && r.topics.length ? r.topics.join(" · ") : ""), 160);
-        blocks += "<g" + core.fx(p, "cell", (row++ * 0.08).toFixed(2)) + ">" +
+        blocks += "<g>" +
           '<rect x="72" y="' + (cy - 11) + '" width="62" height="22" rx="11" fill="' + p.a1 + '" fill-opacity="0.12" stroke="' + p.a1 + '" stroke-opacity="0.5"/>' +
           '<text x="103" y="' + (cy + 4) + '" text-anchor="middle" font-family="' + MONO + '" font-size="10.5" font-weight="700" letter-spacing="1.4" fill="' + p.a1 + '">ADDED</text>' +
           (r.lang ? '<circle cx="152" cy="' + cy + '" r="4.5" fill="' + (LANG_COLORS[r.lang] || p.a2) + '" filter="url(#glow)"/>' : "") +
@@ -422,7 +422,7 @@
       });
       var more = yr.entries.length - CHANGELOG_PER_YEAR;
       if (more > 0) {
-        blocks += "<g" + core.fx(p, "cell", (row++ * 0.08).toFixed(2)) + '><text x="166" y="' + (cursor + 4) + '" font-family="' + MONO + '" font-size="13" fill="' + p.ink + '" fill-opacity="0.5">+' + more + " more</text></g>";
+        blocks += '<g><text x="166" y="' + (cursor + 4) + '" font-family="' + MONO + '" font-size="13" fill="' + p.ink + '" fill-opacity="0.5">+' + more + " more</text></g>";
         cursor += 30;
       }
       cursor += 20;
@@ -433,8 +433,8 @@
     body += '<line x1="44" y1="' + firstDot + '" x2="44" y2="' + (H - 18) + '" stroke="' + p.ink + '" stroke-opacity="0.14" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>';
     if (lastDot > firstDot) {
       body += '<defs><linearGradient id="rail" gradientUnits="userSpaceOnUse" x1="44" y1="' + firstDot + '" x2="44" y2="' + lastDot + '"><stop offset="0" stop-color="' + p.a1 + '"/><stop offset="1" stop-color="' + p.a2 + '"/></linearGradient></defs>';
-      body += '<line x1="44" y1="' + firstDot + '" x2="44" y2="' + lastDot + '" stroke="url(#rail)" stroke-opacity="0.28" stroke-width="9" stroke-linecap="round" pathLength="1"' + core.fx(p, "draw") + "/>";
-      body += '<line x1="44" y1="' + firstDot + '" x2="44" y2="' + lastDot + '" stroke="url(#rail)" stroke-width="2.5" stroke-linecap="round" pathLength="1"' + core.fx(p, "draw") + "/>";
+      body += '<line x1="44" y1="' + firstDot + '" x2="44" y2="' + lastDot + '" stroke="url(#rail)" stroke-opacity="0.28" stroke-width="9" stroke-linecap="round"/>';
+      body += '<line x1="44" y1="' + firstDot + '" x2="44" y2="' + lastDot + '" stroke="url(#rail)" stroke-width="2.5" stroke-linecap="round"/>';
     }
     return frame(W, H, "Changelog of repositories created by " + m.login, p, body + blocks);
   }
@@ -446,7 +446,7 @@
     var W = 860, y0 = 86, step = 50, body = title(p, "RECENTLY PUSHED", "LATEST " + repos.length, W);
     repos.forEach(function (r, i) {
       var cy = y0 + i * step + 18, first = i === 0;
-      body += "<g" + core.fx(p, "cell", (0.1 + i * 0.1).toFixed(2)) + ">";
+      body += "<g>";
       if (first) body += '<circle cx="44" cy="' + cy + '" r="12" fill="' + p.a1 + '" fill-opacity="0.18"' + core.fx(p, "pulse") + "/>";
       body += '<circle cx="44" cy="' + cy + '" r="' + (first ? 6.5 : 4.5) + '" fill="' + (first ? p.a1 : p.ink) + '" fill-opacity="' + (first ? 1 : 0.3) + '"' + (first ? ' stroke="' + p.bg1 + '" stroke-width="2.5" filter="url(#glow)"' : "") + "/>";
       body += '<g mask="url(#rmask)"><text x="72" y="' + (cy + 6) + '" font-family="' + SANS + '" font-size="18" font-weight="700" fill="' + p.ink + '">' + esc(trunc(r.name, 60)) + "</text></g>";

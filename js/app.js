@@ -420,6 +420,9 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   }
 
+  /** One token serves both jobs: whichever box it was pasted into, reading and publishing use it. */
+  function token(first, second) { return $(first).value.trim() || $(second).value.trim(); }
+
   /* ---------- events ---------- */
   $("#ask").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -428,7 +431,7 @@
     var go = $("#go"); go.disabled = true; say("Reading public data for " + u + "…");
     showTab("profile");
     showSkeleton();
-    gh.fetchProfile(u, { token: $("#token").value.trim() })
+    gh.fetchProfile(u, { token: token("#token", "#pubToken") })
       .then(function (model) {
         setModel(model, u);
         say("Done. Your profile is below. Adjust the options on the left to change it.");
@@ -532,7 +535,10 @@
   $("#pub").addEventListener("click", function () {
     var panel = $("#publish");
     panel.hidden = !panel.hidden;
-    if (!panel.hidden) $("#pubToken").focus();
+    if (panel.hidden) return;
+    var reuse = !!$("#token").value.trim();
+    $("#pubToken").placeholder = reuse ? "Using the token you added above" : "github_pat_…";
+    if (!reuse) $("#pubToken").focus();
   });
   $("#pubGo").addEventListener("click", function () {
     var msg = $("#pubMsg"), btn = $("#pubGo"), daily = $("#o-daily").checked && dailyAvailable();
@@ -541,7 +547,7 @@
     packageFiles().then(function (files) {
       msg.textContent = "Publishing " + files.length + (files.length === 1 ? " file…" : " files…");
       return window.ReadmePublish.publish(files, {
-        token: $("#pubToken").value.trim(), owner: state.model.login, message: daily ? "Update profile README and add daily updates (Patch your profile)" : "Update profile README (Patch your profile)"
+        token: token("#pubToken", "#token"), owner: state.model.login, message: daily ? "Update profile README and add daily updates (Patch your profile)" : "Update profile README (Patch your profile)"
       });
     }).then(function (res) {
       $("#pubToken").value = "";
