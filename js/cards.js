@@ -669,6 +669,7 @@
       });
     }
     if (core.wantsUniverse(m, o)) files.push({ name: "cards/universe.svg", data: universeCard(m, o, p) });
+    if (o.wave) files.push({ name: "cards/footer.svg", data: core.buildWaveFooter(m, o) });
     if (o.links) {
       core.connectItems(m, o).forEach(function (it) {
         files.push({ name: "cards/connect-" + it.key + ".svg", data: connectCard(m, it, p) });
