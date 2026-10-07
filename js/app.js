@@ -5,7 +5,7 @@
   var $ = function (s) { return document.querySelector(s); };
   var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [] };
 
-  var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links" };
+  var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe" };
   var TEXTS = { style: "#style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
   var STORE_KEY = "patch-your-profile.v1";
 

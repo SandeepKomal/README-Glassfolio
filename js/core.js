@@ -280,7 +280,7 @@
    * A link like ?user=DevopsNimbus&theme=cyber reopens the tool with the same choices, so people can share their setup. */
   var SHARE_TEXT = ["role", "tagline", "stack", "linkedin"];
   var SHARE_ACCENTS = ["accent1", "accent2"];
-  var SHARE_FLAGS = ["adaptive", "animate", "heatmap", "credit", "banner", "cards", "bars", "pie", "timeline", "proj", "recent", "links"];
+  var SHARE_FLAGS = ["adaptive", "animate", "heatmap", "credit", "banner", "cards", "bars", "pie", "timeline", "proj", "recent", "links", "universe"];
 
   /** Only values that differ from the defaults go into the link, so links stay short. */
   function toQuery(user, options) {
@@ -344,7 +344,7 @@
 
   var DEFAULTS = {
     style: "showcase", theme: "auto", accent1: "", accent2: "", order: "", featured: "", adaptive: true, mode: "", suffix: "", animate: true, heatmap: true, credit: true, siteUrl: "", tagline: "", role: "", stack: "", linkedin: "",
-    banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true
+    banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true, universe: false
   };
   function withDefaults(o) {
     var out = {}, k;
@@ -482,6 +482,8 @@
   }
   /** Which of the two new cards the README includes. */
   function wantsChangelog(m, o) { return !!(o.cards && o.proj && o.style === "changelog" && changelogData(m).length); }
+  /** The 3D contribution universe: opt-in, card mode only, and only when there is activity to draw. */
+  function wantsUniverse(m, o) { return !!(o.cards && o.universe && m.activity && m.activity.daily && m.activity.daily.length); }
   function wantsRecent(m, o) { return !!(o.cards && o.recent && m.recent && m.recent.length); }
 
   var MAX_PROJECT_CARDS = 6;
@@ -529,6 +531,7 @@
     var grid = [pic(o, "cards/stats.svg", 'alt="GitHub stats for ' + esc(m.login) + '" width="' + HALF + '"')];
     if (two) grid.push(pic(o, "cards/streak.svg", 'alt="Contribution streak for ' + esc(m.login) + '" width="' + HALF + '"'));
     if (heat) grid.push(pic(o, "cards/activity.svg", 'alt="Contribution heatmap for ' + esc(m.login) + '" width="100%"'));
+    if (wantsUniverse(m, o)) grid.push(pic(o, "cards/universe.svg", 'alt="Contribution universe for ' + esc(m.login) + '" width="100%"'));
     out.push(grid.join("\n"), "");
     out.push("</div>", "");
     return out;
@@ -739,6 +742,6 @@
     palette: palette, streaks: streaks, weeklyCounts: weeklyCounts, daysFromEvents: daysFromEvents,
     makeActivity: makeActivity, MAX_PROJECT_CARDS: MAX_PROJECT_CARDS, toolList: toolList, connectItems: connectItems, designation: designation,
     THEMES: THEMES, THEME_ORDER: THEME_ORDER, fxStyle: fxStyle, fx: fx,
-    toQuery: toQuery, fromQuery: fromQuery, contrast: contrast, tips: tips, changelogData: changelogData, wantsChangelog: wantsChangelog, wantsRecent: wantsRecent, hash: hash, initials: initials, subtitle: subtitle, chipNames: chipNames, paletteFor: paletteFor, pickProjects: pickProjects, sectionOrder: sectionOrder, SECTIONS: SECTIONS, validHex: validHex
+    toQuery: toQuery, fromQuery: fromQuery, contrast: contrast, tips: tips, changelogData: changelogData, wantsChangelog: wantsChangelog, wantsRecent: wantsRecent, wantsUniverse: wantsUniverse, hash: hash, initials: initials, subtitle: subtitle, chipNames: chipNames, paletteFor: paletteFor, mixHex: mixHex, pickProjects: pickProjects, sectionOrder: sectionOrder, SECTIONS: SECTIONS, validHex: validHex
   };
 });
