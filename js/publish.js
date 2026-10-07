@@ -22,7 +22,7 @@
 
   function explain(status, data) {
     if (status === 401) return "GitHub rejected the token. Check it was copied fully and hasn't expired.";
-    if (status === 403) return "The token can't write to this repository. Give it Contents: Read and write access to your profile repo.";
+    if (status === 403) return "The token can't write to this repository. Give it Contents: Read and write access to your profile repo. (A read-only token, like one made just for Exact data, can't publish.)";
     if (status === 422 && data && data.message) return "GitHub refused the change: " + data.message;
     return "GitHub answered with status " + status + (data && data.message ? ": " + data.message : "") + ".";
   }
@@ -52,7 +52,7 @@
     }, Promise.resolve()).then(function () { return { mode: "contents", commits: files.length }; });
   }
 
-  function publish(files, opts) {
+  function publishAll(files, opts) {
     opts = opts || {};
     if (!opts.token) return Promise.reject(new Error("Paste a GitHub token first."));
     if (!files || !files.length) return Promise.reject(new Error("Nothing to publish yet. Generate a README first."));
@@ -94,13 +94,28 @@
       result.url = "https://github.com/" + owner;
       result.files = files.length;
       return result;
-    }).catch(function (e) {
-      // GitHub refuses workflow files unless the token may write workflows, and says so unhelpfully (often as "Not Found")
-      var hasWorkflow = files.some(function (f) { return /^\.github\/workflows\//.test(f.name); });
-      if (hasWorkflow && (e.status === 403 || e.status === 404 || e.status === 422)) {
-        e.message += " This update includes the daily-update workflow, which GitHub only accepts from a token allowed to write workflows: tick the \"workflow\" scope on a classic token, or set Workflows to \"Read and write\" on a fine-grained one. Nothing was changed. You can also publish again with daily updates switched off.";
-      }
-      throw e;
+    });
+  }
+
+  /** Daily-update files: the workflow, plus the generator copy it runs, which is useless without it. */
+  function isAutomation(f) { return /^\.github\/workflows\//.test(f.name) || /^\.readme-patch\//.test(f.name); }
+
+  /**
+   * GitHub refuses workflow files unless the token may write workflows, and says so unhelpfully (often as "Not Found").
+   * Rather than lose the whole update over that, the README and images go out on their own and the result says
+   * daily updates were skipped (result.skipped === "daily"). If even that is refused, the token can't write at all.
+   */
+  function publish(files, opts) {
+    return publishAll(files, opts || {}).catch(function (e) {
+      var rest = (files || []).filter(function (f) { return !isAutomation(f); });
+      if (!(e.status === 403 || e.status === 404 || e.status === 422) || rest.length === (files || []).length || !rest.length) throw e;
+      return publishAll(rest, opts).then(function (result) {
+        result.skipped = "daily";
+        return result;
+      }, function (e2) {
+        if (e2.status === 404 || e2.status === 403) e2.message = explain(403);
+        throw e2;
+      });
     });
   }
 

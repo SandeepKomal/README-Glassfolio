@@ -4,8 +4,9 @@ const assert = require("node:assert");
 const { publish, b64 } = require("../js/publish.js");
 
 /* ---------- publishing ---------- */
-function fakeRepo({ me = "DevopsNimbus", repo = true, empty = false, failBlob = false } = {}) {
+function fakeRepo({ me = "DevopsNimbus", repo = true, empty = false, failBlob = false, noWorkflowScope = false, readOnly = false } = {}) {
   const log = [];
+  let lastTree = [];
   const f = async (url, init) => {
     const method = init.method || "GET", path = url.replace("https://api.github.com", "");
     const body = init.body ? JSON.parse(init.body) : null;
@@ -17,9 +18,13 @@ function fakeRepo({ me = "DevopsNimbus", repo = true, empty = false, failBlob = 
     if (path === "/repos/DevopsNimbus/DevopsNimbus/git/ref/heads/main") return empty ? err(409, "Git Repository is empty.") : ok({ object: { sha: "c0" } });
     if (path === "/repos/DevopsNimbus/DevopsNimbus/git/commits/c0") return ok({ tree: { sha: "t0" } });
     if (path === "/repos/DevopsNimbus/DevopsNimbus/git/blobs") return failBlob ? err(403, "Resource not accessible") : ok({ sha: "b-" + body.content.length }, 201);
-    if (path === "/repos/DevopsNimbus/DevopsNimbus/git/trees") return ok({ sha: "t1" }, 201);
+    if (path === "/repos/DevopsNimbus/DevopsNimbus/git/trees") { lastTree = body.tree.map((t) => t.path); return ok({ sha: "t1" }, 201); }
     if (path === "/repos/DevopsNimbus/DevopsNimbus/git/commits") return ok({ sha: "c1" }, 201);
-    if (path === "/repos/DevopsNimbus/DevopsNimbus/git/refs/heads/main") return ok({});
+    if (path === "/repos/DevopsNimbus/DevopsNimbus/git/refs/heads/main") {
+      // what GitHub does: a token without workflow permission gets a bare "Not Found" when the commit touches a workflow
+      if (readOnly || (noWorkflowScope && lastTree.some((p) => p.startsWith(".github/workflows/")))) return err(404, "Not Found");
+      return ok({});
+    }
     if (path.startsWith("/repos/DevopsNimbus/DevopsNimbus/contents/")) return ok({}, 201);
     return err(500, "unexpected " + method + " " + path);
   };
@@ -56,6 +61,24 @@ test("publish refuses someone else's profile and explains missing repos and perm
   await assert.rejects(publish(FILES, { token: "t", owner: "DevopsNimbus", fetch: fakeRepo({ failBlob: true }).f }), /Contents: Read and write/);
   await assert.rejects(publish(FILES, { owner: "DevopsNimbus", fetch: fakeRepo().f }), /Paste a GitHub token/);
   await assert.rejects(publish([], { token: "t", owner: "DevopsNimbus", fetch: fakeRepo().f }), /Generate a README first/);
+});
+
+const DAILY = FILES.concat([{ name: ".github/workflows/update-readme.yml", data: "on: push" }, { name: ".readme-patch/config.json", data: "{}" }]);
+
+test("a token that can't write workflows still publishes the README and cards, and says daily updates were skipped", async () => {
+  const { f, log } = fakeRepo({ noWorkflowScope: true });
+  const res = await publish(DAILY, { token: "tok", owner: "DevopsNimbus", fetch: f });
+  assert.strictEqual(res.skipped, "daily");
+  assert.strictEqual(res.files, 3);
+  const trees = log.filter((l) => l.path.endsWith("/git/trees")).map((l) => l.body.tree.map((t) => t.path));
+  assert.deepStrictEqual(trees[1], ["README.md", "banner.svg", "cards/stats.svg"], "the retry leaves out the workflow and the generator copy it would run");
+  const plain = await publish(DAILY, { token: "tok", owner: "DevopsNimbus", fetch: fakeRepo().f });
+  assert.strictEqual(plain.skipped, undefined, "nothing is skipped when the token is allowed");
+});
+
+test("a read-only token is told it can't write at all, instead of blaming the workflow", async () => {
+  await assert.rejects(publish(DAILY, { token: "t", owner: "DevopsNimbus", fetch: fakeRepo({ readOnly: true }).f }), /can't write to this repository[\s\S]*read-only token/);
+  await assert.rejects(publish(FILES, { token: "t", owner: "DevopsNimbus", fetch: fakeRepo({ readOnly: true }).f }), /Not Found/, "without daily files the error is passed on as is");
 });
 
 test("b64 encodes UTF-8 correctly", () => {

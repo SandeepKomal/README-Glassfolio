@@ -292,21 +292,14 @@ test("publishing the daily-update files: one commit with everything, workflow in
   assert.ok(f.log.trees[0].includes(".github/workflows/update-readme.yml") && f.log.trees[0].includes(".readme-patch/cli.js") && f.log.trees[0].includes(".readme-patch/config.json"));
 });
 
-test("a token that may not write workflows: nothing is published, and the message says what to change", async () => {
+test("a token that may not write workflows: the README and cards still go out, and daily updates are reported as skipped", async () => {
   const f = fakeGit({ refuseWorkflows: true });
-  await assert.rejects(publish(PACKAGE(), { token: "t", owner: "DevopsNimbus", fetch: f }), (e) => {
-    assert.match(e.message, /workflow/);
-    assert.match(e.message, /classic token/); assert.match(e.message, /fine-grained/);
-    assert.match(e.message, /Nothing was changed/);
-    assert.match(e.message, /switched off/);
-    return true;
-  });
-  assert.strictEqual(f.log.refUpdates, 0, "the branch was never moved: no half-published profile");
-  assert.strictEqual(f.log.commits.length, 0);
-  // without the workflow the same token works, so "publish again with daily updates off" is real advice
-  const again = fakeGit({ refuseWorkflows: true });
-  await publish(cards.buildFiles(core.SAMPLE, {}), { token: "t", owner: "DevopsNimbus", fetch: again });
-  assert.strictEqual(again.log.refUpdates, 1);
+  const res = await publish(PACKAGE(), { token: "t", owner: "DevopsNimbus", fetch: f });
+  assert.strictEqual(res.skipped, "daily");
+  assert.strictEqual(f.log.refUpdates, 1, "one commit lands: the profile is updated, never half-published");
+  const landed = f.log.trees[f.log.trees.length - 1];
+  assert.ok(landed.includes("README.md"));
+  assert.ok(!landed.some((p) => p.startsWith(".github/") || p.startsWith(".readme-patch/")), "no generator copy without the workflow that runs it");
 });
 
 test("the workflow message only appears when a workflow was actually part of the update", async () => {
@@ -340,7 +333,7 @@ test("the CLI's --daily --publish sends the same single commit, and explains a r
     assert.ok(fs.existsSync(path.join(out, ".github", "workflows", "update-readme.yml")), "also written locally next to the README");
     assert.ok(fs.existsSync(path.join(out, ".readme-patch", "config.json")));
     assert.strictEqual(git.log.refUpdates, 1);
-    // a refusing token: exit 1, a helpful message, nothing moved
+    // a token that can't write workflows: the README still lands, exit 1 and a clear message about daily updates
     const before = git.log.refUpdates; const refuse = fakeGit({ refuseWorkflows: true });
     git.log.trees.length = 0; git.log.commits.length = 0;
     const refusing = http.createServer((req, res) => { let raw = ""; req.on("data", (d) => { raw += d; }); req.on("end", async () => { const p = new URL(req.url, "http://x").pathname; const send = (c, b) => { res.writeHead(c, { "Content-Type": "application/json" }); res.end(JSON.stringify(b)); };
@@ -349,9 +342,10 @@ test("the CLI's --daily --publish sends the same single commit, and explains a r
     await new Promise((r) => refusing.listen(0, "127.0.0.1", r));
     try {
       const bad = await sh(["node", JSON.stringify(path.join(ROOT, "cli.js")), "DevopsNimbus", "--daily", "--publish", "--out", JSON.stringify(tmp("clibad"))].join(" "), ROOT, Object.assign({}, env, { GITHUB_API_URL: "http://127.0.0.1:" + refusing.address().port }));
-      assert.strictEqual(bad.status, 1);
-      assert.match(bad.stderr, /workflow/); assert.match(bad.stderr, /Nothing was changed/);
-      assert.strictEqual(refuse.log.refUpdates, 0);
+      assert.strictEqual(bad.status, 1, "--daily was asked for and not done");
+      assert.match(bad.stdout, /Published \d+ files/);
+      assert.match(bad.stderr, /Daily updates were not added/); assert.match(bad.stderr, /workflow/);
+      assert.strictEqual(refuse.log.refUpdates, 1);
     } finally { refusing.close(); }
     assert.strictEqual(before, 1);
   } finally { server.close(); }
