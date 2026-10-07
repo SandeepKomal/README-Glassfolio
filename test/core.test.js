@@ -58,10 +58,10 @@ test("banner escapes markup in names and bios", () => {
 });
 
 test("banner is deterministic per username and differs between users", () => {
-  const a = core.buildBanner(core.SAMPLE, {});
-  assert.strictEqual(a, core.buildBanner(core.SAMPLE, {}));
+  const a = core.buildBanner(core.SAMPLE, { wave: false });
+  assert.strictEqual(a, core.buildBanner(core.SAMPLE, { wave: false }));
   const other = core.buildModel({ login: "someone-else", name: "Someone Else", created_at: "2024-01-01T00:00:00Z" }, []);
-  const b = core.buildBanner(other, {});
+  const b = core.buildBanner(other, { wave: false });
   const orbit = (svg) => (svg.match(/<circle cx="[\d.]+" cy="[\d.]+" r="[\d.]+" fill="#[0-9a-f]{6}" filter="url\(#glow\)"\/>/g) || []).join("");
   assert.notStrictEqual(orbit(a), orbit(b));
   assert.match(a, />DN</);          // initials in the core
@@ -513,7 +513,7 @@ test("text hero puts the designation directly under the name", () => {
 });
 
 test("banner shows the designation right after the name, with location in the handle line", () => {
-  const svg = core.buildBanner(core.SAMPLE, { role: "Platform Engineer" });
+  const svg = core.buildBanner(core.SAMPLE, { role: "Platform Engineer", wave: false });
   const name = svg.indexOf(">DevopsNimbus<"), des = svg.indexOf(">Platform Engineer at Northwind<");
   assert.ok(name > 0 && des > name);
   assert.match(svg, /@DEVOPSNIMBUS · REMOTE · SINCE 2019/);
@@ -521,8 +521,8 @@ test("banner shows the designation right after the name, with location in the ha
 });
 
 test("a tagline becomes a smaller second line under the designation, and the chips move down", () => {
-  const without = core.buildBanner(core.SAMPLE, { role: "Platform Engineer" });
-  const withTag = core.buildBanner(core.SAMPLE, { role: "Platform Engineer", tagline: "I keep the pagers quiet" });
+  const without = core.buildBanner(core.SAMPLE, { role: "Platform Engineer", wave: false });
+  const withTag = core.buildBanner(core.SAMPLE, { role: "Platform Engineer", tagline: "I keep the pagers quiet", wave: false });
   assert.ok(withTag.includes(">I keep the pagers quiet<"));
   assert.ok(without.includes('y="228"') && withTag.includes('y="252"'));
   const md = core.buildReadme(core.SAMPLE, { banner: false, role: "Platform Engineer", tagline: "I keep the pagers quiet" });
@@ -536,9 +536,12 @@ test("without a job title, the tagline (then location) takes the designation slo
 });
 
 test("long designations are shortened in the banner and escaped", () => {
-  const svg = core.buildBanner(core.SAMPLE, { role: "<Head of> " + "Platform ".repeat(12) });
-  assert.match(svg, /&lt;Head of&gt;/);
-  assert.match(svg, /…</);
+  ["orbit", "wave"].forEach((style) => {
+    const svg = core.buildBanner(core.SAMPLE, { role: "<Head of> " + "Platform ".repeat(12), wave: style === "wave" });
+    assert.match(svg, /&lt;Head of&gt;/, style);
+    // the orbit banner cuts it short; the wave banner first shrinks the line to its smallest size
+    assert.match(svg, style === "orbit" ? /…</ : /font-size="14"[^>]*>&lt;Head of&gt;/, style);
+  });
 });
 
 test("project card footer shortens itself instead of colliding with a long language name", () => {
@@ -603,7 +606,8 @@ test("auto theme follows the username and a fixed theme ignores it", () => {
 
 test("the chosen theme reaches the banner and every card", () => {
   const pal = core.palette("DevopsNimbus", "sunset");
-  const all = [core.buildBanner(core.SAMPLE, { theme: "sunset" })].concat(cards.buildCards(core.SAMPLE, { theme: "sunset" }).map((f) => f.data));
+  // the orbit banner and every card carry the theme's own colours (the wave pieces darken them for white text: tested with the wave)
+  const all = [core.buildBanner(core.SAMPLE, { theme: "sunset", wave: false })].concat(cards.buildCards(core.SAMPLE, { theme: "sunset", wave: false }).map((f) => f.data));
   all.forEach((svg, i) => { assert.ok(svg.includes(pal.a1) && svg.includes(pal.bg1), "file " + i + " is not themed"); });
   const paper = cards.buildCards(core.SAMPLE, { theme: "paper" }).map((f) => f.data).join("");
   assert.ok(paper.includes('fill="#0f172a"'), "paper uses dark text");
@@ -612,7 +616,7 @@ test("the chosen theme reaches the banner and every card", () => {
 
 /* ---------- motion ---------- */
 test("motion is on by default, switchable off, and never changes the still design", () => {
-  const strip = (svg) => svg.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/ class="fx-[a-z0-9]+"/g, "").replace(/ style="[^"]*"/g, "");
+  const strip = (svg) => svg.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/ class="(?:fx|wv|u)-[a-z0-9]+"/g, "").replace(/ style="[^"]*"/g, "");
   const files = (animate) => [core.buildBanner(core.SAMPLE, { animate })].concat(cards.buildCards(core.SAMPLE, { animate }).map((f) => f.data));
   const on = files(true), off = files(false);
   on.forEach((svg, i) => {
@@ -628,7 +632,8 @@ test("motion never hides content: only ambient loops, no entrance effects that r
   assert.doesNotMatch(css, /opacity:0[;}]|scaleY\(0\)|stroke-dasharray:0|stroke-dashoffset/, "no fade-in, grow-in or draw-in start states");
   [...css.matchAll(/\.fx-[a-z0-9]+\{[^}]*\}/g)].forEach(([rule]) => assert.match(rule, /infinite/, rule + " must be an ambient loop"));
   const all = [core.buildBanner(core.SAMPLE, {})].concat(cards.buildCards(core.SAMPLE, {}).map((f) => f.data));
-  all.forEach((svg) => assert.doesNotMatch(svg, /animation-delay/, "nothing waits before it appears"));
+  // a negative delay only sets where a loop starts (the universe's planets); a positive one would hold content back
+  all.forEach((svg) => assert.doesNotMatch(svg, /animation-delay:(?!-)/, "nothing waits before it appears"));
 });
 
 test("animated files stay light and contain nothing that could run code", () => {
@@ -779,7 +784,7 @@ test("buildFiles returns README, banner and cards; adaptive doubles the images a
 });
 
 test("the light set is genuinely light and the dark set genuinely dark", () => {
-  const dual = cards.buildFiles(core.SAMPLE, { adaptive: true, theme: "cyber" });
+  const dual = cards.buildFiles(core.SAMPLE, { adaptive: true, theme: "cyber", wave: false });
   const get = (n) => dual.find((f) => f.name === n).data;
   // each half sits on GitHub's own page colour, with GitHub's border, and keeps the theme's accents
   ["banner.svg", "cards/stats.svg"].forEach((n) => {
@@ -789,10 +794,10 @@ test("the light set is genuinely light and the dark set genuinely dark", () => {
   ["banner-light.svg", "cards/stats-light.svg"].forEach((n) => assert.ok(get(n).includes('stop-color="#ffffff"') && get(n).includes('stroke="#d1d9e0"'), n + " uses GitHub's light surface"));
   assert.ok(get("cards/stats-light.svg").includes('fill="#0f172a"'));
   assert.ok(!get("cards/stats.svg").includes('fill="#0f172a"'));
-  const paperDual = cards.buildFiles(core.SAMPLE, { adaptive: true, theme: "paper" });
+  const paperDual = cards.buildFiles(core.SAMPLE, { adaptive: true, theme: "paper", wave: false });
   assert.ok(paperDual.find((f) => f.name === "banner.svg").data.includes(core.THEMES.royal.a1), "a Paper profile still gets a dark twin");
   // a single set can land on either page, so it keeps the full themed background
-  const single = cards.buildFiles(core.SAMPLE, { adaptive: false, theme: "cyber" });
+  const single = cards.buildFiles(core.SAMPLE, { adaptive: false, theme: "cyber", wave: false });
   assert.ok(single.find((f) => f.name === "banner.svg").data.includes(core.THEMES.cyber.bg1));
 });
 
@@ -898,7 +903,7 @@ test("custom theme: a good colour is kept as chosen, hex is case-insensitive, ba
 });
 
 test("custom theme: reaches the banner and every card, in both halves of an adaptive set", () => {
-  const o = { theme: "custom", accent1: "#ff8800", accent2: "#00c2a8", adaptive: true, animate: false };
+  const o = { theme: "custom", accent1: "#ff8800", accent2: "#00c2a8", adaptive: true, animate: false, wave: false };   // the orbit banner shows the raw accents
   const files = cards.buildFiles(core.SAMPLE, o), get = (n) => files.find((f) => f.name === n).data;
   const dark = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "dark", native: true })), light = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "light", native: true }));
   assert.ok(get("banner.svg").includes(dark.a1) && get("banner.svg").includes(dark.bg1));
@@ -922,10 +927,12 @@ test("section order ignores unknown and repeated entries, keeps hidden sections 
   assert.deepStrictEqual(core.sectionOrder({ order: "projects, nonsense, PROJECTS ,stats,,connect" }), ["projects", "stats", "connect", "stack", "timeline"]);
   assert.deepStrictEqual(core.sectionOrder({}), core.SECTIONS);
   assert.deepStrictEqual(core.sectionOrder({ order: "" }), core.SECTIONS);
-  const md = core.buildReadme(core.SAMPLE, { order: "connect,projects", timeline: false, links: false });
+  const md = core.buildReadme(core.SAMPLE, { order: "connect,projects", timeline: false, links: false, wave: false });
   assert.deepStrictEqual(sectionsIn(md), ["projects", "stats", "stack"]);
   assert.ok(md.indexOf("banner.svg") < md.indexOf("## "), "header stays first");
   assert.ok(md.trimEnd().endsWith("</sub>") && md.lastIndexOf("---") > md.lastIndexOf("## "), "footer stays last");
+  const wave = core.buildReadme(core.SAMPLE, { order: "connect,projects" });
+  assert.ok(wave.lastIndexOf("footer") > wave.lastIndexOf("## ") && /<\/sub>\n\n<\/div>\s*$/.test(wave), "the wave footer and credit stay last");
 });
 
 test("every ordering of the five sections gives a complete README whose images all exist", () => {
@@ -1253,8 +1260,9 @@ test("initials: always something sensible, never empty, and always capitals", ()
 
 /* ---------- 3D contribution universe (ported from Git3D Universe) ---------- */
 test("the universe is opt-in, sits in the stats grid, and gets a light twin like every other card", () => {
-  assert.strictEqual(core.DEFAULTS.universe, false);
-  assert.doesNotMatch(core.buildReadme(core.SAMPLE, {}), /universe\.svg/);
+  assert.strictEqual(core.DEFAULTS.universe, true, "on by default, so the sample and new users show it");
+  assert.match(core.buildReadme(core.SAMPLE, {}), /universe/);
+  assert.doesNotMatch(core.buildReadme(core.SAMPLE, { universe: false }), /universe\.svg/, "and it can be switched off");
   const files = cards.buildFiles(core.SAMPLE, { universe: true }), names = files.map((f) => f.name), md = files[0].data;
   assert.ok(names.includes("cards/universe.svg") && names.includes("cards/universe-light.svg"));
   const section = md.split("## GitHub stats")[1].split("## Stack")[0];
@@ -1263,8 +1271,9 @@ test("the universe is opt-in, sits in the stats grid, and gets a light twin like
   assert.doesNotMatch(core.buildReadme(core.SAMPLE, { universe: true, cards: false }), /universe/, "text mode has no images");
   const quiet = Object.assign({}, core.SAMPLE, { activity: null });
   assert.doesNotMatch(core.buildReadme(quiet, { universe: true }), /universe/, "nothing to draw without activity");
-  assert.match(core.toQuery("x", { universe: true }), /universe=1/);
-  assert.strictEqual(core.fromQuery("?universe=1").opts.universe, true);
+  assert.match(core.toQuery("x", { universe: false }), /universe=0/);
+  assert.doesNotMatch(core.toQuery("x", {}), /universe/);
+  assert.strictEqual(core.fromQuery("?universe=0").opts.universe, false);
 });
 
 test("the universe follows the chosen theme and GitHub's page colours, and stays light and safe", () => {
@@ -1299,8 +1308,9 @@ test("the universe turns the daily counts into Sunday-first weeks and the same n
 
 /* ---------- wave header and footer ---------- */
 test("wave header and footer: opt-in, both halves of Day and night, footer above the credit", () => {
-  assert.strictEqual(core.DEFAULTS.wave, false);
-  assert.doesNotMatch(core.buildBanner(core.SAMPLE, {}), /id="wave"/, "the orbit banner stays the default");
+  assert.strictEqual(core.DEFAULTS.wave, true, "on by default, so the sample and new users show it");
+  assert.match(core.buildBanner(core.SAMPLE, {}), /id="wave"/);
+  assert.doesNotMatch(core.buildBanner(core.SAMPLE, { wave: false }), /id="wave"/, "the orbit banner is still one tick away");
   const files = cards.buildFiles(core.SAMPLE, { wave: true, role: "SRE", stack: "AWS, Go", tagline: "Ship it" }), names = files.map((f) => f.name), md = files[0].data;
   ["banner.svg", "banner-light.svg", "cards/footer.svg", "cards/footer-light.svg"].forEach((n) => assert.ok(names.includes(n), n));
   const banner = files.find((f) => f.name === "banner.svg").data;
@@ -1309,7 +1319,8 @@ test("wave header and footer: opt-in, both halves of Day and night, footer above
   assert.match(tail, /Patched together/, "the credit sits under the wave footer");
   assert.doesNotMatch(md, /\n---\n<sub>/, "no plain rule when the wave footer is on");
   assert.doesNotMatch(core.buildReadme(core.SAMPLE, { wave: true, cards: false }), /footer\.svg/, "text mode has no images");
-  assert.match(core.toQuery("x", { wave: true }), /wave=1/);
+  assert.match(core.toQuery("x", { wave: false }), /wave=0/);
+  assert.doesNotMatch(core.toQuery("x", {}), /wave/);
 });
 
 test("wave: readable white text on every gradient stop, the gradient stays put, and motion follows the rules", () => {

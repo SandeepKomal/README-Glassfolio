@@ -164,8 +164,11 @@
       var color = HEX.test(repo.color || "") ? repo.color : t.glow;
       var label = esc(repo.name.length > 18 ? repo.name.slice(0, 17) + "…" : repo.name);
       var dur = 52 + ring * 20 + i * 3, phase = (i / list.length + ring * 0.17) % 1, deg = r1(phase * 360);
-      var turn = animate ? ' class="u-orbit" style="animation-duration:' + dur + "s;animation-delay:" + r1(-dur * phase) + 's"' : ' transform="rotate(' + deg + ')"';
-      var back = animate ? ' class="u-back" style="animation-duration:' + dur + "s;animation-delay:" + r1(-dur * phase) + 's"' : ' transform="rotate(' + (-deg) + ')"';
+      // the fixed angle is always there, so a still picture (or a visitor who prefers reduced motion) shows each planet at its
+      // own place on the ring; with motion on, the CSS animation takes over from that same angle
+      var anim = animate ? ' style="animation-duration:' + dur + "s" + (phase ? ";animation-delay:" + r1(-dur * phase) + "s" : "") + '"' : "";
+      var turn = (animate ? ' class="u-orbit"' : "") + ' transform="rotate(' + deg + ')"' + anim;
+      var back = (animate ? ' class="u-back"' : "") + ' transform="rotate(' + (-deg) + ')"' + anim;
       out += '<g transform="translate(' + CX + " " + CY + ") scale(1 " + FLAT + ')"><g' + turn + '><g transform="translate(' + R + ' 0)"><g' + back + '><g transform="scale(1 ' + r1(1 / FLAT * 1000) / 1000 + ')">' +
         '<ellipse cx="0" cy="' + r1(radius + 5) + '" rx="' + r1(radius * 1.1) + '" ry="' + r1(radius * 0.3) + '" fill="#000" opacity=".3"/>' +
         '<circle r="' + r1(radius) + '" fill="' + color + '"/><circle r="' + r1(radius) + '" fill="url(#planetShade)"/>' +
