@@ -367,3 +367,16 @@ test("the copied generator is closed under its own imports: nothing it loads at 
   assert.deepStrictEqual([...cli.matchAll(/^const (?:\{[^}]+\}|\w+) = require\("\.\/js\/([^"]+)"\);/gm)].map((m) => "js/" + m[1]).filter((p) => !have.has(p)), [], "cli.js loads nothing missing at start-up");
   assert.match(cli, /^\s{4,}const auto = require\("\.\/js\/automation\.js"\);/m, "automation.js is loaded lazily, inside --daily");
 });
+
+test("the daily update keeps the 3D universe fresh: no extra workflow, the one daily run rebuilds it", () => {
+  const files = auto.buildAutomationFiles("DevopsNimbus", Object.assign({}, OPTS, { universe: true }), sources());
+  assert.deepStrictEqual(files.filter((f) => f.name.startsWith(".github/workflows/")).map((f) => f.name), [auto.WORKFLOW], "one workflow does everything");
+  assert.strictEqual(JSON.parse(files.find((f) => f.name.endsWith("config.json")).data).universe, true, "the choice is saved for the daily run");
+  assert.ok(files.some((f) => f.name === ".readme-patch/js/universe.js"), "the daily run has the universe renderer");
+  const dir = tmp("universe");
+  files.forEach((f) => { const d = path.join(dir, f.name); fs.mkdirSync(path.dirname(d), { recursive: true }); fs.writeFileSync(d, f.data); });
+  const r = spawnSync(process.execPath, [path.join(dir, ".readme-patch", "cli.js"), "--sample", "--config", path.join(dir, ".readme-patch", "config.json"), "--clean", "--out", dir], { encoding: "utf8", cwd: dir });
+  assert.strictEqual(r.status, 0, r.stderr);
+  ["cards/universe.svg", "cards/universe-light.svg"].forEach((n) => assert.ok(fs.existsSync(path.join(dir, n)), "the daily run writes " + n));
+  assert.match(fs.readFileSync(path.join(dir, "README.md"), "utf8"), /cards\/universe-light\.svg/);
+});
