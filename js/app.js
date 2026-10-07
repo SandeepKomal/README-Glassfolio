@@ -500,12 +500,15 @@
   function dailyAvailable() { return !!(state.model && state.user && state.model !== core.SAMPLE); }
   function two(n) { return (n < 10 ? "0" : "") + n; }
   function runTime() { var t = auto.schedule(state.user); return two(t.hour) + ":" + two(t.minute) + " UTC"; }
+  // on by default: every real profile gets the daily workflow unless the person unticks it (then that choice sticks)
+  var dailyTouched = false;
   function updateDaily() {
     var box = $("#o-daily"), ok = dailyAvailable();
     box.disabled = !ok;
     if (!ok) box.checked = false;
+    else if (!dailyTouched) box.checked = true;
     $("#dailyHint").textContent = ok
-      ? (box.checked ? "On: it will run every day at " + runTime() + ", and you can also run it from the Actions tab." : "Off. Tick to add a daily refresh at " + runTime() + " (your own time, so profiles don't all run at once).")
+      ? (box.checked ? "On: it will run every day at " + runTime() + ", and you can also run it from the Actions tab." + ($("#o-universe").checked ? " The 3D universe also gets its own workflow that refreshes it every 6 hours." : "") : "Off. Tick to add the daily refresh at " + runTime() + " (your own time, so profiles don't all run at once).")
       : "Load your own profile to turn this on.";
     $("#dailyMore").hidden = !ok;
     $("#pubWfNote").hidden = !(ok && box.checked);
@@ -529,7 +532,8 @@
       throw new Error("Daily updates need the generator code from this website, and it couldn't be loaded. Open the page from its web address (not from a file on your computer), or untick daily updates.");
     });
   }
-  $("#o-daily").addEventListener("change", updateDaily);
+  $("#o-daily").addEventListener("change", function () { dailyTouched = true; updateDaily(); });
+  $("#o-universe").addEventListener("change", updateDaily);
 
   /* ---------- publish ---------- */
   $("#pub").addEventListener("click", function () {

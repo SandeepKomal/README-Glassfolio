@@ -24,6 +24,7 @@ Options:
   --no-banner --no-cards --no-bars --pie --no-timeline --no-projects --no-links
   --recent              Add a "Recently pushed" card (your latest five repos, in any layout)
   --universe            Add the 3D contribution universe (from Git3D Universe) under the stats
+  --universe-only       Rebuild only cards/universe.svg (and its light twin); used by the 3D universe workflow
   --no-adaptive         One card set only. By default there are dark and light sets, and GitHub shows the one matching the viewer
   --no-animation        Static cards (no motion)
   --no-heatmap          Leave out the contribution heatmap
@@ -94,6 +95,7 @@ function parseArgs(argv) {
       case "--adaptive": o.opts.adaptive = true; break;
       case "--no-adaptive": o.opts.adaptive = false; break;
       case "--universe": o.opts.universe = true; break;
+      case "--universe-only": o.universeOnly = true; o.opts.universe = true; break;
       case "--no-animation": o.opts.animate = false; break;
       case "--no-heatmap": o.opts.heatmap = false; break;
       case "--no-credit": o.opts.credit = false; break;
@@ -148,7 +150,12 @@ async function main() {
     if (args.requireActivity && !model.activity) throw new Error("GitHub activity couldn't be read, so your files were left unchanged.");
   }
 
-  const files = cards.buildFiles(model, args.opts);          // what gets published
+  let files = cards.buildFiles(model, args.opts);            // what gets published
+  if (args.universeOnly) {
+    if (args.daily || args.publish || args.clean) throw new Error("--universe-only can't be combined with --daily, --publish or --clean");
+    files = files.filter((f) => /^cards\/universe(-light)?\.svg$/.test(f.name));
+    if (!files.length) throw new Error("There is no contribution activity to draw, so the 3D universe was left unchanged.");
+  }
   if (args.daily) {
     if (args.sample) throw new Error("--daily needs a real profile, not --sample");
     const auto = require("./js/automation.js");     // loaded only here: the copy of the generator that runs daily doesn't need (or include) it
