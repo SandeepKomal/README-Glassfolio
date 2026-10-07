@@ -547,14 +547,16 @@
     packageFiles().then(function (files) {
       msg.textContent = "Publishing " + files.length + (files.length === 1 ? " file…" : " files…");
       return window.ReadmePublish.publish(files, {
-        token: token("#pubToken", "#token"), owner: state.model.login, message: daily ? "Update profile README and add daily updates (Patch your profile)" : "Update profile README (Patch your profile)"
+        token: token("#pubToken", "#token"), owner: state.model.login, message: daily ? "Update profile README and add daily updates (Patch your profile)" : "Update profile README (Patch your profile)",
+        messageWithoutDaily: "Update profile README (Patch your profile)"
       });
     }).then(function (res) {
       $("#pubToken").value = "";
       var skipped = res.skipped === "daily";
-      if (skipped) daily = false;
-      msg.textContent = "Published " + res.files + (res.files === 1 ? " file. " : " files. ");
-      if (skipped) msg.textContent += "Your README and cards are live, but daily updates were not added: GitHub only accepts them from a token allowed to write workflows (Workflows: Read and write on a fine-grained token, or the workflow scope on a classic one). Publish again with such a token to turn them on. ";
+      if (skipped) { daily = false; msg.className = "msg err"; }
+      msg.textContent = skipped
+        ? "Daily updates were NOT added. Your README and cards were published (" + res.files + " files), but GitHub only accepts the daily-update workflow from a token allowed to write workflows: Workflows: Read and write on a fine-grained token, or the workflow scope on a classic one. Publish again with such a token to turn them on. "
+        : "Published " + res.files + (res.files === 1 ? " file. " : " files. ");
       if (daily) msg.textContent += "Daily updates are on: the first run is at " + runTime() + ", or press Run workflow in the Actions tab. ";
       var a = document.createElement("a");
       a.href = res.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Open your profile";
