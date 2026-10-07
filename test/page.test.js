@@ -88,3 +88,14 @@ test("tokens are never written to storage or to the share link", () => {
   assert.doesNotMatch(core.toQuery("DevopsNimbus", { role: "x", theme: "cyber" }), /token/i);
   assert.ok(!Object.keys(core.DEFAULTS).some((k) => /token/i.test(k)), "a token is not an option at all, so it can't be saved or shared");
 });
+
+test("a page kept from an older deploy notices and reloads once: build stamp, version.txt and a guarded check", () => {
+  assert.match(html, /<meta name="build" content="dev">/, "the deploy has a marker to stamp");
+  const wf = fs.readFileSync(path.join(ROOT, ".github", "workflows", "pages.yml"), "utf8");
+  assert.match(wf, /meta name=\\"build\\" content=\\"\$\{build\}\\"/, "the deploy stamps the build into the page");
+  assert.match(wf, />\s*version\.txt/, "and writes the same build to version.txt");
+  const app = fs.readFileSync(path.join(ROOT, "js", "app.js"), "utf8");
+  assert.match(app, /fetch\("version\.txt\?t=" \+ Date\.now\(\), \{ cache: "no-store" \}\)/, "the check itself is never cached");
+  assert.match(app, /sessionStorage\.getItem\(key\) === latest\) return/, "at most one reload per new build");
+  assert.match(app, /build === "dev"/, "local copies skip the check");
+});
