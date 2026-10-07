@@ -130,7 +130,7 @@ From the terminal: `GITHUB_TOKEN=github_pat_xxx node cli.js <user> --publish --t
 
 ### Keep the stats fresh every day
 
-A published README is a **snapshot**: the numbers are as of the moment you published. GitHub profile READMEs are static files, so something has to run on a schedule to refresh them, and with no server of ours the only place that can be is a small GitHub Action in **your own profile repo**. Tick *Daily updates* (or use `--daily`) and publishing adds two things:
+A published README is a **snapshot**: the numbers are as of the moment you published. GitHub profile READMEs are static files, so something has to run on a schedule to refresh them, and with no server of ours the only place that can be is a small GitHub Action in **your own profile repo**. *Keep my stats fresh every day* is **on by default** on the page as soon as your own profile is loaded (untick it for a one-off snapshot; from the terminal, use `--daily`), and publishing adds:
 
 - `.github/workflows/update-readme.yml`: runs once a day, at a time derived from your username so profiles don't all run at once (shown in the page, for example 22:26 UTC), and whenever you press *Run workflow* in the Actions tab.
 - `.readme-patch/`: your saved choices (`config.json`) and a copy of this generator, so your repo is self-contained and you can read every line that runs.
