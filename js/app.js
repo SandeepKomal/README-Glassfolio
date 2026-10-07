@@ -586,6 +586,22 @@
     }).then(function () { btn.disabled = false; });
   });
 
+  /* ---------- stay current ----------
+   * GitHub Pages lets browsers keep index.html for a while, so a visitor can get yesterday's page (and its old scripts)
+   * right after a deploy. The deploy stamps its build into the page and into version.txt; if they differ, this page is
+   * stale, so it reloads once (sessionStorage stops a loop if a cache keeps serving the old page anyway). */
+  (function () {
+    var meta = document.querySelector('meta[name="build"]'), build = meta && meta.content;
+    if (!build || build === "dev" || !window.fetch) return;                  // local copies have nothing to compare
+    fetch("version.txt?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (latest) {
+      latest = latest.trim();
+      if (!/^[0-9a-f]{7,40}$/.test(latest) || latest === build) return;
+      var key = "patch-your-profile.reloaded-for";
+      try { if (sessionStorage.getItem(key) === latest) return; sessionStorage.setItem(key, latest); } catch (e) { return; }
+      location.reload();
+    }).catch(function () { /* offline: keep what we have */ });
+  })();
+
   /* ---------- start ---------- */
   buildThemePicker();
   buildGallery();
