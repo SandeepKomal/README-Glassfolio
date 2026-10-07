@@ -100,8 +100,28 @@ Every card is an SVG image file that sits next to `README.md` in your profile re
 ### Publish: commit straight to your profile
 
 1. Create the repo `<user>/<user>` on GitHub if you don't have it (public, and the name must match your username).
-2. Create a [fine-grained token](https://github.com/settings/personal-access-tokens/new): *Only select repositories* → `<user>/<user>`, permission *Contents: Read and write*.
+2. Create a [fine-grained token](https://github.com/settings/personal-access-tokens/new) as shown in [Token setup](#token-setup) below.
 3. In the website, click **Publish to GitHub**, paste the token and press **Publish**. All files go in as one commit. The token is sent only to api.github.com and is never stored.
+
+#### Token setup
+
+One fine-grained token covers everything: reading your data, publishing, and adding [daily updates](#keep-the-stats-fresh-every-day). Create it at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new):
+
+**Repository access:** choose *Only select repositories* and pick your profile repository, for example `SandeepKomal/SandeepKomal`.
+
+**Repository permissions:**
+
+| Permission | Setting | Why |
+| --- | --- | --- |
+| Contents | **Read and write** | Commit the README, banner and cards |
+| Workflows | **Read and write** | Add the daily-update workflow in `.github/workflows/` (only needed for *Daily updates*) |
+| Metadata | Read-only | Set automatically by GitHub |
+
+Nothing else is needed: no Administration, Issues, Pull requests, Actions, Pages or Secrets. GitHub requires *Contents* **and** *Workflows* write access for any change under `.github/workflows/`.
+
+With a classic token instead, tick `public_repo`, plus `workflow` for daily updates.
+
+Paste the token into the **Publish** box itself. If that box is left empty, Publish uses the token from *Exact data*, which is often created with no permissions at all. If the token can write files but not workflows, the README and cards are still published, and the page says that daily updates were not added and what to change on that token. You can edit an existing token's permissions; you don't need a new one.
 
 It refuses to publish to anyone else's profile, handles a brand-new empty repo, and gives a plain message when the repo is missing or the token lacks permission.
 
@@ -121,7 +141,7 @@ What to know before you switch it on:
 - **No third-party code.** The workflow has no `uses:` line at all: only plain shell steps that run the copy in `.readme-patch/`. Its only permission is `contents: write`, it uses no secrets, and it only talks to `api.github.com`.
 - **It rewrites `README.md` and the images every day**, so edits you make to those by hand will be replaced. Change `.readme-patch/config.json` (or publish again from the page) instead. The files it manages are `README.md`, `banner.svg`, `banner-light.svg` and every `.svg` in `cards/`; nothing else in the repo is touched.
 - **It never publishes worse data.** If GitHub's activity can't be read on a given day (an outage, a rate limit), the run stops and changes nothing, so you keep yesterday's good profile instead of a half-empty one.
-- **Your token needs one more permission** to add the workflow file: *Workflows: Read and write* for a fine-grained token, or the `workflow` scope for a classic one. Without it, nothing is published and the page tells you what to add. A classic token with `public_repo` is enough for everything else.
+- **Your token needs one more permission** to add the workflow file: *Workflows: Read and write* for a fine-grained token, or the `workflow` scope for a classic one (see [Token setup](#token-setup)). Without it, your README and cards are still published, but daily updates are left out and the page tells you exactly what to add.
 - **It's free** for public repositories. A run takes well under a minute.
 - **GitHub pauses scheduled workflows** in a public repo after 60 days without activity. Re-enable it in the Actions tab if that happens.
 - **To stop it**, delete the workflow file or disable it in the Actions tab. Your README and images stay as they are.
@@ -152,9 +172,9 @@ Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) 
 
 The job title you enter is shown right after your name, as "Role at Company" (the company comes from your GitHub profile). If you leave it blank, your GitHub bio is used. An optional tagline appears as a smaller line beneath it.
 
-Both layouts can include a banner, stats, streak and heatmap cards, a Languages card (proportion bar, legend and tool pills), a timeline card, project cards and a row of clickable Connect buttons. With cards switched off, you get a text-only README with no image files. A Mermaid pie chart is available as an opt-in extra.
+Both layouts can include a banner, stats, streak and heatmap cards, a Languages card (proportion bar, legend and tool pills), a timeline card, project cards and a row of clickable Connect buttons. With cards switched off, you get a text-only README with no image files. A language donut chart is available as an opt-in extra: with cards on it's drawn inside the Languages card (total repos in the middle, a legend with share bars beside it); in text mode it's a Mermaid pie.
 
-**Day and night (light and dark).** *Day and night: follow each visitor's light or dark mode* is **on by default** (turn it off with `--no-adaptive`, or untick it on the page). It writes two complete image sets: your chosen theme for dark-mode visitors and a light twin (`-light.svg`) for everyone else, wrapped in `<picture>` with `prefers-color-scheme`, the mechanism GitHub documents for profile READMEs. So your profile is light for visitors whose device (or GitHub) is in light mode and dark for those in dark mode. Many phones and computers switch to dark at sunset on their own, so in practice it follows each visitor's day and night, and an open page swaps live when their device flips. **A README can't read a clock** (GitHub strips scripts, and CSS has no time of day), so it follows the visitor's own setting, not a time you pick; someone who keeps their device in one mode always sees that one. This was checked in a real browser by simulating a full day on the visitor's device: all images swap together at sunrise and sunset, with nothing mixed or missing. Light twins keep each theme's identity with accents darkened until they reach a readable 4:1 contrast. If your theme is already light (Paper), the dark partner is Royal. It roughly doubles the number of files.
+**Day and night (light and dark).** *Day and night: follow each visitor's light or dark mode* is **on by default** (turn it off with `--no-adaptive`, or untick it on the page). It writes two complete image sets: your chosen theme for dark-mode visitors and a light twin (`-light.svg`) for everyone else, wrapped in `<picture>` with `prefers-color-scheme`, the mechanism GitHub documents for profile READMEs. So your profile is light for visitors whose device (or GitHub) is in light mode and dark for those in dark mode. Many phones and computers switch to dark at sunset on their own, so in practice it follows each visitor's day and night, and an open page swaps live when their device flips. **A README can't read a clock** (GitHub strips scripts, and CSS has no time of day), so it follows the visitor's own setting, not a time you pick; someone who keeps their device in one mode always sees that one. This was checked in a real browser by simulating a full day on the visitor's device: all images swap together at sunrise and sunset, with nothing mixed or missing. Because each set is only ever shown on its matching GitHub page, both sets use **GitHub's own surface and border colours** (`#ffffff`/`#f6f8fa` with a `#d1d9e0` hairline in light, `#0d1117`/`#151b23` with `#3d444d` in dark), so the cards sit in the page like GitHub's own boxes instead of floating on it; the theme lives on in the accents, rings, heatmap and a faint aurora. Light twins keep each theme's identity with accents darkened until they reach a readable 4:1 contrast. If your theme is already light (Paper), the dark partner is Royal. It roughly doubles the number of files.
 
 **Share links.** *Copy share link* produces a URL like `?user=DevopsNimbus&theme=cyber&role=Cloud+Engineer`. Opening it rebuilds the same setup and generates straight away. Only values that differ from the defaults are included, and anything invalid in a link is ignored.
 

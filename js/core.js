@@ -159,8 +159,22 @@
     return { a1: t.a1, a2: t.a2, bg1: t.bg1, bg2: t.bg2, ink: t.ink, light: !!t.light, anim: true, seed: h, hue: h % 360, hue2: (h % 360 + 48) % 360 };
   }
 
-  /** Palette for a profile from the person's options (theme, light/dark mode, custom accents). */
-  function paletteFor(login, o) { return palette(login, o.theme, o.mode, { a1: o.accent1, a2: o.accent2 }); }
+  /**
+   * Palette for a profile from the person's options (theme, light/dark mode, custom accents).
+   * The two halves of a Day and night README are only ever shown on GitHub's own light or dark page, so they
+   * (o.native) take GitHub's surface and border colours and keep the theme in the accents: the cards sit in the
+   * page instead of floating on it. Anything shown elsewhere, like the share image, keeps its themed background.
+   */
+  function paletteFor(login, o) {
+    var p = palette(login, o.theme, o.mode, { a1: o.accent1, a2: o.accent2 }), surface = o.native && NATIVE[o.mode];
+    if (surface) { p.bg1 = surface.bg1; p.bg2 = surface.bg2; p.line = surface.line; p.native = true; }
+    return p;
+  }
+  var NATIVE = {
+    dark:  { bg1: "#0d1117", bg2: "#151b23", line: "#3d444d" },   // GitHub dark: page, raised surface, border
+    light: { bg1: "#ffffff", bg2: "#f6f8fa", line: "#d1d9e0" }    // GitHub light
+  };
+
 
   /* ---------- activity: streaks and weekly totals from per-day counts ---------- */
   function dayKey(ms) { return new Date(ms).toISOString().slice(0, 10); }
@@ -409,7 +423,7 @@
       });
       out.push("```", "");
     }
-    if (o.pie && m.langs.length) {
+    if (o.pie && m.langs.length && !useCard) {                // with cards on, the languages card draws it as a donut
       out.push("```mermaid", "pie showData title Repos by language");
       m.langs.forEach(function (l) { out.push('  "' + l.name.replace(/"/g, "") + '" : ' + l.n); });
       out.push("```", "");
@@ -622,15 +636,15 @@
     out.push('<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(m.name) + '">');
     out.push("<defs>" +
       '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + p.bg1 + '"/><stop offset="1" stop-color="' + p.bg2 + '"/></linearGradient>' +
-      '<radialGradient id="au1"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="' + (L ? 0.32 : 0.5) + '"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></radialGradient>' +
-      '<radialGradient id="au2"><stop offset="0" stop-color="' + p.a2 + '" stop-opacity="' + (L ? 0.3 : 0.5) + '"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="au1"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="' + (p.native ? (L ? 0.14 : 0.22) : (L ? 0.32 : 0.5)) + '"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="au2"><stop offset="0" stop-color="' + p.a2 + '" stop-opacity="' + (p.native ? (L ? 0.12 : 0.2) : (L ? 0.3 : 0.5)) + '"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></radialGradient>' +
       '<linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + (L ? "#ffffff" : I) + '" stop-opacity="' + (L ? 0.95 : 0.45) + '"/><stop offset="0.5" stop-color="' + I + '" stop-opacity="0.06"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0.6"/></linearGradient>' +
       '<linearGradient id="hl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="' + (L ? 0.95 : 0.65) + '"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>' +
       '<linearGradient id="acc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + p.a1 + '"/><stop offset="1" stop-color="' + p.a2 + '"/></linearGradient>' +
       '<linearGradient id="name" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + I + '"/><stop offset="0.55" stop-color="' + I + '"/><stop offset="1" stop-color="' + p.a1 + '"/></linearGradient>' +
       '<filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
       '<pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="' + I + '" fill-opacity="' + (L ? 0.12 : 0.09) + '"/></pattern>' +
-      '<clipPath id="clip"><rect width="' + W + '" height="' + H + '" rx="24"/></clipPath>' +
+      '<clipPath id="clip"><rect width="' + W + '" height="' + H + '" rx="' + (p.native ? 16 : 24) + '"/></clipPath>' +
       "</defs>" + fxStyle(p, W));
     out.push('<g clip-path="url(#clip)">');
     out.push('<rect width="' + W + '" height="' + H + '" fill="url(#bg)"/>');
@@ -659,12 +673,16 @@
     out.push('<circle cx="' + ox + '" cy="' + oy + '" r="50" fill="' + I + '" fill-opacity="0.06" stroke="url(#acc)" stroke-width="1.5"/>');
     out.push('<text x="' + ox + '" y="' + (oy + 12) + '" text-anchor="middle" font-family="' + SANS + '" font-size="34" font-weight="800" letter-spacing="1" fill="url(#acc)">' + esc(initials(m)) + "</text>");
 
-    // glass sheen over everything
-    out.push('<rect width="' + W + '" height="' + H + '" fill="' + I + '" fill-opacity="0.03"/>');
-    out.push('<rect x="40" y="0.6" width="' + (W - 80) + '" height="1.4" fill="url(#hl)"/>');
+    // glass sheen over everything (a native-surface banner keeps only the moving shine, and GitHub's hairline border)
+    if (!p.native) {
+      out.push('<rect width="' + W + '" height="' + H + '" fill="' + I + '" fill-opacity="0.03"/>');
+      out.push('<rect x="40" y="0.6" width="' + (W - 80) + '" height="1.4" fill="url(#hl)"/>');
+    }
     out.push('<rect x="0" y="0.5" width="' + Math.round(W * 0.28) + '" height="1.8" fill="url(#hl)"' + fx(p, "shine") + "/>");
     out.push("</g>");
-    out.push('<rect x="0.75" y="0.75" width="' + (W - 1.5) + '" height="' + (H - 1.5) + '" rx="23.5" fill="none" stroke="url(#edge)" stroke-width="1.5"/>');
+    out.push(p.native
+      ? '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="15.5" fill="none" stroke="' + p.line + '"/>'
+      : '<rect x="0.75" y="0.75" width="' + (W - 1.5) + '" height="' + (H - 1.5) + '" rx="23.5" fill="none" stroke="url(#edge)" stroke-width="1.5"/>');
 
     // text block
     var handle = ["@" + m.login.toUpperCase()];
