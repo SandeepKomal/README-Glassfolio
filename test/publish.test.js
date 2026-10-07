@@ -1,10 +1,10 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert");
-const { publish, b64 } = require("../js/publish.js");
+const { publish, b64, dailyAdvice } = require("../js/publish.js");
 
 /* ---------- publishing ---------- */
-function fakeRepo({ me = "DevopsNimbus", repo = true, empty = false, failBlob = false, noWorkflowScope = false, readOnly = false } = {}) {
+function fakeRepo({ me = "DevopsNimbus", repo = true, empty = false, failBlob = false, noWorkflowScope = false, readOnly = false, scopes = null } = {}) {
   const log = [];
   let lastTree = [];
   const f = async (url, init) => {
@@ -12,7 +12,7 @@ function fakeRepo({ me = "DevopsNimbus", repo = true, empty = false, failBlob = 
     const body = init.body ? JSON.parse(init.body) : null;
     log.push({ method, path, body, auth: init.headers.Authorization });
     const ok = (data, status = 200) => ({ status, ok: true, json: async () => data });
-    const err = (status, message) => ({ status, ok: false, json: async () => ({ message }) });
+    const err = (status, message) => ({ status, ok: false, json: async () => ({ message }), headers: { get: (h) => (h === "X-OAuth-Scopes" ? scopes : null) } });
     if (path === "/user") return ok({ login: me });
     if (path === "/repos/DevopsNimbus/DevopsNimbus") return repo ? ok({ default_branch: "main" }) : err(404, "Not Found");
     if (path === "/repos/DevopsNimbus/DevopsNimbus/git/ref/heads/main") return empty ? err(409, "Git Repository is empty.") : ok({ object: { sha: "c0" } });
@@ -76,6 +76,18 @@ test("a token that can't write workflows still publishes the README and cards, a
   assert.deepStrictEqual(trees[1], ["README.md", "banner.svg", "cards/stats.svg"], "the retry leaves out the workflow and the generator copy it would run");
   const plain = await publish(DAILY, { token: "tok", owner: "DevopsNimbus", fetch: fakeRepo().f });
   assert.strictEqual(plain.skipped, undefined, "nothing is skipped when the token is allowed");
+});
+
+test("the skipped-daily note says what to change on this exact token", async () => {
+  const classic = await publish(DAILY, { token: "ghp_abc", owner: "DevopsNimbus", fetch: fakeRepo({ noWorkflowScope: true, scopes: "public_repo, read:user" }).f });
+  assert.match(classic.advice, /classic token with the scopes: public_repo, read:user/);
+  assert.match(classic.advice, /tick workflow/);
+  assert.match(classic.advice, /GitHub said: 404 Not Found/);
+  const fine = await publish(DAILY, { token: "github_pat_abc", owner: "DevopsNimbus", fetch: fakeRepo({ noWorkflowScope: true }).f });
+  assert.match(fine.advice, /fine-grained token without Workflows: Read and write/);
+  assert.match(fine.advice, /Repository permissions \u2192 Workflows/);
+  assert.match(dailyAdvice("ghp_x", { status: 404, scopes: "" }), /scopes: none/);
+  assert.match(dailyAdvice("something-else", null), /Workflows: Read and write \(fine-grained\) or the workflow scope \(classic\)/);
 });
 
 test("a read-only token is told it can't write at all, instead of blaming the workflow", async () => {

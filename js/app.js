@@ -555,7 +555,7 @@
       var skipped = res.skipped === "daily";
       if (skipped) { daily = false; msg.className = "msg err"; }
       msg.textContent = skipped
-        ? "Daily updates were NOT added. Your README and cards were published (" + res.files + " files), but GitHub only accepts the daily-update workflow from a token allowed to write workflows: Workflows: Read and write on a fine-grained token, or the workflow scope on a classic one. Publish again with such a token to turn them on. "
+        ? "Daily updates were NOT added. Your README and cards were published (" + res.files + " files), but GitHub refused the daily-update workflow from this token. " + res.advice + " "
         : "Published " + res.files + (res.files === 1 ? " file. " : " files. ");
       if (daily) msg.textContent += "Daily updates are on: the first run is at " + runTime() + ", or press Run workflow in the Actions tab. ";
       var a = document.createElement("a");

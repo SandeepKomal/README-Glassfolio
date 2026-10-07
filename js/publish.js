@@ -35,7 +35,13 @@
     return f(API + path, { method: init.method || "GET", headers: headers, body: init.body ? JSON.stringify(init.body) : undefined })
       .then(function (r) {
         return r.json().catch(function () { return null; }).then(function (data) {
-          if (!r.ok) { var e = new Error(explain(r.status, data)); e.status = r.status; throw e; }
+          if (!r.ok) {
+            var e = new Error(explain(r.status, data)); e.status = r.status;
+            e.github = data && data.message;
+            // classic tokens list their scopes on every answer; fine-grained tokens send nothing here
+            e.scopes = r.headers && r.headers.get ? r.headers.get("X-OAuth-Scopes") : null;
+            throw e;
+          }
           return data;
         });
       });
@@ -97,6 +103,19 @@
     });
   }
 
+  /** What to change on this particular token so GitHub accepts the daily-update workflow. */
+  function dailyAdvice(token, e) {
+    var t = String(token || ""), said = e && e.status ? " (GitHub said: " + e.status + (e.github ? " " + e.github : "") + ".)" : "";
+    if (/^github_pat_/.test(t)) {
+      return "This is a fine-grained token without Workflows: Read and write. Open github.com/settings/personal-access-tokens, edit the token, set Repository permissions \u2192 Workflows to Read and write, save, then publish again with the same token." + said;
+    }
+    if (/^gh[po]_/.test(t) || (e && e.scopes != null)) {
+      var scopes = e && e.scopes != null ? (String(e.scopes).trim() || "none") : "unknown";
+      return "This is a classic token with the scopes: " + scopes + ". It also needs the workflow scope: open github.com/settings/tokens, edit the token, tick workflow, save, then publish again with the same token." + said;
+    }
+    return "Give the token Workflows: Read and write (fine-grained) or the workflow scope (classic), then publish again." + said;
+  }
+
   /** Daily-update files: the workflow, plus the generator copy it runs, which is useless without it. */
   function isAutomation(f) { return /^\.github\/workflows\//.test(f.name) || /^\.readme-patch\//.test(f.name); }
 
@@ -113,6 +132,7 @@
       if (opts.messageWithoutDaily) retry.message = opts.messageWithoutDaily;   // the commit must not claim what it left out
       return publishAll(rest, retry).then(function (result) {
         result.skipped = "daily";
+        result.advice = dailyAdvice(opts.token, e);
         return result;
       }, function (e2) {
         if (e2.status === 404 || e2.status === 403) e2.message = explain(403);
@@ -121,5 +141,5 @@
     });
   }
 
-  return { publish: publish, b64: b64 };
+  return { publish: publish, b64: b64, dailyAdvice: dailyAdvice };
 });
