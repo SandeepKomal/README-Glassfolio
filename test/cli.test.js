@@ -17,7 +17,7 @@ function run(args) {
 const sectionsIn = (md) => ["## GitHub stats", "## Stack", "## Timeline", "## Projects", "## Connect"].filter((h) => md.includes(h)).sort((a, b) => md.indexOf(a) - md.indexOf(b)).map((h) => h.slice(3));
 
 test("cli: --colors makes a custom theme and the files use those colours", () => {
-  const r = run(["--colors", "#ff8800,#00c2a8", "--no-animation"]);
+  const r = run(["--colors", "#ff8800,#00c2a8", "--no-animation", "--no-wave"]);
   assert.strictEqual(r.code, 0, r.err);
   assert.match(r.read("banner.svg"), /#ff8800/);
   assert.match(r.read("banner.svg"), /#00c2a8/);

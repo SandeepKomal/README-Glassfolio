@@ -23,8 +23,8 @@ Options:
   --linkedin <text>     LinkedIn username or URL
   --no-banner --no-cards --no-bars --pie --no-timeline --no-projects --no-links
   --recent              Add a "Recently pushed" card (your latest five repos, in any layout)
-  --universe            Add the 3D contribution universe (from Git3D Universe) under the stats
-  --wave                Wave header and footer: a gradient band with moving waves, name and title centred
+  --no-universe         Leave out the 3D contribution universe (on by default, from Git3D Universe)
+  --no-wave             Use the orbit banner and a plain footer instead of the wave header and footer (on by default)
   --universe-only       Rebuild only cards/universe.svg (and its light twin); used by the 3D universe workflow
   --no-adaptive         One card set only. By default there are dark and light sets, and GitHub shows the one matching the viewer
   --no-animation        Static cards (no motion)
@@ -97,6 +97,8 @@ function parseArgs(argv) {
       case "--no-adaptive": o.opts.adaptive = false; break;
       case "--universe": o.opts.universe = true; break;
       case "--wave": o.opts.wave = true; break;
+      case "--no-wave": o.opts.wave = false; break;
+      case "--no-universe": o.opts.universe = false; break;
       case "--universe-only": o.universeOnly = true; o.opts.universe = true; break;
       case "--no-animation": o.opts.animate = false; break;
       case "--no-heatmap": o.opts.heatmap = false; break;

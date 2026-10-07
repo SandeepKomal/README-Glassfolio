@@ -10,9 +10,9 @@ Turn any GitHub username into a profile README that stands out: a themed banner,
 
 ![The tool: a themed preview that shows the README as GitHub will show it](docs/website-preview.jpg)
 
-A profile README made with it, in a dark theme and in the light Paper theme:
+A profile README made with it (the sample profile, Royal theme, default options), as GitHub shows it on its dark and light pages: wave header, stats, heatmap, 3D contribution universe, languages, timeline, projects, Connect buttons and wave footer:
 
-![Example READMEs in a dark theme and in Paper](docs/example-readme-dark-and-light.jpg)
+![The same example README on GitHub's dark page and on its light page](docs/example-readme-dark-and-light.jpg)
 
 <img src="docs/mobile-preview.jpg" alt="The tool on a phone" width="260">
 
@@ -188,9 +188,9 @@ Both layouts can include a banner, stats, streak and heatmap cards, a Languages 
 
 **Share image.** Under the files there's a 1280×640 picture with your name, title, skills and four headline numbers, ready for LinkedIn, X or a repository's social preview. It always uses your theme, light/dark choice and custom colours, is never animated, and is deliberately kept out of the README package, the zip and the publish commit. From the terminal: `--share-image`.
 
-**Wave header and footer.** Tick *Wave header and footer* (or use `--wave`) to swap the banner for a gradient band in your theme's accents, with your name, title and first skills centred on it and two translucent waves drifting along its lower edge, plus a matching wave footer above the credit line. It's drawn by this tool (no outside image service like capsule-render), everything outside the waves is transparent so it melts into GitHub's light or dark page, the gradient is darkened just enough to keep the white text readable in every theme, and the waves stand still for visitors who prefer reduced motion. With *Day and night* you get light and dark versions like every other image.
+**Wave header and footer.** On by default (untick *Wave header and footer*, or use `--no-wave`, for the orbit banner and a plain footer): the banner is a gradient band in your theme's accents, with your name, title and first skills centred on it and two translucent waves drifting along its lower edge, plus a matching wave footer above the credit line. It's drawn by this tool (no outside image service like capsule-render), everything outside the waves is transparent so it melts into GitHub's light or dark page, the gradient is darkened just enough to keep the white text readable in every theme, and the waves stand still for visitors who prefer reduced motion. With *Day and night* you get light and dark versions like every other image.
 
-**3D contribution universe.** Tick *3D contribution universe* (or use `--universe`) to add a full-width card under the heatmap: your contribution calendar as a 3D terrain on a plate, your top repos orbiting it as planets sized by stars and coloured by language, and a panel with totals, streaks and a weekly sparkline. It's ported from Git3D Universe (`SandeepKomal/Git3D-Universe` on GitHub, MIT licence, Copyright (c) 2026 Sandeep Komal Pothu) and reworked to fit this project:
+**3D contribution universe.** On by default (untick *3D contribution universe*, or use `--no-universe`, to leave it out): a full-width card under the heatmap shows your contribution calendar as a 3D terrain on a plate, your top repos orbiting it as planets sized by stars and coloured by language, and a panel with totals, streaks and a weekly sparkline. It's ported from Git3D Universe (`SandeepKomal/Git3D-Universe` on GitHub, MIT licence, Copyright (c) 2026 Sandeep Komal Pothu) and reworked to fit this project:
 
 - **Kept fresh, no extra token.** It's drawn from the same data as the other cards. With [daily updates](#keep-the-stats-fresh-every-day) on, the daily workflow redraws it with everything else, and publishing also adds `.github/workflows/update-universe.yml`, which redraws just the universe tile every 6 hours in between. Neither needs a token beyond the one you publish with, and neither uses a third-party action. If you used the standalone Git3D Universe Action before (for example `git3d-universe.yml` or `test-git3d-universe.yml`), you can delete its workflow from your profile repo.
 - **Follows your template.** Its colours come from the theme you pick (including Custom colours), and with *Day and night* it gets a light twin on GitHub's white page and a dark one with a starfield on GitHub's dark page, exactly like the other cards.
