@@ -93,15 +93,15 @@
     var L = p.light;
     return "<defs>" +
       '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + p.bg1 + '"/><stop offset="1" stop-color="' + p.bg2 + '"/></linearGradient>' +
-      '<radialGradient id="au1"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="' + (p.native ? (L ? 0.1 : 0.16) : (L ? 0.28 : 0.42)) + '"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></radialGradient>' +
-      '<radialGradient id="au2"><stop offset="0" stop-color="' + p.a2 + '" stop-opacity="' + (p.native ? (L ? 0.09 : 0.14) : (L ? 0.26 : 0.4)) + '"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="au1"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="' + (L ? 0.28 : 0.42) + '"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="au2"><stop offset="0" stop-color="' + p.a2 + '" stop-opacity="' + (L ? 0.26 : 0.4) + '"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></radialGradient>' +
       '<linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + (L ? "#ffffff" : p.ink) + '" stop-opacity="' + (L ? 0.95 : 0.42) + '"/><stop offset="0.45" stop-color="' + p.ink + '" stop-opacity="0.07"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="' + (L ? 0.5 : 0.55) + '"/></linearGradient>' +
       '<linearGradient id="hl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="' + (L ? 0.95 : 0.6) + '"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>' +
       '<linearGradient id="acc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + p.a1 + '"/><stop offset="1" stop-color="' + p.a2 + '"/></linearGradient>' +
       '<linearGradient id="accv" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="' + p.a2 + '"/><stop offset="1" stop-color="' + p.a1 + '"/></linearGradient>' +
       '<linearGradient id="fade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="0.6"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></linearGradient>' +
       '<filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
-      '<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="' + p.ink + '" stroke-opacity="' + (p.native ? 0.025 : (L ? 0.05 : 0.04)) + '"/></pattern>' +
+      '<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="' + p.ink + '" stroke-opacity="' + (L ? 0.05 : 0.04) + '"/></pattern>' +
       '<clipPath id="clip"><rect width="' + W + '" height="' + H + '" rx="' + RADIUS(p) + '"/></clipPath>' +
       "</defs>" + core.fxStyle(p, W);
   }
@@ -114,13 +114,14 @@
       defs(p, W, H) +
       '<g clip-path="url(#clip)">' +
       '<rect width="' + W + '" height="' + H + '" fill="url(#bg)"/>' +
-      '<rect width="' + W + '" height="' + H + '" fill="url(#grid)"/>' +
-      "<g" + core.fx(p, "d1") + '><circle cx="' + (W * 0.92).toFixed(0) + '" cy="' + (-H * 0.18).toFixed(0) + '" r="' + (R * 0.6).toFixed(0) + '" fill="url(#au1)"/></g>' +
-      "<g" + core.fx(p, "d2") + '><circle cx="' + (W * 0.04).toFixed(0) + '" cy="' + (H * 1.18).toFixed(0) + '" r="' + (R * 0.55).toFixed(0) + '" fill="url(#au2)"/></g>' +
+      // a native-surface card is the page itself (no grid, aurora or sheen); a themed one is a glass panel
       (p.native ? "" :
+        '<rect width="' + W + '" height="' + H + '" fill="url(#grid)"/>' +
+        "<g" + core.fx(p, "d1") + '><circle cx="' + (W * 0.92).toFixed(0) + '" cy="' + (-H * 0.18).toFixed(0) + '" r="' + (R * 0.6).toFixed(0) + '" fill="url(#au1)"/></g>' +
+        "<g" + core.fx(p, "d2") + '><circle cx="' + (W * 0.04).toFixed(0) + '" cy="' + (H * 1.18).toFixed(0) + '" r="' + (R * 0.55).toFixed(0) + '" fill="url(#au2)"/></g>' +
         '<rect width="' + W + '" height="' + H + '" fill="' + p.ink + '" fill-opacity="0.035"/>' +
-        '<rect x="28" y="0.6" width="' + (W - 56) + '" height="1.2" fill="url(#hl)"/>') +
-      '<rect x="0" y="0.5" width="' + Math.round(W * 0.28) + '" height="1.6" fill="url(#hl)"' + core.fx(p, "shine") + "/>" +
+        '<rect x="28" y="0.6" width="' + (W - 56) + '" height="1.2" fill="url(#hl)"/>' +
+        '<rect x="0" y="0.5" width="' + Math.round(W * 0.28) + '" height="1.6" fill="url(#hl)"' + core.fx(p, "shine") + "/>") +
       "</g>" +
       // a native-surface card gets GitHub's own 1px border, like the boxes around it; a themed one keeps its glass edge
       (p.native
