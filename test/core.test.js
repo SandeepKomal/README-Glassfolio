@@ -607,7 +607,9 @@ test("auto theme follows the username and a fixed theme ignores it", () => {
 test("the chosen theme reaches the banner and every card", () => {
   const pal = core.palette("DevopsNimbus", "sunset");
   // the orbit banner and every card carry the theme's own colours (the wave pieces darken them for white text: tested with the wave)
-  const all = [core.buildBanner(core.SAMPLE, { theme: "sunset", wave: false })].concat(cards.buildCards(core.SAMPLE, { theme: "sunset", wave: false }).map((f) => f.data));
+  // (the 3D universe follows the theme in its "theme" style; the default neon style keeps Git3D's colours, tested with the universe)
+  const o = { theme: "sunset", wave: false, universeStyle: "theme" };
+  const all = [core.buildBanner(core.SAMPLE, o)].concat(cards.buildCards(core.SAMPLE, o).map((f) => f.data));
   all.forEach((svg, i) => { assert.ok(svg.includes(pal.a1) && svg.includes(pal.bg1), "file " + i + " is not themed"); });
   const paper = cards.buildCards(core.SAMPLE, { theme: "paper" }).map((f) => f.data).join("");
   assert.ok(paper.includes('fill="#0f172a"'), "paper uses dark text");
@@ -640,7 +642,8 @@ test("animated files stay light and contain nothing that could run code", () => 
   const all = [core.buildBanner(core.SAMPLE, {})].concat(cards.buildCards(core.SAMPLE, {}).map((f) => f.data));
   all.forEach((svg) => {
     assert.doesNotMatch(svg, /<script|onload=|onclick=|javascript:|<foreignObject|<image|xlink:href|href="http/i);
-    assert.ok(svg.length < 60000, "keeps each file small");
+    // the 3D universe is a whole scene and has its own budget (tested with the universe)
+    if (!/CONTRIBUTION OBSERVATORY/.test(svg)) assert.ok(svg.length < 60000, "keeps each file small");
   });
 });
 
@@ -903,7 +906,7 @@ test("custom theme: a good colour is kept as chosen, hex is case-insensitive, ba
 });
 
 test("custom theme: reaches the banner and every card, in both halves of an adaptive set", () => {
-  const o = { theme: "custom", accent1: "#ff8800", accent2: "#00c2a8", adaptive: true, animate: false, wave: false };   // the orbit banner shows the raw accents
+  const o = { theme: "custom", accent1: "#ff8800", accent2: "#00c2a8", adaptive: true, animate: false, wave: false, universeStyle: "theme" };   // the orbit banner shows the raw accents
   const files = cards.buildFiles(core.SAMPLE, o), get = (n) => files.find((f) => f.name === n).data;
   const dark = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "dark", native: true })), light = core.paletteFor("DevopsNimbus", Object.assign({}, o, { mode: "light", native: true }));
   assert.ok(get("banner.svg").includes(dark.a1) && get("banner.svg").includes(dark.bg1));
@@ -1276,8 +1279,21 @@ test("the universe is opt-in, sits in the stats grid, and gets a light twin like
   assert.strictEqual(core.fromQuery("?universe=0").opts.universe, false);
 });
 
-test("the universe follows the chosen theme and GitHub's page colours, and stays light and safe", () => {
+test("the universe uses Git3D Universe's neon palettes by default: aurora at night, daylight by day", () => {
+  assert.strictEqual(core.DEFAULTS.universeStyle, "neon");
   const get = (o, n) => cards.buildFiles(core.SAMPLE, Object.assign({ universe: true }, o)).find((f) => f.name === n).data;
+  const dark = get({ theme: "sunset" }, "cards/universe.svg"), light = get({ theme: "sunset" }, "cards/universe-light.svg");
+  const u = require("../js/universe.js");
+  u.NEON.dark.ramp.slice(1).forEach((c) => assert.ok(dark.includes(c), "night ramp " + c));
+  u.NEON.light.ramp.slice(1).forEach((c) => assert.ok(light.includes(c), "day ramp " + c));
+  assert.ok(!dark.includes(core.THEMES.sunset.a1), "the theme's accent stays out of the neon scene");
+  assert.match(dark, /stroke-width="1" stroke-opacity="\.95"/, "neon tubes around the bar tops at night");
+  assert.ok(dark.includes('stroke="#3d444d"') && light.includes('stroke="#d1d9e0"'), "still framed by GitHub's own hairline");
+  assert.ok(!light.includes('fill="#fff" opacity'), "no starfield on the light page");
+});
+
+test("the universe can follow the chosen theme and GitHub's page colours instead, and stays light and safe", () => {
+  const get = (o, n) => cards.buildFiles(core.SAMPLE, Object.assign({ universe: true, universeStyle: "theme" }, o)).find((f) => f.name === n).data;
   const dark = get({ theme: "sunset" }, "cards/universe.svg"), light = get({ theme: "sunset" }, "cards/universe-light.svg");
   assert.ok(dark.includes(core.THEMES.sunset.a1), "sunset accent in the dark set");
   assert.ok(dark.includes('stroke="#3d444d"') && dark.includes('stop-color="#0d1117"'), "sits on GitHub's dark page");
@@ -1285,7 +1301,7 @@ test("the universe follows the chosen theme and GitHub's page colours, and stays
   assert.ok(!light.includes('fill="#fff" opacity'), "no starfield on the light page");
   const single = get({ theme: "cyber", adaptive: false }, "cards/universe.svg");
   assert.ok(single.includes(core.THEMES.cyber.bg1), "a single set keeps the themed background");
-  [dark, light].forEach((svg) => {
+  [dark, light, get({}, "cards/universe.svg")].forEach((svg) => {
     assert.doesNotMatch(svg, /<script|onload=|javascript:|<foreignObject|<image|href="http/i);
     assert.ok(svg.length < 200000, "a reasonable size: " + svg.length);
     assert.match(svg, /prefers-reduced-motion:reduce/);
@@ -1296,6 +1312,38 @@ test("the universe follows the chosen theme and GitHub's page colours, and stays
   assert.match(still, /transform="rotate\(/, "planets keep their places when motion is off");
 });
 
+test("universe v1.2.1: each planet is drawn behind and in front of the terrain, one copy at a time, and only the front one is named", () => {
+  const u = require("../js/universe.js");
+  const p = core.paletteFor("x", { mode: "dark" });
+  const repos = ["alpha", "beta", "gamma", "delta"].map((name, i) => ({ name, stars: i }));
+  const weeks = u.toWeeks(Array.from({ length: 120 }, (_, i) => i % 3), "2026-06-01");
+  [true, false].forEach((animate) => {
+    const svg = u.buildUniverse({ name: "X", login: "x", weeks, repos }, p, { animate });
+    const copies = [...svg.matchAll(/<g transform="translate\(640 452\) scale\(1 0\.2\)"([^>]*)>/g)].map((m) => m[1]);
+    assert.strictEqual(copies.length, 2 * repos.length, "a far and a near copy of every planet");
+    const hidden = copies.filter((a) => /visibility="hidden"/.test(a)).length;
+    assert.strictEqual(hidden, repos.length, "the still picture shows exactly one copy of each");
+    const named = repos.filter((r) => svg.includes(">" + r.name + "<") || svg.includes(">" + r.name + '<tspan')).length;
+    assert.strictEqual(named, repos.length, "every planet has its name once, on the near copy");
+    repos.forEach((r) => assert.strictEqual(svg.split(">" + r.name).length - 1, 1, r.name + " named once"));
+  });
+  const anim = u.buildUniverse({ name: "X", login: "x", weeks, repos }, p, {});
+  assert.match(anim, /@keyframes unear\{0%\{visibility:visible\}50%,100%\{visibility:hidden\}\}/);
+  assert.match(anim, /@keyframes uorb\{from\{transform:rotate\(0deg\)\}/, "the orbit starts from 0, in step with the layer swap");
+  assert.match(anim, /month|>Jun</, "month labels along the front edge");
+  assert.match(anim, /CONTRIBUTION OBSERVATORY/);
+  assert.doesNotMatch(anim, /Updated /, "no date stamp, so a quiet day changes nothing");
+});
+
+test("universe colours: a share link, the CLI and the saved config carry the choice", () => {
+  assert.doesNotMatch(core.toQuery("x", {}), /universeStyle/);
+  assert.match(core.toQuery("x", { universeStyle: "theme" }), /universeStyle=theme/);
+  assert.strictEqual(core.fromQuery("?universeStyle=theme").opts.universeStyle, "theme");
+  assert.strictEqual(core.fromQuery("?universeStyle=<x>").opts.universeStyle, undefined, "unknown values are ignored");
+  const auto = require("../js/automation.js");
+  assert.strictEqual(JSON.parse(auto.configJson({ universeStyle: "theme" })).universeStyle, "theme");
+});
+
 test("the universe turns the daily counts into Sunday-first weeks and the same numbers as the other cards", () => {
   const u = require("../js/universe.js");
   const weeks = u.toWeeks([1, 0, 2, 3, 0, 0, 4, 5], "2026-10-07");          // a Wednesday
@@ -1304,6 +1352,7 @@ test("the universe turns the daily counts into Sunday-first weeks and the same n
   const st = u.stats(weeks.map((w) => w.filter(Boolean)));
   assert.deepStrictEqual([st.total, st.active, st.longest, st.current, st.max], [15, 5, 2, 2, 5]);
   assert.deepStrictEqual([0, 1, 4, 9, 10].map((c) => u.levelOf(c, 10)), [0, 1, 2, 4, 4]);
+  assert.deepStrictEqual([0, 1, 2, 3, 9].map((c) => u.levelByRank(c, [1, 2, 3])), [0, 1, 2, 3, 4], "colours follow the quartiles of the active days");
 });
 
 /* ---------- wave header and footer ---------- */

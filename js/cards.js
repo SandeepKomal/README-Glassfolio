@@ -384,9 +384,10 @@
   /** The 3D contribution universe (universe.js), fed from the same model as the other cards: no extra token or request. */
   function universeCard(m, o, p) {
     var repos = m.all.slice().sort(function (a, b) { return b.stars - a.stars; }).map(function (r, i) {
-      return { name: r.name, stars: r.stars || 0, color: r.lang ? langColor(r.lang, i, p) : null };
+      return { name: r.name, stars: r.stars || 0 };
     });
-    return universe.buildUniverse({ name: m.name || m.login, login: m.login, weeks: universe.toWeeks(m.activity.daily, m.activity.start), repos: repos }, p, { animate: p.anim });
+    return universe.buildUniverse({ name: m.name || m.login, login: m.login, weeks: universe.toWeeks(m.activity.daily, m.activity.start), repos: repos }, p,
+      { animate: p.anim, style: o.universeStyle });
   }
 
   /* ---------- timeline card ---------- */

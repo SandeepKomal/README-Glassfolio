@@ -6,7 +6,7 @@
   var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [] };
 
   var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe", wave: "o-wave" };
-  var TEXTS = { style: "#style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
+  var TEXTS = { style: "#style", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
   var STORE_KEY = "patch-your-profile.v1";
 
   /* ---------- saved settings (this browser only; never the token) ---------- */
@@ -57,7 +57,7 @@
 
   function resetOptions() {
     var d = {};
-    Object.keys(TEXTS).forEach(function (k) { d[k] = k === "style" ? core.DEFAULTS.style : ""; });
+    Object.keys(TEXTS).forEach(function (k) { d[k] = typeof core.DEFAULTS[k] === "string" ? core.DEFAULTS[k] : ""; });
     Object.keys(FLAGS).forEach(function (k) { d[k] = core.DEFAULTS[k]; });
     d.theme = "auto"; d.order = ""; d.featured = ""; d.accent1 = "#38e8ff"; d.accent2 = "#8b5cf6";
     applyOptions(d);
@@ -461,7 +461,7 @@
     setModel(core.SAMPLE, ""); say("Showing the sample profile. Paste a username above to make it yours."); refresh();
   });
 
-  Object.keys(TEXTS).concat(Object.keys(FLAGS).map(function (k) { return FLAGS[k]; })).forEach(function (idOrSel) {
+  Object.keys(TEXTS).map(function (k) { return TEXTS[k]; }).concat(Object.keys(FLAGS).map(function (k) { return FLAGS[k]; })).forEach(function (idOrSel) {
     var el = document.querySelector(idOrSel.charAt(0) === "#" ? idOrSel : "#" + idOrSel);
     var instant = el.tagName === "SELECT" || el.type === "checkbox";
     el.addEventListener(instant ? "change" : "input", instant ? refresh : refreshSoon);

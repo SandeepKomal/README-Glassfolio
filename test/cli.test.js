@@ -90,3 +90,14 @@ test("cli: --recent adds the Recently pushed card in either layout, and it is of
   assert.ok(!run(["--recent", "--no-recent"]).has("cards/recent.svg"), "the last flag wins");
   assert.ok(run(["--style", "changelog"]).has("cards/changelog.svg"));
 });
+
+test("cli: --universe-style picks the universe's colours and rejects anything else", () => {
+  const neon = run([]), themed = run(["--theme", "sunset", "--universe-style", "theme"]);
+  assert.strictEqual(neon.code, 0, neon.err);
+  assert.match(neon.read("cards/universe.svg"), /#00b7ff/, "Git3D's neon palette by default");
+  assert.strictEqual(themed.code, 0, themed.err);
+  assert.doesNotMatch(themed.read("cards/universe.svg"), /#00b7ff/);
+  const bad = run(["--universe-style", "rainbow"]);
+  assert.notStrictEqual(bad.code, 0);
+  assert.match(bad.err, /--universe-style must be neon or theme/);
+});
