@@ -130,7 +130,7 @@ On by default:
 - **Wave header and footer**: the moving gradient header and footer (untick for the orbit banner and a plain footer).
 - **Visual cards**: stats, streak and projects as cards (untick for a text-only README).
 - **Contribution heatmap**, **Timeline**, **Projects**, **Connect links**.
-- **3D contribution universe**: your contributions as a 3D terrain with your repos orbiting it as planets. Under it, **Universe colours** picks *Neon* (Git3D Universe's neon look, the default) or *Match my theme*.
+- **3D contribution universe**: your contributions as a 3D terrain with your repos orbiting it as planets. Under it, **Universe colours** picks *Neon* (Git3D Universe's neon look, the default), *Glass* (soft glossy indigo and mint) or *Match my theme*.
 - **Footer credit link**.
 
 Off by default, tick to add:

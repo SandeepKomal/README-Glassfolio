@@ -99,5 +99,5 @@ test("cli: --universe-style picks the universe's colours and rejects anything el
   assert.doesNotMatch(themed.read("cards/universe.svg"), /#00b7ff/);
   const bad = run(["--universe-style", "rainbow"]);
   assert.notStrictEqual(bad.code, 0);
-  assert.match(bad.err, /--universe-style must be neon or theme/);
+  assert.match(bad.err, /--universe-style must be neon, glass or theme/);
 });

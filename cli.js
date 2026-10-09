@@ -25,7 +25,7 @@ Options:
   --recent              Add a "Recently pushed" card (your latest five repos, in any layout)
   --no-universe         Leave out the 3D contribution universe (on by default, from Git3D Universe)
   --no-wave             Use the orbit banner and a plain footer instead of the wave header and footer (on by default)
-  --universe-style <neon|theme>  The universe's colours: Git3D Universe's neon palettes (default) or the theme's
+  --universe-style <neon|glass|theme>  The universe's colours: Git3D's neon (default), soft glossy glass, or the theme's
   --universe-only       Rebuild only cards/universe.svg (and its light twin); used by the 3D universe workflow
   --no-adaptive         One card set only. By default there are dark and light sets, and GitHub shows the one matching the viewer
   --no-animation        Static cards (no motion)
@@ -137,7 +137,7 @@ function parseArgs(argv) {
     const bad = o.opts.order.split(",").map((x) => x.trim().toLowerCase()).filter((x) => x && !core.SECTIONS.includes(x));
     if (bad.length) throw new Error("Unknown section: " + bad.join(", ") + ". Use: " + core.SECTIONS.join(", "));
   }
-  if (o.opts.universeStyle && !["neon", "theme"].includes(o.opts.universeStyle)) throw new Error("--universe-style must be neon or theme");
+  if (o.opts.universeStyle && !["neon", "glass", "theme"].includes(o.opts.universeStyle)) throw new Error("--universe-style must be neon, glass or theme");
   if (o.opts.style && !["showcase", "changelog", "manifest", "plain"].includes(o.opts.style)) {
     throw new Error("--style must be showcase or changelog");
   }

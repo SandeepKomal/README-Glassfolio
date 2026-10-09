@@ -280,8 +280,8 @@
    * A link like ?user=DevopsNimbus&theme=cyber reopens the tool with the same choices, so people can share their setup. */
   var SHARE_TEXT = ["role", "tagline", "stack", "linkedin"];
   var SHARE_ACCENTS = ["accent1", "accent2"];
-  // the 3D universe's colours: Git3D Universe's neon palettes, or the profile's own theme
-  var UNIVERSE_STYLES = ["neon", "theme"];
+  // the 3D universe's colours: Git3D Universe's neon palettes, soft glossy glass, or the profile's own theme
+  var UNIVERSE_STYLES = ["neon", "glass", "theme"];
   var SHARE_FLAGS = ["adaptive", "animate", "heatmap", "credit", "banner", "cards", "bars", "pie", "timeline", "proj", "recent", "links", "universe", "wave"];
 
   /** Only values that differ from the defaults go into the link, so links stay short. */

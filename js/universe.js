@@ -66,6 +66,31 @@
     }
   };
 
+  // "Glass": soft glossy 3D, after a reference illustration: icy white or deep navy skies, periwinkle, violet and electric
+  // indigo bars with gradient faces and a bright top edge, and cyan and mint glows.
+  var GLASS = {
+    dark: {
+      dark: true, bgInner: "#1a1650", bgMid: "#0e0c38", bgOuter: "#070623",
+      plateTop: "#14113f", plateEdge: "#4b3fd8", plateSide: "#0b0930",
+      ramp: ["#1b1850", "#3f34c8", "#6d39fe", "#9a7bff", "#2eabff"], peak: "#5ff2d0",
+      ink: "#eef0ff", mute: "#a9aee0", rule: "#28236a", ring: "#8f7dff", ringHi: "#e6e1ff", glow: "#2eabff",
+      cellEdge: "#3b33a0", nebulaA: "#6d39fe", nebulaB: "#2eabff", grid: "#262069",
+      planets: ["#8f6bff", "#5ff2d0", "#2eabff", "#b9a6ff", "#6d39fe", "#7ee0ff", "#55bbb7"],
+      floor: ["#16134a", "#151a52", "#13204f", "#1a1550", "#16134a"],
+      shadow: "#000000", neonEdges: false, gloss: true, stars: true
+    },
+    light: {
+      dark: false, bgInner: "#ffffff", bgMid: "#eef3fb", bgOuter: "#dde8f6",
+      plateTop: "#eef1fc", plateEdge: "#b3baf0", plateSide: "#c9cff3",
+      ramp: ["#e3e8f7", "#b3baf0", "#8f7dff", "#6d39fe", "#442bf1"], peak: "#2eabff",
+      ink: "#14125a", mute: "#5d6390", rule: "#d6ddf2", ring: "#7773f5", ringHi: "#ffffff", glow: "#6d39fe",
+      cellEdge: "#c7cdf0", nebulaA: "#b9a6ff", nebulaB: "#9fe3d6", grid: "#cdd6f0",
+      planets: ["#442bf1", "#3fbfa6", "#9652ff", "#2eabff", "#a795f9", "#7773f5", "#55bbb7"],
+      floor: ["#e8ecf9", "#e4effa", "#e6f5f3", "#ece8fb", "#e8ecf9"],
+      shadow: "#8a90c8", neonEdges: false, gloss: true, stars: false
+    }
+  };
+
   /** The same colour tokens, derived from the profile palette so the universe matches whatever theme is chosen. */
   function themeTokens(p) {
     var L = p.light, b = p.bg1, ink = p.ink, a1 = p.a1, a2 = p.a2;
@@ -86,9 +111,9 @@
     };
   }
 
-  /** Colour tokens for a style ("neon" or "theme"), plus the frame that sits the card on the README page. */
+  /** Colour tokens for a style ("neon", "glass" or "theme"), plus the frame that sits the card on the README page. */
   function tokens(p, style) {
-    var t = style === "theme" ? themeTokens(p) : Object.assign({}, NEON[p.light ? "light" : "dark"]);
+    var set = style === "glass" ? GLASS : NEON, t = style === "theme" ? themeTokens(p) : Object.assign({}, set[p.light ? "light" : "dark"]);
     t.line = p.native ? p.line : mix(t.bgOuter, t.ink, 0.18);
     t.radius = p.native ? 12 : 18;
     return t;
@@ -200,7 +225,17 @@
   /* ---------- terrain ---------- */
   function terrain(weeks, st, t, P, cell) {
     var gap = cell * 3.4 / 22, size = cell - gap, n = weeks.length;
-    var u0 = -n * cell / 2, v0 = -7 * cell / 2, cells = [], bars = "", peakTop = null, jitter = lcg(7);
+    var u0 = -n * cell / 2, v0 = -7 * cell / 2, cells = [], bars = "", peakTop = null, jitter = lcg(7), gloss = {};
+    /** id of the shared gradient for one face of a bar of a level (faces come in the same order for every bar). */
+    function glossFace(lvl, f, fi, base) {
+      var id = "ug" + lvl + (f.top ? "t" : fi);
+      if (!gloss[id]) {
+        gloss[id] = f.top
+          ? '<linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + mix(base, "#ffffff", 0.55) + '"/><stop offset=".55" stop-color="' + shade(base, 1.12) + '"/><stop offset="1" stop-color="' + shade(base, 0.98) + '"/></linearGradient>'
+          : '<linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + shade(base, Math.min(1.3, f.shade * 1.3)) + '"/><stop offset=".5" stop-color="' + shade(base, f.shade) + '"/><stop offset="1" stop-color="' + shade(base, f.shade * 0.72) + '"/></linearGradient>';
+      }
+      return id;
+    }
     var q = quartiles([].concat.apply([], weeks).filter(Boolean));
     // bigger cells (a shorter window) sit closer to the cards, so their bars stay lower to keep clear of them
     var maxBar = MAX_BAR * Math.min(1, Math.pow(22 / cell, 0.75));
@@ -223,7 +258,14 @@
       }
       var base = isPeak ? t.peak : t.ramp[levelByRank(day.count, q)];
       var height = 6 + Math.pow(day.count / st.max, 0.6) * maxBar;
-      prismFaces(P, u, v, size, height).forEach(function (f) {
+      var lvl = isPeak ? 5 : levelByRank(day.count, q);
+      prismFaces(P, u, v, size, height).forEach(function (f, fi) {
+        if (t.gloss) {
+          // glass: every face is a gradient (shared per level and face), and the top gets a bright glassy edge
+          bars += poly(f.pts, "url(#" + glossFace(lvl, f, fi, base) + ")",
+            (f.top ? ' stroke="' + mix(base, "#ffffff", 0.7) + '" stroke-width=".9" stroke-opacity=".9"' : "") + (f.top && isPeak ? ' filter="url(#uglow)"' : ""));
+          return;
+        }
         var edge = !f.top ? "" : t.neonEdges
           ? ' stroke="' + mix(base, "#ffffff", 0.45) + '" stroke-width="1" stroke-opacity=".95"'       // a neon tube around each bar top
           : ' stroke="' + t.cellEdge + '" stroke-width=".6" stroke-opacity=".62"';
@@ -259,7 +301,15 @@
       months += '<line x1="' + r1(a.x) + '" y1="' + r1(a.y + 4) + '" x2="' + r1(a.x) + '" y2="' + r1(a.y + 10) + '" stroke="' + t.mute + '" stroke-opacity=".6"/>' +
         '<text x="' + r1(a.x) + '" y="' + r1(a.y + 24) + '" text-anchor="middle" font-size="12" letter-spacing=".4" fill="' + t.mute + '">' + MONTHS[m - 1] + "</text>";
     });
-    return { plate: plate, bars: bars, months: months, peakTop: peakTop };
+    return { plate: plate, bars: bars, months: months, peakTop: peakTop, defs: Object.keys(gloss).map(function (k) { return gloss[k]; }).join(""),
+      legendGloss: legendIds(gloss) };
+  }
+
+  /** The legend's little prisms reuse the terrain's glass gradients: { "<level><face>": gradient id }. */
+  function legendIds(gloss) {
+    var out = {};
+    Object.keys(gloss).forEach(function (id) { out[id.slice(2)] = id; });
+    return out;
   }
 
   /** A light beam rising from the busiest day, with a callout at its tip. */
@@ -418,7 +468,8 @@
   }
 
   /** Bottom-right card: the intensity ramp drawn as tiny prisms that echo the terrain, and the peak day. */
-  function legend(st, t) {
+  function legend(st, t, legendGloss) {
+    legendGloss = legendGloss || {};
     var w = 340, h = 128, x = W - 40 - w, y = H - 28 - h, ramp = "";
     t.ramp.forEach(function (color, i) {
       var P = projector(x + 42 + i * 26, y + 72), size = 12;
@@ -426,8 +477,9 @@
         ramp += poly([P(-size / 2, -size / 2), P(size / 2, -size / 2), P(size / 2, size / 2), P(-size / 2, size / 2)], color, ' stroke="' + t.cellEdge + '" stroke-width=".6"');
         return;
       }
-      prismFaces(P, -size / 2, -size / 2, size, i * 9).forEach(function (f) {
-        ramp += poly(f.pts, shade(color, f.shade), f.top ? ' stroke="' + t.cellEdge + '" stroke-width=".45" stroke-opacity=".62"' : "");
+      prismFaces(P, -size / 2, -size / 2, size, i * 9).forEach(function (f, fi) {
+        var fill = t.gloss && legendGloss[i + (f.top ? "t" : fi)] ? "url(#" + legendGloss[i + (f.top ? "t" : fi)] + ")" : shade(color, f.shade);
+        ramp += poly(f.pts, fill, f.top ? ' stroke="' + (t.gloss ? mix(color, "#ffffff", 0.7) : t.cellEdge) + '" stroke-width=".45" stroke-opacity="' + (t.gloss ? ".9" : ".62") + '"' : "");
       });
     });
     var px = x + 196;
@@ -509,7 +561,7 @@
       '<filter id="uglow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
       '<filter id="usoft" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="12"/></filter>' +
       '<clipPath id="uclip"><rect width="' + W + '" height="' + H + '" rx="' + t.radius + '"/></clipPath>' +
-      orbit.defs +
+      orbit.defs + land.defs +
       "</defs>" + motion +
       '<g clip-path="url(#uclip)">' +
       '<rect width="' + W + '" height="' + H + '" fill="url(#ubg)"/>' +
@@ -519,11 +571,11 @@
       '<ellipse cx="' + CX + '" cy="' + CY + '" rx="660" ry="280" fill="url(#ufloorGlow)"/>' +
       orbit.back + land.plate + land.bars + land.months + beacon(land.peakTop, st, t) + orbit.front +
       panel(d, st, t) +
-      legend(st, t) +
+      legend(st, t, land.legendGloss) +
       "</g>" +
       '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="' + (t.radius - 0.5) + '" fill="none" stroke="' + t.line + '"' + (p.native ? "" : ' stroke-width="1.5"') + "/>" +
       "</svg>";
   }
 
-  return { buildUniverse: buildUniverse, toWeeks: toWeeks, stats: stats, levelOf: levelOf, levelByRank: levelByRank, NEON: NEON };
+  return { buildUniverse: buildUniverse, toWeeks: toWeeks, stats: stats, levelOf: levelOf, levelByRank: levelByRank, NEON: NEON, GLASS: GLASS };
 });

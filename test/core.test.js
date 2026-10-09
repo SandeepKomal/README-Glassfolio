@@ -1292,6 +1292,21 @@ test("the universe uses Git3D Universe's neon palettes by default: aurora at nig
   assert.ok(!light.includes('fill="#fff" opacity'), "no starfield on the light page");
 });
 
+test("the universe's glass style: a soft glossy palette with gradient faces and glassy bar edges, light and dark", () => {
+  const u = require("../js/universe.js");
+  const get = (o, n) => cards.buildFiles(core.SAMPLE, Object.assign({ universe: true, universeStyle: "glass" }, o)).find((f) => f.name === n).data;
+  const dark = get({}, "cards/universe.svg"), light = get({}, "cards/universe-light.svg");
+  assert.ok(dark.includes(u.GLASS.dark.bgOuter) && light.includes(u.GLASS.light.bgOuter), "its own skies");
+  [dark, light].forEach((svg) => {
+    assert.match(svg, /<linearGradient id="ug\dt"/, "bar tops are gradients");
+    assert.match(svg, /fill="url\(#ug\d[0-9t]\)"/, "faces use the shared gradients");
+    assert.ok(svg.length < 200000);
+  });
+  assert.ok(!light.includes('fill="#fff" opacity'), "no starfield by day");
+  assert.match(core.toQuery("x", { universeStyle: "glass" }), /universeStyle=glass/);
+  assert.doesNotMatch(get({ universeStyle: "neon" }, "cards/universe.svg"), /id="ug\d/, "the other styles keep flat faces");
+});
+
 test("the universe can follow the chosen theme and GitHub's page colours instead, and stays light and safe", () => {
   const get = (o, n) => cards.buildFiles(core.SAMPLE, Object.assign({ universe: true, universeStyle: "theme" }, o)).find((f) => f.name === n).data;
   const dark = get({ theme: "sunset" }, "cards/universe.svg"), light = get({ theme: "sunset" }, "cards/universe-light.svg");
