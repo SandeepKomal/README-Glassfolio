@@ -20,7 +20,7 @@ function fake(rules) {
 const USER = { login: "DevopsNimbus", name: "DevopsNimbus", created_at: "2020-01-01T00:00:00Z", public_repos: 0 };
 const base = (u) => (u.startsWith("/users/DevopsNimbus/repos") ? { body: [] } : /^\/users\/DevopsNimbus(\?|$)/.test(u) ? { body: USER } : null);
 const today = () => new Date().toISOString();
-const GQL_OK = { body: { data: { user: { contributionsCollection: { totalCommitContributions: 9, totalPullRequestContributions: 3, totalIssueContributions: 1,
+const GQL_OK = { body: { data: { user: { contributionsCollection: { totalCommitContributions: 9, totalPullRequestContributions: 3, totalIssueContributions: 1, totalPullRequestReviewContributions: 5,
   contributionCalendar: { totalContributions: 40, weeks: [{ contributionDays: [{ date: "2026-10-05", contributionCount: 4 }, { date: "2026-10-06", contributionCount: 2 }] }] } } } } } };
 
 test("with a token, activity comes from GraphQL", async () => {
@@ -28,7 +28,16 @@ test("with a token, activity comes from GraphQL", async () => {
   const m = await fetchProfile("DevopsNimbus", { fetch: f, token: "t" });
   assert.strictEqual(m.activity.source, "graphql");
   assert.strictEqual(m.activity.total, 40);
+  assert.deepStrictEqual([m.activity.commits, m.activity.prs, m.activity.issues, m.activity.reviews], [9, 3, 1, 5], "the contribution mix's four totals");
   assert.ok(f.seen.every((s) => s.auth === "Bearer t"));
+});
+
+test("without a token, code reviews come from a reviewed-by search, like the other totals", async () => {
+  const f = fake((u) => base(u) || (u.startsWith("/search/issues?q=reviewed-by") ? { body: { total_count: 7 } }
+    : u.startsWith("/search/") ? { body: { total_count: 12 } } : u.startsWith("/users/DevopsNimbus/events") ? { body: [{ created_at: today() }] } : { status: 500, body: {} }));
+  const a = await fetchActivity("DevopsNimbus", { fetch: f });
+  assert.strictEqual(a.reviews, 7);
+  assert.strictEqual(a.prs, 12);
 });
 
 test("a token that GraphQL won't accept falls back to the public activity instead of losing it", async () => {
@@ -45,7 +54,7 @@ test("some activity requests failing still gives a useful picture; the missing n
   const f = fake((u) => base(u) || (u.startsWith("/search/") ? { status: 403, body: {} } : u.startsWith("/users/DevopsNimbus/events") ? { body: [{ created_at: today() }] } : { status: 500, body: {} }));
   const a = await fetchActivity("DevopsNimbus", { fetch: f });
   assert.strictEqual(a.source, "public");
-  assert.strictEqual(a.prs, null); assert.strictEqual(a.commits, null); assert.strictEqual(a.issues, null);
+  assert.strictEqual(a.prs, null); assert.strictEqual(a.commits, null); assert.strictEqual(a.issues, null); assert.strictEqual(a.reviews, null);
   assert.ok(a.active >= 1);
 });
 

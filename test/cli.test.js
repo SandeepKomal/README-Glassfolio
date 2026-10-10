@@ -94,9 +94,9 @@ test("cli: --recent adds the Recently pushed card in either layout, and it is of
 test("cli: --universe-style picks the universe's colours and rejects anything else", () => {
   const neon = run([]), themed = run(["--theme", "sunset", "--universe-style", "theme"]);
   assert.strictEqual(neon.code, 0, neon.err);
-  assert.match(neon.read("cards/universe.svg"), /#00b7ff/, "Git3D's neon palette by default");
+  assert.match(neon.read("cards/universe.svg"), /#7dd3fc/, "Git3D Universe's own cosmic palette by default (the style keeps its original name, neon)");
   assert.strictEqual(themed.code, 0, themed.err);
-  assert.doesNotMatch(themed.read("cards/universe.svg"), /#00b7ff/);
+  assert.doesNotMatch(themed.read("cards/universe.svg"), /#7dd3fc/);
   const bad = run(["--universe-style", "rainbow"]);
   assert.notStrictEqual(bad.code, 0);
   assert.match(bad.err, /--universe-style must be neon or theme/);

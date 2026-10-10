@@ -280,7 +280,7 @@
    * A link like ?user=DevopsNimbus&theme=cyber reopens the tool with the same choices, so people can share their setup. */
   var SHARE_TEXT = ["role", "tagline", "stack", "linkedin"];
   var SHARE_ACCENTS = ["accent1", "accent2"];
-  // the 3D universe's colours: Git3D Universe's neon palettes, or the profile's own theme
+  // the 3D universe's colours: Git3D Universe's own cosmic palettes ("neon" is the option's original name, kept so saved choices and links still work), or the profile's own theme
   var UNIVERSE_STYLES = ["neon", "theme"];
   var SHARE_FLAGS = ["adaptive", "animate", "heatmap", "credit", "banner", "cards", "bars", "pie", "timeline", "proj", "recent", "links", "universe", "wave"];
 
@@ -809,7 +809,7 @@
       { name: "dotfiles", html_url: "https://github.com/DevopsNimbus/dotfiles", description: "", language: "Shell", stargazers_count: 3, pushed_at: "2026-05-01T00:00:00Z", created_at: "2021-01-05T00:00:00Z", topics: [] },
       { name: "slo-calc", html_url: "https://github.com/DevopsNimbus/slo-calc", description: "Error-budget calculator", language: "Go", stargazers_count: 7, pushed_at: "2026-03-10T00:00:00Z", created_at: "2022-08-19T00:00:00Z", topics: ["sre"] }
     ],
-    makeActivity(sampleDays, { source: "public", commits: 1243, prs: 87, issues: 21 }));
+    makeActivity(sampleDays, { source: "public", commits: 1243, prs: 87, issues: 21, reviews: 58 }));
 
   return {
     parseUser: parseUser, buildModel: buildModel, buildReadme: buildReadme,
