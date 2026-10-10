@@ -25,7 +25,7 @@ Options:
   --recent              Add a "Recently pushed" card (your latest five repos, in any layout)
   --no-universe         Leave out the 3D contribution universe (on by default, from Git3D Universe)
   --no-wave             Use the orbit banner and a plain footer instead of the wave header and footer (on by default)
-  --universe-style <neon|theme>  The universe's colours: Git3D Universe's neon palettes (default) or the theme's
+  --universe-style <neon|theme>  The universe's colours: Git3D Universe's own cosmic palettes (neon, the default) or the theme's
   --universe-only       Rebuild only cards/universe.svg (and its light twin); used by the 3D universe workflow
   --no-adaptive         One card set only. By default there are dark and light sets, and GitHub shows the one matching the viewer
   --no-animation        Static cards (no motion)

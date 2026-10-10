@@ -25,7 +25,7 @@ index.html        The page
 css/style.css     Glass / neon theme for the page
 js/core.js        Engine: parse input, build the model, write the README and banner (no network, no DOM)
 js/cards.js       Draws the stats, streak, heatmap, languages, timeline, project and connect cards as SVG files
-js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe v1.2.1)
+js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe v2.0.0)
 js/github.js      Fetches profile, repos and activity from the GitHub API
 js/preview.js     Shows the README as a GitHub profile page would (safe, whitelist-based renderer)
 js/publish.js     Commits the README, banner and cards to <user>/<user> in one commit
@@ -192,13 +192,13 @@ Both layouts can include a banner, stats, streak and heatmap cards, a Languages 
 
 **Wave header and footer.** On by default (untick *Wave header and footer*, or use `--no-wave`, for the orbit banner and a plain footer): the banner is a gradient band in your theme's accents, with your name, title and first skills centred on it and two translucent waves drifting along its lower edge, plus a matching wave footer above the credit line. It's drawn by this tool (no outside image service like capsule-render), everything outside the waves is transparent so it melts into GitHub's light or dark page, the gradient is darkened just enough to keep the white text readable in every theme, and the waves stand still for visitors who prefer reduced motion. With *Day and night* you get light and dark versions like every other image.
 
-**3D contribution universe.** On by default (untick *3D contribution universe*, or use `--no-universe`, to leave it out): a full-width card under the heatmap shows your contribution calendar as a 3D terrain running corner to corner, with month labels and a light beam over your busiest day; your top repos orbit it as lit planets sized by stars (the most-starred one has rings), passing behind the terrain on the far side and in front of it on the near side; and two glass cards show your totals, streaks, weekly sparkline, the intensity scale and your peak day. It's ported from Git3D Universe v1.2.1 (`SandeepKomal/Git3D-Universe` on GitHub, MIT licence, Copyright (c) 2026 Sandeep Komal Pothu) and reworked to fit this project:
+**3D contribution universe.** On by default (untick *3D contribution universe*, or use `--no-universe`, to leave it out): a full-width card under the heatmap shows your year as a 3D pie of month wedges standing on a floating disc round a glowing core, read clockwise like a clock face. Each wedge spans its month and rises with that month's contributions, carries the month's name, and the busiest month is outlined in gold with a label above the pie. Your top repos orbit it as lit planets sized by stars (the most-starred one has rings), passing behind the pie on the far side and in front of it on the near side. In the top-left corner a small upright 3D pie shows your **contribution mix**: commits, pull requests, issues and code review as shares of those four (like GitHub's activity overview), each with its percentage and name on a leader line. A glass card in the bottom-right shows the month colours and your peak day. It's ported from Git3D Universe v2.0.0 (`SandeepKomal/Git3D-Universe` on GitHub, MIT licence, Copyright (c) 2026 Sandeep Komal Pothu) and reworked to fit this project:
 
 - **Kept fresh, no extra token.** It's drawn from the same data as the other cards. With [daily updates](#keep-the-stats-fresh-every-day) on, the daily workflow redraws it with everything else, and publishing also adds `.github/workflows/update-universe.yml`, which redraws just the universe tile every 6 hours in between. Neither needs a token beyond the one you publish with, and neither uses a third-party action. If you used the standalone Git3D Universe Action before (for example `git3d-universe.yml` or `test-git3d-universe.yml`), you can delete its workflow from your profile repo.
-- **Two colour styles.** *Universe colours* (or `--universe-style`) picks them. **Neon** (the default, `neon`) uses Git3D Universe's own radium palettes: neon blue, green, purple and pink with a glowing outline on every bar top at night, and slightly deeper neons that stay readable by day. **Match my theme** (`theme`) takes every colour from the theme you pick (including Custom colours). Either way, *Day and night* gives it a light twin for GitHub's white page and a dark one with a starfield for GitHub's dark page, like the other cards.
-- **Names are never cut off.** Each planet's name shows while it's in front of the terrain and hides with it when it passes behind, as in Git3D Universe v1.2.1.
+- **Two colour styles.** *Universe colours* (or `--universe-style`) picks them. **Cosmic** (the default, `neon`, a name kept from earlier versions so saved choices and share links still work) uses Git3D Universe's own palettes: deep space with a starfield at night, a soft dawn sky by day, one colour wheel for the months (teal, sky, indigo, violet, rose and gold), and four contribution-mix colours checked for colour-blind separation. **Match my theme** (`theme`) takes every colour from the theme you pick (including Custom colours). Either way, *Day and night* gives it a light twin for GitHub's white page and a dark one for GitHub's dark page, like the other cards.
+- **Names are never cut off.** Planet names sit in a layer above everything. On the near side they always show; on the far side a name shows while it's in clear sky and hides only while it would cross the pie. Month names are white at night and dark by day, so there's no white text on a light card.
 - **Respects reduced motion.** The planets orbit with CSS (and swell slightly as they come closer), so visitors who prefer reduced motion see them standing still, and *Subtle motion* off gives a still picture.
-- With a token it covers the past year; without one it shows the last 90 days with bigger cells.
+- **Data window.** With a token the month pie covers the past year and the contribution mix uses GraphQL's totals for the same year (*last 12 months*). Without one the pie shows the last 90 days of public activity (a few wide wedges) and the mix uses public search totals (*all time*); code reviews come from a `reviewed-by:` search. A number GitHub can't give is left out of the mix rather than shown as zero.
 
 **Recently pushed.** Tick *Recently pushed* (or use `--recent`) to add a card with your five latest pushes, each with its language and date, and a pulsing marker on the newest. It's off by default, works in every layout, and moves with the other sections. With cards switched off it becomes a plain list.
 
@@ -242,13 +242,13 @@ node tools/day-night-check.js      # simulates a visitor's device going light at
 
 ## Stats and streaks
 
-The stats card (commits, pull requests, issues, stars, followers) and the streak card (current streak, longest streak, active days, weekly chart) use two data sources:
+The stats card (commits, pull requests, issues, stars, followers), the streak card (current streak, longest streak, active days, weekly chart) and the 3D universe's contribution mix (commits, pull requests, issues, code reviews) use two data sources:
 
 | | Without a token | With a token |
 | --- | --- | --- |
-| Commits, PRs, issues | Search API totals (public, all time) | GraphQL, past year |
+| Commits, PRs, issues, code reviews | Search API totals (public, all time) | GraphQL, past year |
 | Streaks and active days | Public events feed, up to the last 90 days | Full contribution calendar, past year |
-| Requests per profile | about 8 (60 per hour limit) | 3 |
+| Requests per profile | about 9 (60 per hour limit) | 3 |
 
 Without a token the streak is a lower bound, because GitHub only exposes about 90 days of public events. A token needs no scopes for public data and is never stored. Cards are generated locally as SVG, so there's no third-party image service. They share one visual language: deep-space glass panels with aurora light, a faint tech grid and neon accents. Each profile gets one of six curated neon color pairs, chosen from the username.
 
@@ -258,7 +258,7 @@ Without a token the streak is a lower bound, because GitHub only exposes about 9
 - **Phones.** GitHub shows a README about 360px wide. Paired cards (stats and streak, project cards, Connect buttons) use fixed pixel widths, so on a phone they stack at close to full size (a 14px label stays near 11px). The wide cards (heatmap, languages, timeline, changelog, recently pushed, banner) are drawn for a desktop column and shrink to roughly 40% on a phone, so their small text gets hard to read. The *Phone* preview shows exactly this. A narrower "compact" design for those cards would fix it and is the natural next step.
 - Motion is verified in Chromium. GitHub shows SVGs through its own image proxy, which allows inline CSS but not scripts, so the animations should play there too, but check your own profile once. If a viewer blocks them, the still image shows.
 - **The daily update has been tested here but not on GitHub itself.** The workflow's real shell steps ran against real git repositories and a fake GitHub API (first run, quiet day, busy day, outages, settings changes, files that aren't ours), but I couldn't run an actual scheduled GitHub Action. Whether GitHub's temporary `GITHUB_TOKEN` is accepted for the contribution calendar isn't confirmed; if it isn't, the update falls back to the public activity feed, which covers about 90 days. Press *Run workflow* once after publishing and check the run in the Actions tab.
-- Anonymous GitHub API access allows 60 requests an hour per network. Each profile uses about 8. A token (optional field in the page, or `GITHUB_TOKEN` for the CLI) raises that. The page never stores the token.
+- Anonymous GitHub API access allows 60 requests an hour per network. Each profile uses about 9. A token (optional field in the page, or `GITHUB_TOKEN` for the CLI) raises that. The page never stores the token.
 - Language stats count repos per primary language, not lines of code.
 
 ## Extend it

@@ -3,9 +3,9 @@
  * Browser: window.ReadmeGitHub.fetchProfile(username, { token })
  * Node 18+: require("./github.js").fetchProfile(username, { token })
  *
- * Activity numbers (commits, pull requests, issues, streaks):
- *   - with a token: one GraphQL call, exact contribution calendar for the past year
- *   - without a token: the search API for totals, and the public events feed (max 90 days) for streaks
+ * Activity numbers (commits, pull requests, issues, code reviews, streaks):
+ *   - with a token: one GraphQL call, exact contribution calendar and totals for the past year
+ *   - without a token: the search API for all-time totals, and the public events feed (max 90 days) for streaks
  * A token that GraphQL won't accept for contributions (for example the temporary GITHUB_TOKEN of a GitHub Action)
  * falls back to the public path. If the public path can't read anything at all, activity is reported as unavailable
  * (null) instead of as a believable-looking set of zeros, so a scheduled run can refuse to overwrite good data.
@@ -44,7 +44,7 @@
 
   /* ---------- activity ---------- */
   var GQL = "query($login:String!){user(login:$login){contributionsCollection{totalCommitContributions" +
-    " totalPullRequestContributions totalIssueContributions contributionCalendar{totalContributions" +
+    " totalPullRequestContributions totalIssueContributions totalPullRequestReviewContributions contributionCalendar{totalContributions" +
     " weeks{contributionDays{date contributionCount}}}}}}";
 
   function activityGraphQL(username, opts) {
@@ -61,13 +61,14 @@
       });
       return core.makeActivity(days, {
         source: "graphql", total: cc.contributionCalendar.totalContributions,
-        commits: cc.totalCommitContributions, prs: cc.totalPullRequestContributions, issues: cc.totalIssueContributions
+        commits: cc.totalCommitContributions, prs: cc.totalPullRequestContributions, issues: cc.totalIssueContributions,
+        reviews: cc.totalPullRequestReviewContributions
       });
     });
   }
 
   function activityPublic(username, opts) {
-    var q = encodeURIComponent("author:" + username), failed = 0, asked = 0;
+    var q = encodeURIComponent("author:" + username), rq = encodeURIComponent("reviewed-by:" + username), failed = 0, asked = 0;
     // some requests may fail (a search rate limit, say) and the rest still give a useful picture; but if ALL fail we must say so
     function soft(promise, fallback) { asked++; return promise.catch(function () { failed++; return fallback; }); }
     function total(path) { return soft(request(path, opts).then(function (r) { return typeof r.total_count === "number" ? r.total_count : null; }), null); }
@@ -78,12 +79,13 @@
       total("/search/issues?q=" + q + "+type:pr&per_page=1"),
       total("/search/issues?q=" + q + "+type:issue&per_page=1"),
       total("/search/commits?q=" + q + "&per_page=1"),
+      total("/search/issues?q=" + rq + "+type:pr&per_page=1"),
       Promise.all(pages)
     ]).then(function (res) {
       if (failed === asked) throw new Error("GitHub activity could not be read.");
-      var events = [].concat.apply([], res[3]);
+      var events = [].concat.apply([], res[4]);
       var days = core.daysFromEvents(events, Date.now());
-      return core.makeActivity(days, { source: "public", prs: res[0], issues: res[1], commits: res[2] });
+      return core.makeActivity(days, { source: "public", prs: res[0], issues: res[1], commits: res[2], reviews: res[3] });
     });
   }
 
