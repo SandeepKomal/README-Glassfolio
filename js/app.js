@@ -266,14 +266,6 @@
   // jumps to the studio glide, except for visitors who asked their device for less motion
   var SMOOTH = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
-  /** The hero shows the real product: a banner and a showpiece generated right here from the sample profile. */
-  function buildHero() {
-    var banner = $("#heroBanner"), piece = $("#heroPiece");
-    if (!banner || !piece) return;
-    var o = { world: "voxel", mode: "light" };
-    banner.src = dataUri(cardsLib.bannerFor(core.SAMPLE, o));
-    piece.src = dataUri(cardsLib.showpieceFor(core.SAMPLE, { world: "voxel", mode: "light", showpiece: "city" }));
-  }
 
   /* ---------- custom colours ---------- */
   function syncCustom() {
@@ -778,7 +770,6 @@
   })();
 
   /* ---------- start ---------- */
-  buildHero();
   buildThemePicker();
   buildGallery();
   buildWorlds();
