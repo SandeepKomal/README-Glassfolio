@@ -42,6 +42,17 @@
           <label for="accent2">Accent 2<input type="color" id="accent2" value="#8b5cf6"></label>
           <p class="hint">Any two colours work. Text and accents are adjusted automatically so they always stay readable, in dark and light.</p>
         </div>
+        <label class="f" for="showpiece">Showpiece <span class="new">new</span></label>
+        <select id="showpiece">
+          <option value="">None</option>
+          <option value="departures">Departures board</option>
+          <option value="holo">Holo trading card</option>
+          <option value="metro">Metro map</option>
+          <option value="vinyl">Now playing</option>
+          <option value="vitals">Vital signs</option>
+          <option value="garden">Code garden</option>
+        </select>
+        <p class="hint" id="showHint">One animated scene under your banner, drawn from your own repos and activity.</p>
         <div class="chk"><input type="checkbox" id="o-adaptive" checked><label for="o-adaptive">Day and night: follow each visitor's light or dark mode</label></div>
         <p class="hint">Adds a light twin of every image. A visitor whose device (or GitHub) is in light mode sees light cards; in dark mode, dark ones. Many phones and computers switch to dark at sunset by themselves, so your profile follows each visitor's day and night. About twice the files.</p>
         <div class="chk"><input type="checkbox" id="o-animate" checked><label for="o-animate">Subtle motion</label></div>
@@ -197,6 +208,12 @@
       </div>
     </section>
   </main>
+  <section class="band" id="showpieces" aria-labelledby="showTitle">
+    <h2 id="showTitle">Showpieces: a scene nobody else has</h2>
+    <p class="sub">Six animated scenes built from your own data, placed right under your banner. Your repos become flights, stations, trading cards, album tracks or flowers. Tap one to put it on your profile.</p>
+    <div class="gallery show" id="showGrid"></div>
+  </section>
+
   <section class="band" id="gallery" aria-labelledby="galleryTitle">
     <h2 id="galleryTitle">Pick a look</h2>
     <p class="sub">Seven themes plus an Auto mode that picks colours from your username. Every card changes with it. Tap one to try it on the preview above.</p>
@@ -244,6 +261,7 @@
 
 <script src="js/core.js?v=dev"></script>
 <script src="js/universe.js?v=dev"></script>
+<script src="js/showpieces.js?v=dev"></script>
 <script src="js/github.js?v=dev"></script>
 <script src="js/cards.js?v=dev"></script>
 <script src="js/automation.js?v=dev"></script>

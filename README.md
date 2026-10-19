@@ -26,6 +26,7 @@ css/style.css     Glass / neon theme for the page
 js/core.js        Engine: parse input, build the model, write the README and banner (no network, no DOM)
 js/cards.js       Draws the stats, streak, heatmap, languages, timeline, project and connect cards as SVG files
 js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe v2.0.0)
+js/showpieces.js  Draws the six animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden)
 js/github.js      Fetches profile, repos and activity from the GitHub API
 js/preview.js     Shows the README as a GitHub profile page would (safe, whitelist-based renderer)
 js/publish.js     Commits the README, banner and cards to <user>/<user> in one commit
@@ -85,6 +86,7 @@ The browser application uses a restrictive Content-Security-Policy, keeps publis
 ```bash
 node cli.js https://github.com/DevopsNimbus
 node cli.js DevopsNimbus --style changelog --role "Cloud Engineer" --stack "AWS, Terraform"
+node cli.js DevopsNimbus --showpiece metro   # add an animated showpiece under the banner
 node cli.js --sample            # no network
 GITHUB_TOKEN=ghp_xxx node cli.js DevopsNimbus   # exact full-year streaks
 ```
@@ -158,6 +160,19 @@ What to know before you switch it on:
 Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) to `<user>/<user>`, for example by dragging them into the repo page on github.com. If an image is missing, it shows as a broken picture.
 
 ## Look and options
+
+**Showpieces.** One full-width animated scene, right under the banner, drawn from your own repos and activity. Nobody else's profile has the same one, because the data is yours. Pick one in *Look → Showpiece* (or the gallery on the page), or use `--showpiece <name>`. Off by default.
+
+| Showpiece | Your data becomes | Motion |
+| --- | --- | --- |
+| `departures` | A split-flap departures board: featured repos are flights (year, name, description, stars as the gate), and each gets a status from its activity (the latest push is *Boarding*, older ones *Shipped*, *On time* or *Landed*). Contributions, PRs, streak and repos sit underneath. | Letters flip now and then, *Boarding* blinks, and a ticker along the bottom says what you're open to |
+| `holo` | A collectible trading card: contributions are HP, your contribution graph is the card art, your best project and your pull requests are the two attacks. Your next three repos are a fanned deck, rarer with more stars. | A rainbow foil sweep and sparkles |
+| `metro` | A metro map: each top language is a line, its newest repos are stations placed by the year they were made, and every line runs into your own interchange. | Trains ride the lines |
+| `vinyl` | An album: the cover shows your year's contributions, your projects are the tracklist, and the equaliser is your contributions per month (per week with 90 days of data). | The record spins, the bars bounce, the progress bar plays |
+| `vitals` | A bedside monitor: the ECG is drawn from your monthly commits, heart rate is your streak, and pull requests, reviews and stars are the other vitals, with a rhythm and prognosis from how regularly you contribute. | Traces scroll, the heart beats |
+| `garden` | A garden: each project is a flower, taller with more stars and coloured by language, and the grass is your contribution graph, one blade per half week. A night sky for dark-mode visitors and a day sky for light. | Flowers and grass sway, fireflies (or pollen) drift, clouds pass |
+
+Like every other image, a showpiece gets a light and a dark version with *Day and night*, follows *Subtle motion*, stands still for visitors who prefer reduced motion, is kept fresh by the daily update, and needs nothing but the data the cards already use. It's left out of text-only READMEs.
 
 **Themes.** Pick `auto` (colours chosen from the username, so every profile differs), or one of seven fixed themes: `aurora`, `cyber`, `sunset`, `emerald`, `royal`, `graphite` and the light `paper`. Every banner and card follows the theme. Text contrast is checked in the tests for all of them.
 

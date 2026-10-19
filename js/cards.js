@@ -6,10 +6,10 @@
  */
 (function (root, factory) {
   var node = typeof module === "object" && module.exports;
-  var api = factory(node ? require("./core.js") : root.ReadmeCore, node ? require("./universe.js") : root.ReadmeUniverse);
+  var api = factory(node ? require("./core.js") : root.ReadmeCore, node ? require("./universe.js") : root.ReadmeUniverse, node ? require("./showpieces.js") : root.ReadmeShowpieces);
   if (node) module.exports = api;
   else root.ReadmeCards = api;
-})(typeof self !== "undefined" ? self : this, function (core, universe) {
+})(typeof self !== "undefined" ? self : this, function (core, universe, showpieces) {
   "use strict";
 
   var SANS = "system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -17,14 +17,7 @@
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var DAYMS = 86400000;
 
-  var LANG_COLORS = {
-    "JavaScript": "#f1e05a", "TypeScript": "#3178c6", "Python": "#3572A5", "Go": "#00ADD8", "Rust": "#dea584",
-    "Java": "#b07219", "Kotlin": "#A97BFF", "Swift": "#F05138", "C": "#9a9a9a", "C++": "#f34b7d", "C#": "#178600",
-    "PHP": "#4F5D95", "Ruby": "#CC342D", "Shell": "#89e051", "HCL": "#844FBA", "Dockerfile": "#5d8fa8",
-    "HTML": "#e34c26", "CSS": "#8a63d2", "SCSS": "#c6538c", "Vue": "#41b883", "Jupyter Notebook": "#DA5B0B",
-    "Makefile": "#6aa84f", "Lua": "#6c7bff", "Dart": "#00B4AB", "Markdown": "#8fa3b8", "Jinja": "#c25a5a",
-    "Groovy": "#4298b8", "Scala": "#DC322F", "R": "#198CE7"
-  };
+  var LANG_COLORS = core.LANG_COLORS;
 
   /* ---------- text helpers ---------- */
   function esc(s) {
@@ -654,7 +647,9 @@
     if (!o.cards) return [];
     var p = core.paletteFor(m.login, o);
     p.anim = o.animate !== false;
-    var files = [{ name: "cards/stats.svg", data: statsCard(m, p) }];
+    var files = [];
+    if (core.wantsShowpiece(m, o)) files.push({ name: "cards/showpiece.svg", data: showpieces.build(m, o, p) });
+    files.push({ name: "cards/stats.svg", data: statsCard(m, p) });
     var streak = streakCard(m, p);
     if (streak) files.push({ name: "cards/streak.svg", data: streak });
     if (o.heatmap) {

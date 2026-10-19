@@ -89,6 +89,16 @@
     };
   }
 
+  /* GitHub's own language colours, shared by the cards and the showpieces. */
+  var LANG_COLORS = {
+    "JavaScript": "#f1e05a", "TypeScript": "#3178c6", "Python": "#3572A5", "Go": "#00ADD8", "Rust": "#dea584",
+    "Java": "#b07219", "Kotlin": "#A97BFF", "Swift": "#F05138", "C": "#9a9a9a", "C++": "#f34b7d", "C#": "#178600",
+    "PHP": "#4F5D95", "Ruby": "#CC342D", "Shell": "#89e051", "HCL": "#844FBA", "Dockerfile": "#5d8fa8",
+    "HTML": "#e34c26", "CSS": "#8a63d2", "SCSS": "#c6538c", "Vue": "#41b883", "Jupyter Notebook": "#DA5B0B",
+    "Makefile": "#6aa84f", "Lua": "#6c7bff", "Dart": "#00B4AB", "Markdown": "#8fa3b8", "Jinja": "#c25a5a",
+    "Groovy": "#4298b8", "Scala": "#DC322F", "R": "#198CE7"
+  };
+
   /* Curated neon pairs for the "auto" theme: chosen from the username, so every profile looks distinct. */
   var NEON = [
     ["#38e8ff", "#8b5cf6"],   // cyan / violet
@@ -290,6 +300,7 @@
     if (user) q.set("user", user);
     if (o.theme !== DEFAULTS.theme) q.set("theme", o.theme);
     if (o.style !== DEFAULTS.style) q.set("style", o.style);
+    if (SHOWPIECE_KEYS.indexOf(o.showpiece) !== -1) q.set("showpiece", o.showpiece);
     if (o.universeStyle !== DEFAULTS.universeStyle && UNIVERSE_STYLES.indexOf(o.universeStyle) !== -1) q.set("universeStyle", o.universeStyle);
     SHARE_TEXT.forEach(function (k) { if (o[k]) q.set(k, String(o[k]).slice(0, 160)); });
     SHARE_ACCENTS.forEach(function (k) { if (validHex(o[k])) q.set(k, o[k].toLowerCase()); });
@@ -307,6 +318,8 @@
     if (theme && THEME_ORDER.indexOf(theme) !== -1) opts.theme = theme;
     var style = q.get("style");
     if (style === "showcase" || style === "changelog") opts.style = style;
+    var show = q.get("showpiece");
+    if (SHOWPIECE_KEYS.indexOf(show) !== -1) opts.showpiece = show;
     var ustyle = q.get("universeStyle");
     if (UNIVERSE_STYLES.indexOf(ustyle) !== -1) opts.universeStyle = ustyle;
     SHARE_TEXT.forEach(function (k) { var v = q.get(k); if (v) opts[k] = oneLine(v).slice(0, 160); });
@@ -349,7 +362,8 @@
 
   var DEFAULTS = {
     style: "showcase", theme: "auto", accent1: "", accent2: "", order: "", featured: "", adaptive: true, mode: "", suffix: "", animate: true, heatmap: true, credit: true, siteUrl: "", tagline: "", role: "", stack: "", linkedin: "",
-    banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true, universe: true, universeStyle: "neon", wave: true
+    banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true, universe: true, universeStyle: "neon", wave: true,
+    showpiece: ""
   };
   function withDefaults(o) {
     var out = {}, k;
@@ -491,6 +505,25 @@
   function wantsUniverse(m, o) { return !!(o.cards && o.universe && m.activity && m.activity.daily && m.activity.daily.length); }
   function wantsRecent(m, o) { return !!(o.cards && o.recent && m.recent && m.recent.length); }
 
+  /* ---------- showpieces ----------
+   * One full-width animated scene under the banner, drawn from the profile's own data (showpieces.js draws them).
+   * Off ("") by default, so existing READMEs keep their look until someone picks one. */
+  var SHOWPIECES = [
+    { key: "departures", label: "Departures board", blurb: "Repos as flights on a split-flap board, with a ticker that says you're open to roles." },
+    { key: "holo", label: "Holo trading card", blurb: "You as a collectible card: contributions are HP, top projects are attacks, a foil shimmer on top." },
+    { key: "metro", label: "Metro map", blurb: "Languages are metro lines, repos are stations by year, all running into your own interchange." },
+    { key: "vinyl", label: "Now playing", blurb: "Your work as an album: projects are the tracklist, months are a bouncing equaliser." },
+    { key: "vitals", label: "Vital signs", blurb: "A bedside monitor: commits as the heartbeat, streak as heart rate, PRs and reviews as vitals." },
+    { key: "garden", label: "Code garden", blurb: "Repos grow as flowers by stars, the grass is your contribution graph. Night or day, with the visitor's theme." }
+  ];
+  var SHOWPIECE_KEYS = SHOWPIECES.map(function (s) { return s.key; });
+  function wantsShowpiece(m, o) { return !!(o.cards && SHOWPIECE_KEYS.indexOf(o.showpiece) !== -1); }
+  function showpieceSection(m, o) {
+    if (!wantsShowpiece(m, o)) return [];
+    var label = SHOWPIECES[SHOWPIECE_KEYS.indexOf(o.showpiece)].label;
+    return ['<div align="center">', "", pic(o, "cards/showpiece.svg", 'alt="' + esc(label + " for " + m.login) + '" width="100%"'), "", "</div>", ""];
+  }
+
   var MAX_PROJECT_CARDS = 6;
   var SECTIONS = ["stats", "stack", "timeline", "projects", "connect"];
 
@@ -607,7 +640,7 @@
   }
 
   function buildReadme(m, options) {
-    var o = withDefaults(options), L = [].concat(header(m, o));
+    var o = withDefaults(options), L = [].concat(header(m, o), showpieceSection(m, o));
     var cardProjects = o.cards && o.style !== "changelog";
     var parts = {
       stats: function () { return o.cards ? statsSection(m, o) : []; },
@@ -816,7 +849,7 @@
     buildBanner: buildBanner, buildWaveFooter: buildWaveFooter, SAMPLE: SAMPLE, DEFAULTS: DEFAULTS,
     palette: palette, streaks: streaks, weeklyCounts: weeklyCounts, daysFromEvents: daysFromEvents,
     makeActivity: makeActivity, MAX_PROJECT_CARDS: MAX_PROJECT_CARDS, toolList: toolList, connectItems: connectItems, designation: designation,
-    THEMES: THEMES, THEME_ORDER: THEME_ORDER, fxStyle: fxStyle, fx: fx,
-    toQuery: toQuery, fromQuery: fromQuery, contrast: contrast, tips: tips, changelogData: changelogData, wantsChangelog: wantsChangelog, wantsRecent: wantsRecent, wantsUniverse: wantsUniverse, hash: hash, initials: initials, subtitle: subtitle, chipNames: chipNames, paletteFor: paletteFor, mixHex: mixHex, pickProjects: pickProjects, sectionOrder: sectionOrder, SECTIONS: SECTIONS, validHex: validHex
+    THEMES: THEMES, THEME_ORDER: THEME_ORDER, LANG_COLORS: LANG_COLORS, fxStyle: fxStyle, fx: fx,
+    toQuery: toQuery, fromQuery: fromQuery, contrast: contrast, tips: tips, changelogData: changelogData, wantsChangelog: wantsChangelog, wantsRecent: wantsRecent, wantsUniverse: wantsUniverse, wantsShowpiece: wantsShowpiece, SHOWPIECES: SHOWPIECES, SHOWPIECE_KEYS: SHOWPIECE_KEYS, hash: hash, initials: initials, subtitle: subtitle, chipNames: chipNames, paletteFor: paletteFor, mixHex: mixHex, pickProjects: pickProjects, sectionOrder: sectionOrder, SECTIONS: SECTIONS, validHex: validHex
   };
 });
