@@ -784,11 +784,11 @@
       items.map(function (it) { return "**[" + it.label + "](" + it.url + ")**"; }).join(" · "), "", "</div>", ""];
   }
 
-  /** Footer line; the "Made with" credit links back to the site that generated the README, when it has an address. */
+  /** README attribution line; the "Made with" credit links back to the generating site. */
   function footer(o) {
     var base = "Patched together from public GitHub data";
-    if (!o.credit) return "<sub>" + base + ".</sub>";
-    return "<sub>" + base + " · " + (o.siteUrl ? 'made with <a href="' + esc(o.siteUrl) + '">README Glassfolio</a>' : "made with README Glassfolio") + "</sub>";
+    if (!o.credit) return '<sub class="readme-credit">' + base + '.</sub>';
+    return '<sub class="readme-credit">' + base + " · " + (o.siteUrl ? 'made with <a href="' + esc(o.siteUrl) + '">README Glassfolio</a>' : "made with README Glassfolio") + "</sub>";
   }
 
   function buildReadme(m, options) {
