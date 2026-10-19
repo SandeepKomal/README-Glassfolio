@@ -558,16 +558,23 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
 .guide code{overflow-wrap:anywhere}
 .nav-in>.btn-sm{margin-left:auto}
 
-/* Keep only the generated README attribution readable on narrow mobile previews. */
+/* Keep the README attribution phrases visually grouped on narrow previews. */
 @media (max-width:600px){
   .gh-body sub.readme-credit{
     display:inline-block;
-    max-width:32ch;
+    max-width:100%;
+    text-align:center;
     white-space:normal;
-    text-wrap:balance;
     font-size:.62em;
-    line-height:1.35;
+    line-height:1.3;
   }
+  .gh-body sub.readme-credit .readme-credit-source,
+  .gh-body sub.readme-credit .readme-credit-made{
+    display:block;
+    max-width:100%;
+    text-wrap:balance;
+  }
+  .gh-body sub.readme-credit .readme-credit-made{margin-top:.12em}
 }
 
 /* ---------- privacy policy callout: scoped to the privacy section only ---------- */
