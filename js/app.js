@@ -572,7 +572,7 @@
     });
     // the message line sits under the form; when it's scrolled out of view, echo it briefly at the bottom of the screen
     var r = m.getBoundingClientRect(), t = $("#toast");
-    if (t && text && (r.bottom < 0 || r.top > window.innerHeight)) {
+    if (t && text && say.engaged && (r.bottom < 0 || r.top > window.innerHeight)) {
       t.textContent = text; t.classList.toggle("err", !!isErr); t.classList.add("on");
       clearTimeout(say.timer); say.timer = setTimeout(function () { t.classList.remove("on"); }, 3600);
     }
@@ -769,6 +769,9 @@
     }).catch(function () { /* offline: keep what we have */ });
   })();
 
+  // the on-screen echo is for replies to something the visitor did, never for what the page says by itself on load
+  ["pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, function () { say.engaged = true; }, { once: true, capture: true }); });
+
   /* ---------- start ---------- */
   buildThemePicker();
   buildGallery();
@@ -791,6 +794,6 @@
     $("#ask").requestSubmit ? $("#ask").requestSubmit() : $("#go").click();
   } else {
     // show the finished design straight away, before anyone has typed anything
-    setModel(core.SAMPLE, ""); say("The studio below shows a sample profile. Type a username to build yours."); refresh();
+    setModel(core.SAMPLE, ""); say("This is a sample profile. Type your username above to build yours."); refresh();
   }
 })();

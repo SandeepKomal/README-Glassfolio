@@ -14,6 +14,21 @@
   var nav = document.querySelector(".nav"), shot = document.querySelector(".sc-stage");
   function dataUri(svg) { return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+  /** A desktop monitor around two images: the screen (thin dark bezel), a light chin, a slim neck and a flat foot. */
+  function monitor(into, imgs) {
+    var screen = el("div", "sc-screen");
+    imgs.forEach(function (i) { screen.appendChild(i); });
+    into.appendChild(screen); into.appendChild(el("div", "sc-chin")); into.appendChild(el("div", "sc-neck")); into.appendChild(el("div", "sc-base"));
+    return into;
+  }
+
+  /* ---------- hero buttons: jump to the studio, then put the cursor in the username box (or load the sample) ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-focus]"), function (a) {
+    a.addEventListener("click", function () { var t = document.querySelector(a.dataset.focus); if (t) setTimeout(function () { t.focus({ preventScroll: true }); }, reduce ? 0 : 450); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-sample]"), function (a) {
+    a.addEventListener("click", function () { var b = document.getElementById("sample"); if (b) b.click(); });
+  });
 
   /* ---------- the numbers: real counts from the generator itself ---------- */
   var COUNTS = core ? { designs: core.WORLDS.length, showpieces: core.SHOWPIECES.length, themes: core.THEME_ORDER.filter(function (k) { return k !== "auto" && k !== "custom"; }).length, servers: 0 } : {};
@@ -28,12 +43,12 @@
   }
 
   /* ---------- the story ---------- */
-  // six designs here and six others in the hero's showcase, so the page shows twelve looks
-  var STORY = ["transit", "botanical", "atlas", "periodic", "observatory", "ink"];
+  // every look: the classic glass, then each of the designs
+  var STORY = core ? [""].concat(core.WORLD_KEYS) : [];
   var track = document.getElementById("storyTrack"), story = null;
   if (track && core && cardsLib) {
     var looks = STORY.map(function (key) {
-      var w = core.worldOf({ world: key }), mode = key === "observatory" ? "dark" : "light", o = { world: key, mode: mode, theme: key ? "" : "emerald" };
+      var w = core.worldOf({ world: key }), mode = key === "" || key === "airport" || key === "observatory" || key === "abyss" ? "dark" : "light", o = { world: key, mode: mode, theme: key ? "" : "emerald" };
       var piece = core.showpieceKey(o), sp = core.SHOWPIECES.filter(function (s) { return s.key === piece; })[0];
       o.showpiece = piece;
       return { name: w ? w.label : "Classic", blurb: w ? w.blurb : "Glass cards on a moving wave, in any theme or your own colours.", piece: sp ? sp.label : "", o: o };
@@ -55,11 +70,11 @@
       var sticky = el("div", "story-sticky"), list = el("ol", "story-list"), media = el("div", "story-media"), bar = el("div", "story-progress"), fill = el("i");
       looks.forEach(function (l, i) {
         var li = el("li"); li.appendChild(el("h3", "", l.name)); li.appendChild(el("p", "", l.blurb)); list.appendChild(li); items.push(li);
-        var fig = el("figure"); images(l).forEach(function (im) { fig.appendChild(im); }); media.appendChild(fig); figs.push(fig);
+        var fig = monitor(el("figure"), images(l)); media.appendChild(fig); figs.push(fig);
       });
       bar.setAttribute("aria-hidden", "true"); bar.appendChild(fill);
       sticky.appendChild(list); sticky.appendChild(media); sticky.appendChild(bar); track.appendChild(sticky);
-      track.style.height = "calc(100vh + " + (looks.length * 70) + "vh)";
+      track.style.height = "calc(100vh + " + (looks.length * 45) + "vh)";
       story = { fill: fill, at: -1 };
     }
   }
@@ -75,7 +90,7 @@
   }
 
   /* ---------- statements: words fill from ink to the brand ramp, one after another, as the line scrolls past ---------- */
-  var RAMP = ["#22304f", "#3d5580", "#8a6239"], INK = [28, 28, 30];
+  var RAMP = ["#9a5cc6", "#7a6bd1", "#4f7fcb", "#3d8a8f", "#4c9437"], INK = [28, 28, 30];
   function rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.slice(i, i + 2), 16); }); }
   function along(t) { var seg = t * (RAMP.length - 1), i = Math.min(RAMP.length - 2, Math.floor(seg)), a = rgb(RAMP[i]), b = rgb(RAMP[i + 1]), k = seg - i; return a.map(function (v, j) { return v + (b[j] - v) * k; }); }
   var fills = Array.prototype.map.call(document.querySelectorAll("[data-fill]"), function (box) {
@@ -105,11 +120,10 @@
     var slides = SHOW.map(function (look, i) {
       var w = core.worldOf(look), piece = core.showpieceKey(look), sp = core.SHOWPIECES.filter(function (x) { return x.key === piece; })[0];
       var o = { world: look.world, theme: look.theme || "", mode: look.mode, showpiece: piece }, name = look.name || (w ? w.label : "Classic");
-      var fig = el("figure", "sc-slide"), screen = el("div", "sc-screen"), a = el("img"), b = el("img");
+      var fig = el("figure", "sc-slide"), a = el("img"), b = el("img");
       a.src = dataUri(cardsLib.bannerFor(core.SAMPLE, o)); a.alt = name + " design: banner"; a.width = 1200; a.height = 300; a.decoding = "async";
       b.src = dataUri(cardsLib.showpieceFor(core.SAMPLE, o)); b.alt = name + " design: the " + (sp ? sp.label : "") + " showpiece"; b.decoding = "async";
-      screen.appendChild(a); screen.appendChild(b); fig.appendChild(screen);
-      fig.appendChild(el("div", "sc-neck")); fig.appendChild(el("div", "sc-base"));
+      monitor(fig, [a, b]);
       fig.addEventListener("click", function () { if (sc.at !== i) { go(i); } });
       stage.appendChild(fig);
       return { el: fig, label: name + (sp ? " · " + sp.label : "") };
