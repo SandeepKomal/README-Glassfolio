@@ -618,7 +618,7 @@ test("the chosen theme reaches the banner and every card", () => {
 
 /* ---------- motion ---------- */
 test("motion is on by default, switchable off, and never changes the still design", () => {
-  const strip = (svg) => svg.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/ class="(?:fx|wv|u)-[a-z0-9]+"/g, "").replace(/ style="[^"]*"/g, "");
+  const strip = (svg) => svg.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/ class="(?:fx|wv|u|lf)-[a-z0-9]+"/g, "").replace(/ style="[^"]*"/g, "");
   const files = (animate) => [core.buildBanner(core.SAMPLE, { animate })].concat(cards.buildCards(core.SAMPLE, { animate }).map((f) => f.data));
   const on = files(true), off = files(false);
   on.forEach((svg, i) => {

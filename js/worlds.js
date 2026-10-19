@@ -181,10 +181,12 @@
           for (var j = 0; j < 4; j++) lines += '<path d="' + contour(cx, cy, rx * (1 - j * 0.22), rx * 0.6 * (1 - j * 0.22), k + j) + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.07"/>';
         }
         return { back: "<defs>" + clipWF(W, H, 4) + grain("gr", p, 6, 0.06) + '</defs><g clip-path="url(#wf)"><rect width="' + W + '" height="' + H + '" fill="' + p.bg1 + '"/><rect width="' + W + '" height="' + H + '" fill="url(#gr)"/>' + lines + "</g>",
-          over: '<rect x="5" y="5" width="' + (W - 10) + '" height="' + (H - 10) + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.55" stroke-width="1.2"/><rect x="9" y="9" width="' + (W - 18) + '" height="' + (H - 18) + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.25" stroke-width="0.6"/>', style: "" };
+          over: '<rect x="5" y="5" width="' + (W - 10) + '" height="' + (H - 10) + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.55" stroke-width="1.2"/><rect x="9" y="9" width="' + (W - 18) + '" height="' + (H - 18) + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.25" stroke-width="0.6"/>',
+          style: ".wcn{transform-box:fill-box;transform-origin:center;animation:wcn 4s ease-in-out infinite}@keyframes wcn{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}" +
+            ".wsh{animation:wsh 16s ease-in-out infinite alternate}@keyframes wsh{to{transform:translateX(" + (W - 110) + "px)}}" };
       },
       title: function (p, left, right, edge) {
-        return compass(36, 35, 9, p.a1) + '<text x="52" y="40" font-family="' + SERIF + '" font-size="16" font-style="italic" fill="' + p.ink + '">' + esc(sentence(left)) + "</text>" +
+        return '<g' + anim(p, "wcn") + ">" + compass(36, 35, 9, p.a1) + "</g>" + (p.anim ? '<g transform="translate(46 50)"><g class="wsh"><g transform="scale(.42)">' + ship(p.ink) + "</g></g></g>" : "") + '<text x="52" y="40" font-family="' + SERIF + '" font-size="16" font-style="italic" fill="' + p.ink + '">' + esc(sentence(left)) + "</text>" +
           (right ? '<text x="' + edge + '" y="40" text-anchor="end" font-family="' + SERIF + '" font-size="11" letter-spacing="2" fill="' + p.ink + '" fill-opacity="0.6">' + esc(right) + "</text>" : "") +
           '<line x1="28" y1="52" x2="' + edge + '" y2="52" stroke="' + p.a1 + '" stroke-opacity="0.6" stroke-dasharray="6 4"/>';
       },
@@ -285,9 +287,10 @@
           style: "@keyframes sw{0%,100%{transform:translateX(-420px)}50%{transform:translateX(420px)}}.sw{animation:sw 10s ease-in-out infinite}" };
       },
       footer: function (m, o, p) {
-        var s = '<path d="M60 70 Q210 100 360 70 Q510 100 660 70 Q810 100 960 70 Q1110 100 1140 76" fill="none" stroke="' + p.a2 + '" stroke-width="5" stroke-linecap="round"/>';
+        var s = '<path d="M60 70 Q210 100 360 70 Q510 100 660 70 Q810 100 960 70 Q1110 100 1140 76" fill="none" stroke="' + p.a2 + '" stroke-width="5" stroke-linecap="round"' + anim(p, "rp") + "/>";
         [60, 360, 660, 960].forEach(function (x) { s += '<rect x="' + (x - 3) + '" y="52" width="6" height="60" fill="' + p.a1 + '"/><circle cx="' + x + '" cy="50" r="7" fill="' + p.a1 + '"/>'; });
-        return { svg: s + '<text x="600" y="34" text-anchor="middle" font-family="' + SERIF + '" font-size="18" font-style="italic" fill="' + p.ink + '">Exit through the gift shop · the @' + esc(trunc(m.login, 28)) + " collection</text>", style: "" };
+        return { svg: s + '<text x="600" y="34" text-anchor="middle" font-family="' + SERIF + '" font-size="18" font-style="italic" fill="' + p.ink + '">Exit through the gift shop · the @' + esc(trunc(m.login, 28)) + " collection</text>",
+          style: "@keyframes rp{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}.rp{animation:rp 3.6s ease-in-out infinite}" };
       }
     },
 
@@ -305,8 +308,10 @@
         var mark = esc(String(p.mark || "").slice(0, 2));
         return { back: "<defs>" + clipWF(W, H, 6) + '</defs><g clip-path="url(#wf)"><rect width="' + W + '" height="' + H + '" fill="' + p.bg1 + '"/>' + fibres + "</g>",
           over: '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="5.5" fill="none" stroke="' + p.line + '"/>' +
-            '<g transform="rotate(-8 ' + (W - 22) + ' 16)"><rect x="' + (W - 32) + '" y="6" width="20" height="20" rx="3" fill="' + p.a1 + '" fill-opacity="0.9"/><text x="' + (W - 22) + '" y="20" text-anchor="middle" font-family="' + SERIF + '" font-size="9" font-weight="700" fill="#fff7ee">' + mark + "</text></g>",
-          style: "" };
+            '<g transform="rotate(-8 ' + (W - 22) + ' 16)"><g' + anim(p, "wsl") + '><rect x="' + (W - 32) + '" y="6" width="20" height="20" rx="3" fill="' + p.a1 + '" fill-opacity="0.9"/><text x="' + (W - 22) + '" y="20" text-anchor="middle" font-family="' + SERIF + '" font-size="9" font-weight="700" fill="#fff7ee">' + mark + "</text></g></g>" +
+            (p.anim ? '<g clip-path="url(#wf)"><g transform="translate(-14 ' + Math.round(H * 0.18) + ')"><g class="wpt">' + petal("#f2a7b8") + "</g></g></g>" : ""),
+          style: ".wsl{transform-box:fill-box;transform-origin:center;animation:wsl 6s ease-in-out infinite}@keyframes wsl{0%,82%,100%{transform:scale(1)}86%{transform:scale(1.3)}90%{transform:scale(.9)}94%{transform:scale(1)}}" +
+            ".wpt{animation:wpt 13s linear infinite}@keyframes wpt{0%{transform:translate(0,0) rotate(0);opacity:0}8%,90%{opacity:.9}100%{transform:translate(" + (W + 30) + "px," + Math.round(H * 0.6) + "px) rotate(540deg);opacity:0}}" };
       },
       title: function (p, left, right, edge) {
         return '<rect x="28" y="29" width="10" height="10" rx="1.5" fill="' + p.a1 + '"/><text x="46" y="39" font-family="' + SERIF + '" font-size="16" letter-spacing="0.6" fill="' + p.ink + '">' + esc(sentence(left)) + "</text>" +
@@ -366,16 +371,18 @@
         return { back: "<defs>" + clipWF(W, H, 10) + '<pattern id="gp" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="' + p.ink + '" stroke-opacity="0.05"/></pattern>' +
           '<pattern id="gP" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0H0V60" fill="none" stroke="' + p.ink + '" stroke-opacity="0.08"/></pattern></defs>' +
           '<g clip-path="url(#wf)"><rect width="' + W + '" height="' + H + '" fill="' + p.bg1 + '"/><rect width="' + W + '" height="' + H + '" fill="url(#gp)"/><rect width="' + W + '" height="' + H + '" fill="url(#gP)"/></g>',
-          over: '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="9.5" fill="none" stroke="' + p.line + '"/>', style: "" };
+          over: '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="9.5" fill="none" stroke="' + p.line + '"/>',
+          style: ".wtp{transform-box:fill-box;transform-origin:center;animation:wtp 3.4s ease-in-out infinite}@keyframes wtp{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}" +
+            ".whc{animation:whc 2.2s ease-in-out infinite}@keyframes whc{0%,100%{opacity:1}50%{opacity:.5}}" };
       },
       title: function (p, left, right, edge) {
-        return tile(26, 18, 30, String(core.hash(left) % 118 + 1), symbolOf(left), p.a1, p.ink) +
+        return '<g' + anim(p, "wtp", "animation-delay:-" + (core.hash(left) % 34 / 10).toFixed(1) + "s") + ">" + tile(26, 18, 30, String(core.hash(left) % 118 + 1), symbolOf(left), p.a1, p.ink) + "</g>" +
           '<text x="66" y="39" font-family="' + GROTESK + '" font-size="15" font-weight="800" fill="' + p.ink + '">' + esc(sentence(left)) + "</text>" +
           (right ? '<text x="' + edge + '" y="39" text-anchor="end" font-family="' + MONO + '" font-size="10.5" letter-spacing="1.4" fill="' + p.ink + '" fill-opacity="0.55">' + esc(right) + "</text>" : "") +
           '<rect x="66" y="50" width="' + (edge - 66) + '" height="1" fill="' + p.ink + '" fill-opacity="0.1"/>';
       },
       cell: function (p, x, y, size, lv) {
-        return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + size.toFixed(1) + '" height="' + size.toFixed(1) + '" rx="2" fill="' + (lv === 4 ? p.a2 : lv ? p.a1 : p.ink) + '" fill-opacity="' + (lv === 4 ? 0.9 : lv ? 0.2 + lv * 0.22 : 0.05) + '"/>';
+        return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + size.toFixed(1) + '" height="' + size.toFixed(1) + '" rx="2" fill="' + (lv === 4 ? p.a2 : lv ? p.a1 : p.ink) + '" fill-opacity="' + (lv === 4 ? 0.9 : lv ? 0.2 + lv * 0.22 : 0.05) + '"' + (lv === 4 ? anim(p, "whc", "animation-delay:-" + ((x * 3 + y) % 22 / 10).toFixed(1) + "s") : "") + "/>";
       },
       ring: function (p, cx, cy, r, f) {
         var n = Math.max(0, Math.round(f * 8)), s = '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.55).toFixed(1) + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.18"/><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.18"/>';
@@ -505,16 +512,24 @@
         '<g clip-path="url(#wf)"><rect width="' + W + '" height="' + H + '" fill="url(#wb)"/><rect width="' + W + '" height="' + H + '" fill="url(#lv)"/>' +
         '<rect x="0" y="0" width="' + W + '" height="1" fill="#ffffff" fill-opacity="0.08"/></g>';
       over = '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="13.5" fill="none" stroke="#2c2c31"/>';
+      style = ".wft{transform-box:fill-box;transform-origin:center;animation:wft 7s ease-in-out infinite}@keyframes wft{0%,88%{transform:scaleY(1)}91%{transform:scaleY(.05)}94%{transform:scaleY(1)}}" +
+        ".wfk{animation:wfk 3.2s steps(1) infinite}@keyframes wfk{0%,100%{opacity:1}46%{opacity:.35}54%{opacity:1}}" +
+        ".wlp{animation:wlp 1.4s steps(2) infinite}@keyframes wlp{50%{opacity:.2}}";
     } else if (w === "transit") {
       var bands = p.stripe && p.stripe.length ? p.stripe : [p.a1], bw = W / bands.length;
       back = "<defs>" + clip + '</defs><g clip-path="url(#wf)"><rect width="' + W + '" height="' + H + '" fill="' + p.bg1 + '"/>' +
         bands.map(function (c, i) { return '<rect x="' + (i * bw).toFixed(1) + '" y="0" width="' + (bw + 0.5).toFixed(1) + '" height="7" fill="' + c + '"/>'; }).join("") + "</g>";
-      over = '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="9.5" fill="none" stroke="' + p.line + '"/>';
+      over = '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="9.5" fill="none" stroke="' + p.line + '"/>' +
+        '<g clip-path="url(#wf)"><rect x="-34" y="1.5" width="28" height="4" rx="2" fill="#ffffff" stroke="' + p.ink + '" stroke-width="1"' + anim(p, "wtr") + "/></g>";
+      style = ".wtr{animation:wtr " + Math.max(5, Math.round(W / 70)) + "s linear infinite}@keyframes wtr{to{transform:translateX(" + (W + 70) + "px)}}";
     } else if (w === "broadsheet") {
       back = "<defs>" + clip + '<pattern id="gr" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.6" fill="' + p.ink + '" fill-opacity="0.07"/><circle cx="4" cy="4" r="0.5" fill="' + p.ink + '" fill-opacity="0.05"/></pattern></defs>' +
         '<rect width="' + W + '" height="' + H + '" fill="' + p.bg1 + '"/><rect width="' + W + '" height="' + H + '" fill="url(#gr)"/>' +
         '<rect x="14" y="10" width="' + (W - 28) + '" height="2.5" fill="' + p.ink + '"/><rect x="14" y="15" width="' + (W - 28) + '" height="0.8" fill="' + p.ink + '"/>' +
         '<rect x="14" y="' + (H - 11) + '" width="' + (W - 28) + '" height="0.8" fill="' + p.ink + '"/>';
+      over = '<defs><linearGradient id="rl" x1="0" x2="1"><stop offset="0" stop-color="' + p.a1 + '" stop-opacity="0"/><stop offset="0.5" stop-color="' + p.a1 + '"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></linearGradient></defs>' +
+        '<rect x="14" y="9.2" width="120" height="3.8" fill="url(#rl)"' + anim(p, "wro") + "/>";
+      style = ".wro{animation:wro 6s ease-in-out infinite alternate}@keyframes wro{to{transform:translateX(" + (W - 148) + "px)}}";
     } else if (w === "observatory") {
       back = "<defs>" + clip + '<radialGradient id="wb" cx="0.3" cy="0.2" r="1"><stop offset="0" stop-color="' + p.bg2 + '"/><stop offset="1" stop-color="' + p.bg1 + '"/></radialGradient></defs>' +
         '<g clip-path="url(#wf)"><rect width="' + W + '" height="' + H + '" fill="url(#wb)"/>' +
@@ -542,8 +557,11 @@
     var w = p.world, edge = (W || 420) - 28, s = "";
     if (NEW[w]) return NEW[w].title(p, left, right, edge);
     if (w === "airport") {
-      s += '<text x="28" y="40" font-family="' + MONO + '" font-size="13" font-weight="800" letter-spacing="2.4" fill="' + p.a1 + '">✈ ' + esc(left) + "</text>";
+      s += '<g' + anim(p, "wft", "animation-delay:-" + (core.hash(left) % 70 / 10).toFixed(1) + "s") + '><rect x="26" y="25" width="18" height="21" rx="2.5" fill="url(#tile)"/><text x="35" y="40" text-anchor="middle" font-family="' + SANS + '" font-size="12" fill="' + p.a1 + '">✈</text><rect x="26" y="35" width="18" height="0.8" fill="#000"/></g>';
+      s += '<text x="52" y="40" font-family="' + MONO + '" font-size="13" font-weight="800" letter-spacing="2.4" fill="' + p.a1 + '">' + esc(left) + "</text>";
       if (right) s += '<text x="' + edge + '" y="40" text-anchor="end" font-family="' + SANS + '" font-size="11" font-weight="600" letter-spacing="2" fill="#8a8a8f">' + esc(right) + "</text>";
+      // a status lamp, like the indicator beside every line of a real board
+      s += '<circle cx="' + (edge + 12) + '" cy="36" r="3.5" fill="' + p.a1 + '"' + anim(p, "wlp") + "/>";
       s += '<rect x="28" y="51" width="' + (edge - 28) + '" height="1" fill="#2a2a2e"/>';
     } else if (w === "transit") {
       s += roundel(40, 35, 10, p);
@@ -574,7 +592,8 @@
     if (NEW[w]) return NEW[w].cell(p, x, y, size, lv);
     if (w === "airport") return '<rect x="' + X + '" y="' + Y + '" width="' + size.toFixed(1) + '" height="' + size.toFixed(1) + '" rx="1.5" fill="#26262b"/>' +
       (lv ? '<rect x="' + X + '" y="' + Y + '" width="' + size.toFixed(1) + '" height="' + size.toFixed(1) + '" rx="1.5" fill="' + p.a1 + '" fill-opacity="' + OP[lv] + '"/>' : "") +
-      '<rect x="' + X + '" y="' + (y + c - 0.4).toFixed(1) + '" width="' + size.toFixed(1) + '" height="0.8" fill="#000" fill-opacity="0.7"/>';
+      '<rect x="' + X + '" y="' + (y + c - 0.4).toFixed(1) + '" width="' + size.toFixed(1) + '" height="0.8" fill="#000" fill-opacity="0.7"/>' +
+      (lv === 4 ? '<rect x="' + X + '" y="' + Y + '" width="' + size.toFixed(1) + '" height="' + size.toFixed(1) + '" rx="1.5" fill="#fff6c4" fill-opacity="0.45"' + anim(p, "wfk", "animation-delay:-" + ((x * 7 + y) % 32 / 10).toFixed(1) + "s") + "/>" : "");
     if (w === "transit") return '<circle cx="' + (x + c).toFixed(1) + '" cy="' + (y + c).toFixed(1) + '" r="' + (c * 0.92).toFixed(1) + '" fill="' + (lv ? p.a1 : p.bg1) + '" fill-opacity="' + (lv ? OP[lv] : 1) + '" stroke="' + p.ink + '" stroke-opacity="' + (lv ? 0 : 0.18) + '"/>';
     if (w === "broadsheet") return '<circle cx="' + (x + c).toFixed(1) + '" cy="' + (y + c).toFixed(1) + '" r="' + (lv ? c * (0.35 + lv * 0.16) : c * 0.16).toFixed(1) + '" fill="' + p.ink + '" fill-opacity="' + (lv ? 0.88 : 0.25) + '"/>';
     if (w === "observatory") return '<circle cx="' + (x + c).toFixed(1) + '" cy="' + (y + c).toFixed(1) + '" r="' + (lv ? c * (0.25 + lv * 0.17) : c * 0.12).toFixed(1) + '" fill="' + (lv >= 3 ? p.a2 : "#ffffff") + '" fill-opacity="' + (lv ? 0.55 + lv * 0.1 : 0.2) + '"' +

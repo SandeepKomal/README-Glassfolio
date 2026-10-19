@@ -103,8 +103,17 @@
         : '<filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>') +
       '<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="' + p.ink + '" stroke-opacity="' + (L ? 0.05 : 0.04) + '"/></pattern>' +
       '<clipPath id="clip"><rect width="' + W + '" height="' + H + '" rx="' + RADIUS(p) + '"/></clipPath>' +
-      "</defs>" + core.fxStyle(p, W);
+      '<linearGradient id="shim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0.5"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>' +
+      "</defs>" + core.fxStyle(p, W) + (p.anim ? "<style>" + LIFE + "@media (prefers-reduced-motion:reduce){*{animation:none!important}}</style>" : "");
   }
+
+  /* Small ambient motion every card shares, in any look: arrows nudge, the newest point pulses, bars catch a sheen. */
+  var LIFE = ".lf-n{animation:lfn 2.6s ease-in-out infinite}@keyframes lfn{0%,100%{transform:translate(0,0)}50%{transform:translate(2px,-2px)}}" +
+    ".lf-r{animation:lfr 2.2s ease-in-out infinite}@keyframes lfr{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}" +
+    ".lf-p{transform-box:fill-box;transform-origin:center;animation:lfp 2.4s ease-out infinite}@keyframes lfp{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.6);opacity:0}}" +
+    ".lf-s{animation:lfs 5.5s ease-in-out infinite}@keyframes lfs{0%{transform:translateX(0)}70%,100%{transform:translateX(1000px)}}" +
+    ".lf-g{animation:lfg 2.8s ease-in-out infinite}@keyframes lfg{0%,100%{opacity:1}50%{opacity:.72}}";
+  function life(p, cls) { return p.anim ? ' class="' + cls + '"' : ""; }
 
   function RADIUS(p) { return p.native ? 12 : 18; }
 
@@ -325,6 +334,8 @@
       body += '<defs><clipPath id="bar"><rect x="28" y="' + barY + '" width="' + inner + '" height="12" rx="6"/></clipPath>' +
         '<linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.45"/><stop offset="0.6" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs>';
       body += '<g filter="url(#glow)"><g clip-path="url(#bar)">' + segs + "</g></g>";
+      // the sheen waits just left of the bar, so the still image is unchanged; motion sweeps it across
+      body += '<g clip-path="url(#bar)"><rect x="-112" y="' + barY + '" width="140" height="12" fill="url(#shim)"' + life(p, "lf-s") + "/></g>";
       body += '<rect x="28" y="' + barY + '" width="' + inner + '" height="12" rx="6" fill="url(#gloss)"/>';
       var colW = inner / 3, y0 = 128;
       items.forEach(function (it, i) {
@@ -427,6 +438,7 @@
       body += '<circle cx="' + x + '" cy="' + cy + '" r="' + (n.joined ? 16 : 13) + '" fill="' + n.color + '" fill-opacity="0.16"/>';
       body += '<circle cx="' + x + '" cy="' + cy + '" r="' + (n.joined ? 8 : 6) + '" fill="' + n.color + '" stroke="' + p.bg1 + '" stroke-width="2.5" filter="url(#glow)"/>';
       if (n.joined) body += '<circle cx="' + x + '" cy="' + cy + '" r="2.8" fill="' + p.bg1 + '"/>';
+      if (!n.joined && i === nodes.length - 1) body += '<circle cx="' + x + '" cy="' + cy + '" r="8" fill="none" stroke="' + n.color + '" stroke-width="2" stroke-opacity="0.5"' + life(p, "lf-p") + "/>";
       var ny = above ? cy - 64 : cy + 58, sy = above ? cy - 43 : cy + 79;
       body += '<text x="' + x + '" y="' + ny + '" text-anchor="middle" font-family="' + F(p, "sans") + '" font-size="16" font-weight="700" fill="' + p.ink + '">' + esc(fitText(n.name, 16, 138, true)) + "</text>";
       body += '<text x="' + x + '" y="' + sy + '" text-anchor="middle" font-family="' + F(p, "mono") + '" font-size="13" fill="' + p.ink + '" fill-opacity="0.6">' + esc(n.sub) + "</text>";
@@ -524,7 +536,7 @@
   function projectCard(m, r, p, metrics) {
     var tall = !!metrics, H = tall ? 210 : 156, body = fadeMask("pname", 28, 322, H) + fadeMask("pdesc", 28, 364, H);
     body += '<g mask="url(#pname)"><text x="28" y="44" font-family="' + F(p, "sans") + '" font-size="21" font-weight="700" letter-spacing="-0.2" fill="' + p.ink + '">' + esc(trunc(r.name, 40)) + "</text></g>";
-    body += '<path d="M372 38L386 24M377 24H386V33" fill="none" stroke="' + p.a1 + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>';
+    body += "<g" + life(p, "lf-n") + '><path d="M372 38L386 24M377 24H386V33" fill="none" stroke="' + p.a1 + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/></g>';
     var desc = r.desc || (r.topics && r.topics.length ? r.topics.join(" · ") : "No description yet");
     var muted = r.desc ? 0.78 : 0.48;
     wrap(desc, 46, 2).forEach(function (line, i) {
@@ -577,7 +589,7 @@
       body += '<text x="28" y="' + y + '" font-family="' + F(p, "sans") + '" font-size="15" fill="' + p.ink + '" fill-opacity="0.66">' + esc(fitText(core.designation(m, o), 15, headW)) + "</text>";
     }
     if (res) {
-      body += '<rect x="' + (W - 28 - 170) + '" y="72" width="170" height="44" rx="22" fill="url(#acc)"/>';
+      body += '<rect x="' + (W - 28 - 170) + '" y="72" width="170" height="44" rx="22" fill="url(#acc)"' + life(p, "lf-g") + "/>";
       body += '<rect x="' + (W - 28 - 152) + '" y="72.6" width="134" height="1" fill="url(#hl)"/>';
       body += '<text x="' + (W - 28 - 85) + '" y="100" text-anchor="middle" font-family="' + F(p, "sans") + '" font-size="16" font-weight="800" fill="' + (p.light ? "#ffffff" : p.bg1) + '">Résumé \u2197</text>';
     }
@@ -610,16 +622,18 @@
   /** Each skill with the repos that prove it: count, stars and the latest one. */
   function skillsCard(m, o, p) {
     var rows = core.skillProof(m, o), W = 860, body = title(p, "SKILLS, WITH PROOF", "FROM PUBLIC REPOS", W);
-    var max = Math.max.apply(null, rows.map(function (x) { return x.repos; }).concat([1]));
+    var max = Math.max.apply(null, rows.map(function (x) { return x.repos; }).concat([1])), bars = "";
     rows.forEach(function (x, i) {
       var y = 96 + i * 46, w = Math.max(10, x.repos / max * 270);
       body += '<text x="28" y="' + y + '" font-family="' + F(p, "sans") + '" font-size="17" font-weight="700" fill="' + p.ink + '">' + esc(fitText(x.skill, 17, 180, true)) + "</text>";
       body += '<rect x="220" y="' + (y - 12) + '" width="270" height="12" rx="6" fill="' + p.ink + '" fill-opacity="0.07"/>';
       body += '<rect x="220" y="' + (y - 12) + '" width="' + w.toFixed(1) + '" height="12" rx="6" fill="url(#acc)" filter="url(#glow)"/>';
+      bars += '<rect x="220" y="' + (y - 12) + '" width="' + w.toFixed(1) + '" height="12" rx="6"/>';
       body += '<text x="508" y="' + y + '" font-family="' + F(p, "mono") + '" font-size="14" fill="' + p.ink + '" fill-opacity="0.85">' + x.repos + (x.repos === 1 ? " repo" : " repos") + (x.stars ? " \u00b7 \u2605 " + fmt(x.stars) : "") + "</text>";
       if (x.latest) body += '<text x="832" y="' + y + '" text-anchor="end" font-family="' + F(p, "sans") + '" font-size="13" fill="' + p.ink + '" fill-opacity="0.55">latest: ' + esc(fitText(x.latest, 13, 150)) + "</text>";
       if (i < rows.length - 1) body += '<rect x="28" y="' + (y + 18) + '" width="' + (W - 56) + '" height="1" fill="' + p.ink + '" fill-opacity="0.06"/>';
     });
+    if (bars) body += '<defs><clipPath id="skb">' + bars + '</clipPath></defs><g clip-path="url(#skb)"><rect x="80" y="70" width="140" height="' + (rows.length * 46) + '" fill="url(#shim)"' + life(p, "lf-s") + "/></g>";
     return frame(W, 96 + (rows.length - 1) * 46 + 34, "Skills with proof for " + m.login, p, body);
   }
 
@@ -646,7 +660,7 @@
       '<g filter="url(#glow)">' + glyph(it.key, p.a1, p) + "</g></g>";
     body += '<text x="84" y="40" font-family="' + F(p, "sans") + '" font-size="19" font-weight="700" fill="' + p.ink + '">' + esc(it.label) + "</text>";
     body += '<text x="84" y="64" font-family="' + F(p, "mono") + '" font-size="14" fill="' + p.ink + '" fill-opacity="0.62">' + esc(trunc(it.handle, 16)) + "</text>";
-    body += '<path d="M236 44H250M244 37L251 44L244 51" fill="none" stroke="' + p.ink + '" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+    body += "<g" + life(p, "lf-r") + '><path d="M236 44H250M244 37L251 44L244 51" fill="none" stroke="' + p.ink + '" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>';
     return frame(270, 88, it.label + " for " + m.login, p, body);
   }
 
