@@ -84,7 +84,8 @@ test("the garden follows day and night, and the metro map has a light and a dark
 
 test("showpieces are drawn from the profile: repos, stars and activity show up", () => {
   const top = core.pickProjects(core.SAMPLE, {})[0];
-  const textOf = (svg) => svg.replace(/<style>.*?<\/style>/, "").replace(/<[^>]+>/g, "").toUpperCase();   // split-flap tiles hold one letter each
+  // split-flap tiles hold one letter each, and a moving tile repeats it on its two folding halves
+  const textOf = (svg) => svg.replace(/<style>.*?<\/style>/, "").replace(/<g class="f[ud]"[^>]*><svg[^>]*>.*?<\/svg><\/g>/g, "").replace(/<[^>]+>/g, "").toUpperCase();
   for (const key of ["departures", "holo", "vinyl", "garden"]) assert.ok(textOf(showpieces.build(core.SAMPLE, { showpiece: key })).includes(top.name.toUpperCase().slice(0, 12)), key + " shows the top project");
   assert.match(showpieces.build(core.SAMPLE, { showpiece: "metro" }), />Go line /, "a line per language");
   const vit = showpieces.build(core.SAMPLE, { showpiece: "vitals" });

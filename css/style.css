@@ -87,7 +87,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none}
 
 aside{padding:8px 18px 18px}
 aside label.f{display:block;font-size:.82rem;color:var(--muted);margin:14px 0 6px}
-aside input[type=text],aside input[type=password],aside select{
+aside input[type=text],aside input[type=url],aside input[type=password],aside select{
   width:100%;font:inherit;padding:10px 12px;border-radius:10px;color:var(--ink);
   background:rgba(0,0,0,.25);border:1px solid var(--line);
 }
@@ -331,6 +331,29 @@ aside .hint{font-size:.78rem;color:var(--muted);margin:2px 0 8px;line-height:1.4
 .extras .hint{margin:0 0 12px}
 .extras figure{margin:0}
 .extras img{width:100%;height:auto;display:block;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+
+/* ---------- showpiece picker: a thumbnail per scene ---------- */
+.pieces{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-height:356px;overflow:auto;padding:2px;margin:0 -2px;scrollbar-width:thin}
+.pieces label{position:relative;cursor:pointer;display:block}
+.pieces input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.pieces .pc{display:flex;flex-direction:column;gap:5px;padding:5px 5px 7px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);font-size:.7rem;color:var(--muted);transition:border-color .2s,box-shadow .2s,color .2s,transform .2s}
+.pieces img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;border-radius:8px;background:rgba(255,255,255,.04)}
+.pieces .none{display:grid;place-items:center;aspect-ratio:16/10;border-radius:8px;border:1px dashed var(--line-strong);font-size:1.1rem;color:var(--muted)}
+.pieces .pc span{padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pieces .pc:hover{border-color:var(--line-strong);transform:translateY(-1px)}
+.pieces input:checked + .pc{border-color:var(--a1);color:var(--ink);box-shadow:0 0 0 3px rgba(56,232,255,.14),0 0 22px rgba(56,232,255,.18)}
+.pieces input:focus-visible + .pc{outline:2px solid var(--a1);outline-offset:2px}
+
+/* ---------- for employers ---------- */
+.hire summary .new{margin-left:8px}
+.hint.warn{color:#ffb547}
+.hint em{font-style:normal;color:var(--ink)}
+.impact{display:grid;gap:8px}
+.impact label{display:grid;gap:4px;font-size:.78rem;color:var(--ink)}
+.impact input[type=text]{font-size:.86rem;padding:8px 10px}
+.impact label span{display:flex;justify-content:space-between;gap:8px}
+.impact label small{color:var(--muted)}
+.impact .empty{font-size:.8rem;color:var(--muted)}
 
 /* the Custom swatch is a full-width button on its own row */
 .themes label:last-child{grid-column:1 / -1}

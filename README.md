@@ -26,7 +26,7 @@ css/style.css     Glass / neon theme for the page
 js/core.js        Engine: parse input, build the model, write the README and banner (no network, no DOM)
 js/cards.js       Draws the stats, streak, heatmap, languages, timeline, project and connect cards as SVG files
 js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe v2.0.0)
-js/showpieces.js  Draws the six animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden)
+js/showpieces.js  Draws the twelve animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden, year in code, newspaper, passport, constellation sky, commit forecast, launch control)
 js/github.js      Fetches profile, repos and activity from the GitHub API
 js/preview.js     Shows the README as a GitHub profile page would (safe, whitelist-based renderer)
 js/publish.js     Commits the README, banner and cards to <user>/<user> in one commit
@@ -161,6 +161,16 @@ Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) 
 
 ## Look and options
 
+**For employers.** Recruiters spend about ten seconds on a profile, so the *For employers* panel puts what they look for right under the banner. Every field is optional, and a README only changes once one is filled in:
+
+- **Open to** and a **Résumé link** (https only) make an *Open to work* card with a Résumé button; the card and a plain link under it both open your CV.
+- **Certifications** become badges on that card.
+- **Recruiter summary** adds three plain lines written from your data: what you're strongest in (with the repos and stars that show it), your best result, and how consistently you contribute.
+- **Skills with proof** adds a card to Stack that backs each skill with evidence: how many public repos use it, their stars and the latest one. A skill no repo shows is left out rather than claimed.
+- **Impact numbers** per project (up to three, like *40+ accounts watched, 99.9% uptime, 3× faster*) appear as a bold strip on that project's card. With numbers on any card, every card gets the strip, so the row stays even; cards without numbers show their own stars, start year and last update.
+
+From the terminal: `--open-to`, `--resume`, `--certs`, `--summary`, `--proof` and `--impact "api: 40+ users, 99.9% uptime; web: 3x faster"`.
+
 **Showpieces.** One full-width animated scene, right under the banner, drawn from your own repos and activity. Nobody else's profile has the same one, because the data is yours. Pick one in *Look → Showpiece* (or the gallery on the page), or use `--showpiece <name>`. Off by default.
 
 | Showpiece | Your data becomes | Motion |
@@ -171,6 +181,12 @@ Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) 
 | `vinyl` | An album: the cover shows your year's contributions, your projects are the tracklist, and the equaliser is your contributions per month (per week with 90 days of data). | The record spins, the bars bounce, the progress bar plays |
 | `vitals` | A bedside monitor: the ECG is drawn from your monthly commits, heart rate is your streak, and pull requests, reviews and stars are the other vitals, with a rhythm and prognosis from how regularly you contribute. | Traces scroll, the heart beats |
 | `garden` | A garden: each project is a flower, taller with more stars and coloured by language, and the grass is your contribution graph, one blade per half week. A night sky for dark-mode visitors and a day sky for light. | Flowers and grass sway, fireflies (or pollen) drift, clouds pass |
+| `yearcode` | Year in Code: six bold tiles with your total, top language, busiest month, longest streak, best day and a coding personality worked out from when you contribute (*The Streak Machine*, *The Weekend Warrior*, *The Tuesday Titan*…). | Colour blobs drift, confetti falls, tiles breathe |
+| `newspaper` | *The Daily Commit*: a front page with your year as the headline, your top repo as the lead story, a halftone of your activity, markets (stars, followers, PRs), the commit weather and a classified ad for what you're open to. | The EXTRA! stamp pulses and a breaking-news ticker runs along the bottom |
+| `passport` | An open passport: the photo page with your details and a machine-readable zone, and a visa stamp for every language you've shipped in, with the year you first used it. | A holographic sheen crosses the page and the stamps thump down one by one |
+| `constellation` | Your sky: each top language is a constellation, each repo a star that's bigger with more stars, named after the brightest. | Stars twinkle, the sky drifts, a shooting star crosses now and then |
+| `weather` | A commit forecast: your chance of commits on any day, the last seven days as weather (more work, more sun), a forecast discussion and a radar of the last 12 weeks. | The sun turns, clouds drift, the radar sweeps and each echo flares as it passes |
+| `launch` | Launch control: your top repo on the pad, with telemetry from stars (altitude), weekly pace (velocity), streak (fuel) and repos (payload), go/no-go checks and a weekly trace. | A countdown from T−10 to liftoff, flame and smoke, a scrolling telemetry trace |
 
 Like every other image, a showpiece gets a light and a dark version with *Day and night*, follows *Subtle motion*, stands still for visitors who prefer reduced motion, is kept fresh by the daily update, and needs nothing but the data the cards already use. It's left out of text-only READMEs.
 

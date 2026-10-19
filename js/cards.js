@@ -509,8 +509,9 @@
   }
 
   /* ---------- project card ---------- */
-  function projectCard(m, r, p) {
-    var body = fadeMask("pname", 28, 322, 156) + fadeMask("pdesc", 28, 364, 156);
+  /** A project card. With impact numbers anywhere in the row, every card gets a metrics strip (repo facts stand in where none were given). */
+  function projectCard(m, r, p, metrics) {
+    var tall = !!metrics, H = tall ? 210 : 156, body = fadeMask("pname", 28, 322, H) + fadeMask("pdesc", 28, 364, H);
     body += '<g mask="url(#pname)"><text x="28" y="44" font-family="' + SANS + '" font-size="21" font-weight="700" letter-spacing="-0.2" fill="' + p.ink + '">' + esc(trunc(r.name, 40)) + "</text></g>";
     body += '<path d="M372 38L386 24M377 24H386V33" fill="none" stroke="' + p.a1 + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>';
     var desc = r.desc || (r.topics && r.topics.length ? r.topics.join(" · ") : "No description yet");
@@ -518,8 +519,19 @@
     wrap(desc, 46, 2).forEach(function (line, i) {
       body += '<g mask="url(#pdesc)"><text x="28" y="' + (74 + i * 22) + '" font-family="' + SANS + '" font-size="15" fill="' + p.ink + '" fill-opacity="' + muted + '">' + esc(line) + "</text></g>";
     });
-    body += '<rect x="28" y="110" width="364" height="1" fill="url(#fade)"/>';
-    var yb = 136;
+    if (tall) {
+      // no numbers given for this one: its own facts fill the strip, so the row of cards stays even
+      var given = metrics.length ? metrics : [{ value: fmt(r.stars), label: r.stars === 1 ? "star" : "stars" }, { value: String(r.created).slice(0, 4) || "\u2014", label: "started" }, { value: monthLabel(r.pushed).slice(0, 3) || "\u2014", label: "last update" }];
+      var colW = 364 / 3;
+      given.slice(0, 3).forEach(function (mt, i) {
+        var x = 28 + i * colW;
+        if (i) body += '<rect x="' + (x - 10).toFixed(1) + '" y="118" width="1" height="42" fill="' + p.ink + '" fill-opacity="0.1"/>';
+        body += '<text x="' + x.toFixed(1) + '" y="140" font-family="' + SANS + '" font-size="24" font-weight="800" letter-spacing="-0.5" fill="' + (metrics.length ? p.a1 : p.ink) + '"' + (metrics.length ? "" : ' fill-opacity="0.85"') + ">" + esc(fitText(mt.value, 24, colW - 14, true)) + "</text>";
+        if (mt.label) body += '<text x="' + x.toFixed(1) + '" y="158" font-family="' + SANS + '" font-size="12" fill="' + p.ink + '" fill-opacity="0.62">' + esc(fitText(mt.label, 12, colW - 14)) + "</text>";
+      });
+    }
+    var ruleY = tall ? 172 : 110, yb = tall ? 194 : 136;
+    body += '<rect x="28" y="' + ruleY + '" width="364" height="1" fill="url(#fade)"/>';
     if (r.lang) {
       body += '<circle cx="34" cy="' + (yb - 5) + '" r="5" fill="' + (LANG_COLORS[r.lang] || p.a2) + '" filter="url(#glow)"/>';
       body += '<text x="47" y="' + yb + '" font-family="' + SANS + '" font-size="14" fill="' + p.ink + '" fill-opacity="0.85">' + esc(trunc(r.lang, 14)) + "</text>";
@@ -538,7 +550,66 @@
       if (392 - meta.join(" · ").length * 7.4 < langEnd + 16) meta = metaFor(v[0], v[1]);
     });
     if (meta.length) body += '<text x="392" y="' + yb + '" text-anchor="end" font-family="' + SANS + '" font-size="14" fill="' + p.ink + '" fill-opacity="0.62">' + esc(meta.join(" · ")) + "</text>";
-    return frame(420, 156, r.name, p, body);
+    return frame(420, H, r.name, p, body);
+  }
+
+  /* ---------- for employers ---------- */
+  /** Open to, résumé, credentials and a three-line summary, in the profile's own theme. */
+  function hireCard(m, o, p) {
+    var W = 860, openTo = core.oneLine(o.openTo), res = core.resumeUrl(o), certs = core.certList(o);
+    var body = title(p, openTo ? "OPEN TO WORK" : "FOR RECRUITERS", m.location ? m.location.toUpperCase().slice(0, 28) : "", W), y = 100;
+    var head = openTo || core.designation(m, o) || m.name;
+    var headW = res ? 600 : 800;
+    body += '<text x="28" y="' + y + '" font-family="' + SANS + '" font-size="26" font-weight="800" letter-spacing="-0.4" fill="' + p.ink + '">' + esc(fitText(head, 26, headW, true)) + "</text>";
+    if (openTo && core.designation(m, o)) {
+      y += 26;
+      body += '<text x="28" y="' + y + '" font-family="' + SANS + '" font-size="15" fill="' + p.ink + '" fill-opacity="0.66">' + esc(fitText(core.designation(m, o), 15, headW)) + "</text>";
+    }
+    if (res) {
+      body += '<rect x="' + (W - 28 - 170) + '" y="72" width="170" height="44" rx="22" fill="url(#acc)"/>';
+      body += '<rect x="' + (W - 28 - 152) + '" y="72.6" width="134" height="1" fill="url(#hl)"/>';
+      body += '<text x="' + (W - 28 - 85) + '" y="100" text-anchor="middle" font-family="' + SANS + '" font-size="16" font-weight="800" fill="' + (p.light ? "#ffffff" : p.bg1) + '">Résumé \u2197</text>';
+    }
+    if (certs.length) {
+      y += 30;
+      var cx = 28;
+      certs.forEach(function (c) {
+        var w = Math.round(textWidth(c, 14, true) + 50);
+        if (cx + w > W - 28) { cx = 28; y += 44; }
+        body += '<rect x="' + cx + '" y="' + y + '" width="' + w + '" height="34" rx="17" fill="' + p.ink + '" fill-opacity="0.06" stroke="' + p.a1 + '" stroke-opacity="0.45"/>';
+        body += '<circle cx="' + (cx + 18) + '" cy="' + (y + 17) + '" r="8" fill="' + p.a1 + '"/><path d="M' + (cx + 14) + " " + (y + 17) + "l3 3 5-6" + '" fill="none" stroke="' + (p.light ? "#ffffff" : p.bg1) + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+        body += '<text x="' + (cx + 34) + '" y="' + (y + 22) + '" font-family="' + SANS + '" font-size="14" font-weight="700" fill="' + p.ink + '">' + esc(c) + "</text>";
+        cx += w + 10;
+      });
+      y += 34;
+    }
+    var lines = o.summary ? core.recruiterSummary(m, o) : [];
+    if (lines.length) {
+      y += 22;
+      body += '<rect x="28" y="' + y + '" width="' + (W - 56) + '" height="1" fill="url(#fade)"/>';
+      y += 8;
+      lines.forEach(function (l) {
+        y += 30;
+        body += '<text x="28" y="' + y + '" font-family="' + SANS + '" font-size="15" fill="' + p.ink + '"><tspan fill="' + p.a1 + '" font-weight="800">\u2192 </tspan><tspan fill-opacity="0.88">' + esc(fitText(l, 15, W - 80)) + "</tspan></text>";
+      });
+    }
+    return frame(W, y + 30, (openTo ? "Open to: " + openTo : "For recruiters") + ", " + m.login, p, body);
+  }
+
+  /** Each skill with the repos that prove it: count, stars and the latest one. */
+  function skillsCard(m, o, p) {
+    var rows = core.skillProof(m, o), W = 860, body = title(p, "SKILLS, WITH PROOF", "FROM PUBLIC REPOS", W);
+    var max = Math.max.apply(null, rows.map(function (x) { return x.repos; }).concat([1]));
+    rows.forEach(function (x, i) {
+      var y = 96 + i * 46, w = Math.max(10, x.repos / max * 270);
+      body += '<text x="28" y="' + y + '" font-family="' + SANS + '" font-size="17" font-weight="700" fill="' + p.ink + '">' + esc(fitText(x.skill, 17, 180, true)) + "</text>";
+      body += '<rect x="220" y="' + (y - 12) + '" width="270" height="12" rx="6" fill="' + p.ink + '" fill-opacity="0.07"/>';
+      body += '<rect x="220" y="' + (y - 12) + '" width="' + w.toFixed(1) + '" height="12" rx="6" fill="url(#acc)" filter="url(#glow)"/>';
+      body += '<text x="508" y="' + y + '" font-family="' + MONO + '" font-size="14" fill="' + p.ink + '" fill-opacity="0.85">' + x.repos + (x.repos === 1 ? " repo" : " repos") + (x.stars ? " \u00b7 \u2605 " + fmt(x.stars) : "") + "</text>";
+      if (x.latest) body += '<text x="832" y="' + y + '" text-anchor="end" font-family="' + SANS + '" font-size="13" fill="' + p.ink + '" fill-opacity="0.55">latest: ' + esc(fitText(x.latest, 13, 150)) + "</text>";
+      if (i < rows.length - 1) body += '<rect x="28" y="' + (y + 18) + '" width="' + (W - 56) + '" height="1" fill="' + p.ink + '" fill-opacity="0.06"/>';
+    });
+    return frame(W, 96 + (rows.length - 1) * 46 + 34, "Skills with proof for " + m.login, p, body);
   }
 
   /* ---------- connect buttons ---------- */
@@ -649,6 +720,7 @@
     p.anim = o.animate !== false;
     var files = [];
     if (core.wantsShowpiece(m, o)) files.push({ name: "cards/showpiece.svg", data: showpieces.build(m, o, p) });
+    if (core.wantsHire(m, o)) files.push({ name: "cards/hire.svg", data: hireCard(m, o, p) });
     files.push({ name: "cards/stats.svg", data: statsCard(m, p) });
     var streak = streakCard(m, p);
     if (streak) files.push({ name: "cards/streak.svg", data: streak });
@@ -665,10 +737,12 @@
     var lang = languagesCard(m, o, p);
     if (lang) files.push({ name: "cards/languages.svg", data: lang });
     if (o.proj && o.style !== "changelog") {
+      var tall = core.anyImpact(m, o);
       core.pickProjects(m, o).forEach(function (r, i) {
-        files.push({ name: "cards/project-" + (i + 1) + ".svg", data: projectCard(m, r, p) });
+        files.push({ name: "cards/project-" + (i + 1) + ".svg", data: projectCard(m, r, p, tall ? core.impactFor(o, r) : null) });
       });
     }
+    if (core.wantsProof(m, o)) files.push({ name: "cards/skills.svg", data: skillsCard(m, o, p) });
     if (core.wantsUniverse(m, o)) files.push({ name: "cards/universe.svg", data: universeCard(m, o, p) });
     if (o.wave) files.push({ name: "cards/footer.svg", data: core.buildWaveFooter(m, o) });
     if (o.links) {
