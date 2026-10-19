@@ -106,7 +106,7 @@
       b.addEventListener("click", function () {
         document.querySelector('input[name="theme"][value="' + key + '"]').checked = true;
         refresh();
-        $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
+        $("#main").scrollIntoView({ behavior: SMOOTH, block: "start" });
       });
     });
   }
@@ -168,7 +168,7 @@
         $("#world").value = w.key; $("#showpiece").value = ""; syncWorld(); syncShowpiece(); repaintThumbs();
         if (!$("#o-cards").checked) $("#o-cards").checked = true;
         refresh();
-        $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
+        $("#main").scrollIntoView({ behavior: SMOOTH, block: "start" });
       });
     });
   }
@@ -191,7 +191,7 @@
         var img = document.createElement("img"); img.alt = ""; img.loading = "lazy"; img.width = 160; img.height = 100; img.src = thumb(s.key, false); img.dataset.key = s.key;
         pc.appendChild(img);
       } else {
-        var none = document.createElement("span"); none.className = "none"; none.textContent = s.key ? "\u2205" : "\u2728"; pc.appendChild(none);
+        var none = document.createElement("span"); none.className = "none"; none.textContent = s.key ? "No scene" : "The look's own"; pc.appendChild(none);
       }
       var name = document.createElement("span"); name.textContent = s.label; pc.appendChild(name);
       label.appendChild(input); label.appendChild(pc); box.appendChild(label);
@@ -202,7 +202,7 @@
     $("#showpiece").value = key; syncShowpiece();
     if (key && !$("#o-cards").checked) $("#o-cards").checked = true;
     refresh();
-    if (scroll) $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
+    if (scroll) $("#main").scrollIntoView({ behavior: SMOOTH, block: "start" });
   }
 
   /* ---------- for employers ---------- */
@@ -263,6 +263,17 @@
   }
 
   function dataUri(svg) { return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); }
+  // jumps to the studio glide, except for visitors who asked their device for less motion
+  var SMOOTH = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+
+  /** The hero shows the real product: a banner and a showpiece generated right here from the sample profile. */
+  function buildHero() {
+    var banner = $("#heroBanner"), piece = $("#heroPiece");
+    if (!banner || !piece) return;
+    var o = { world: "voxel", mode: "light" };
+    banner.src = dataUri(cardsLib.bannerFor(core.SAMPLE, o));
+    piece.src = dataUri(cardsLib.showpieceFor(core.SAMPLE, { world: "voxel", mode: "light", showpiece: "city" }));
+  }
 
   /* ---------- custom colours ---------- */
   function syncCustom() {
@@ -505,7 +516,7 @@
     if (!el) return;
     var grp = el.closest("details");
     if (grp) grp.open = true;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.scrollIntoView({ behavior: SMOOTH, block: "center" });
     setTimeout(function () { el.focus(); }, 250);
   }
 
@@ -761,6 +772,7 @@
   })();
 
   /* ---------- start ---------- */
+  buildHero();
   buildThemePicker();
   buildGallery();
   buildWorlds();
@@ -782,6 +794,6 @@
     $("#ask").requestSubmit ? $("#ask").requestSubmit() : $("#go").click();
   } else {
     // show the finished design straight away, before anyone has typed anything
-    setModel(core.SAMPLE, ""); say("This is a sample. Paste a username above to make it yours."); refresh();
+    setModel(core.SAMPLE, ""); say("The studio below shows a sample profile. Type a username to build yours."); refresh();
   }
 })();
