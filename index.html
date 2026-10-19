@@ -89,10 +89,17 @@
       <h2 id="studioTitle">Studio</h2>
       <p>Type your username, choose a design, a colour theme and a showpiece, then publish. The preview is exactly what GitHub will show, in light and dark, on desktop and phone.</p>
     </div>
-    <div class="studio-bar">
-      <div class="ask-col">
+    <div class="studio-bar studio-steps">
+      <div class="ask-col studio-step studio-step-one">
+        <div class="studio-step-heading">
+          <span class="studio-step-number" aria-hidden="true">1</span>
+          <div>
+            <h3>Start with your GitHub profile</h3>
+            <p>Enter a username or profile link to load your public data.</p>
+          </div>
+        </div>
         <form class="ask" id="ask">
-          <label class="ask-label" for="url">1. Your GitHub username or profile link</label>
+          <label class="ask-label" for="url">GitHub username or profile link</label>
           <div class="ask-row">
             <input type="text" id="url" placeholder="your-username" autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="askHelp">
             <button type="submit" id="go" class="btn">Build my README</button>
@@ -101,16 +108,31 @@
         </form>
         <div class="msg" id="msg" role="status" aria-live="polite"></div>
       </div>
-      <div class="ship">
-        <p class="ask-label">2. Publish your README.md</p>
-        <div class="dhead">
-          <div class="mono path">README.md <span class="stat" id="stat"></span></div>
-          <div class="dactions">
-            <button type="button" id="pub" disabled>Publish to GitHub</button>
-            <button type="button" class="ghost" id="dlzip" disabled>Download zip</button>
-            <button type="button" class="ghost" id="share" disabled>Copy share link</button>
+
+      <div class="ship studio-step studio-step-two">
+        <div class="studio-step-heading">
+          <span class="studio-step-number" aria-hidden="true">2</span>
+          <div>
+            <h3>Customize and publish</h3>
+            <p>Add an optional GitHub token here, then choose a design, theme, and other options below.</p>
           </div>
         </div>
+        <details class="grp" id="dataGrp">
+          <summary>Exact data: add a token</summary>
+          <label class="f" for="token">GitHub token (optional, no scopes needed)</label>
+          <input type="password" id="token" autocomplete="off" placeholder="Stays in your browser, never stored">
+          <p class="hint">Optional. Without a token, streaks use your recent public activity. With a token, you get a full-year heatmap and a higher rate limit. Add it here before building your README. A token with repository write access can also be used when publishing.</p>
+        </details>
+        <div class="studio-readme-row">
+          <span class="mono path">README.md <span class="stat" id="stat"></span></span>
+        </div>
+        <div class="dactions studio-step-actions">
+          <button type="button" id="pub" disabled>Publish to GitHub</button>
+          <button type="button" class="ghost" id="dlzip" disabled>Download zip</button>
+          <button type="button" class="ghost" id="share" disabled>Copy share link</button>
+          <button type="button" class="ghost" id="reset">Reset all options</button>
+        </div>
+        <p class="studio-step-note">Your choices are saved in this browser only.</p>
         <div class="publish" id="publish" hidden>
           <p>Commit the README, banner and cards to <span class="mono" id="pubRepo"></span> in one go. Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> limited to that repository with <strong>Contents: Read and write</strong>, or a classic token with the <strong>public_repo</strong> scope. It's sent only to GitHub and never stored. If you already added a token under <strong>Exact data</strong>, it's used here too, so leave this box empty; it just needs the write access above.</p>
           <p class="hint" id="pubWfNote" hidden><strong>Daily updates are on,</strong> so the token must also be allowed to write workflows: <strong>Workflows: Read and write</strong> for a fine-grained token, or the <strong>workflow</strong> scope for a classic one.</p>
@@ -227,12 +249,7 @@
           <div class="chk"><input type="checkbox" id="o-credit" checked><label for="o-credit">Footer credit link</label></div>
         </details>
 
-        <details class="grp" id="dataGrp">
-          <summary>Exact data: add a token</summary>
-          <label class="f" for="token">GitHub token (optional, no scopes needed)</label>
-          <input type="password" id="token" autocomplete="off" placeholder="Stays in your browser, never stored">
-          <p class="hint">Without a token, streaks come from your last 90 days of public activity. With one, you get a full-year heatmap and a higher rate limit. Click Generate again after adding it. Give it Contents: Read and write on your profile repo and the same token also publishes, so you only paste it once.</p>
-        </details>
+
 
         <div class="polish" id="polish" hidden>
           <div class="polish-head">
@@ -242,10 +259,6 @@
           <ul id="polishList"></ul>
         </div>
 
-        <div class="aside-foot">
-          <button type="button" class="linkish" id="reset">Reset all options</button>
-          <span>Your choices are saved in this browser only.</span>
-        </div>
       </aside>
 
       <section class="diff" aria-label="Preview">
