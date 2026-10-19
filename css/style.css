@@ -569,3 +569,48 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
     line-height:1.35;
   }
 }
+
+/* ---------- privacy policy callout: scoped to the privacy section only ---------- */
+.privacy-callout{
+  display:flex;
+  align-items:center;
+  gap:var(--s4);
+  margin:var(--s5) 0 0;
+  padding:var(--s5);
+  border:1px solid var(--line);
+  border-radius:var(--r-media);
+  background:var(--surface);
+  box-shadow:0 6px 20px rgba(28,28,30,.035);
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease),transform .2s var(--ease);
+}
+.privacy-callout-icon{
+  display:grid;
+  place-items:center;
+  flex:0 0 52px;
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  background:var(--accent-tint);
+  color:var(--accent);
+}
+.privacy-callout-icon svg{display:block;width:26px;height:26px}
+.privacy-callout-copy{min-width:0}
+.privacy-callout h3{margin:0 0 var(--s1);font-size:1.12rem;letter-spacing:-.015em;color:var(--ink)}
+.privacy-callout p{margin:0 0 var(--s2);max-width:52ch;color:var(--ink-2);font-size:.95rem}
+.privacy-callout a{display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-weight:600;text-decoration:none;text-underline-offset:4px}
+.privacy-callout a span{display:inline-block;transition:transform .2s var(--ease)}
+@media (hover:hover){
+  .privacy-callout:hover{border-color:var(--line-strong);box-shadow:0 10px 26px rgba(28,28,30,.07);transform:translateY(-1px)}
+  .privacy-callout a:hover{text-decoration:underline}
+  .privacy-callout a:hover span{transform:translateX(3px)}
+}
+.privacy-callout a:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:3px}
+@media (max-width:600px){
+  .privacy-callout{align-items:flex-start;gap:var(--s3);padding:var(--s4);margin-top:var(--s4)}
+  .privacy-callout-icon{flex-basis:44px;width:44px;height:44px;border-radius:12px}
+  .privacy-callout-icon svg{width:22px;height:22px}
+  .privacy-callout h3{font-size:1.02rem}
+  .privacy-callout p{font-size:.9rem;line-height:1.45}
+  .privacy-callout a{min-height:44px;flex-wrap:wrap;align-content:center}
+}
+
