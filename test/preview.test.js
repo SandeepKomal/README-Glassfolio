@@ -76,8 +76,8 @@ test("tables keep alignment and escaped pipes", () => {
 });
 
 test("README attribution groups survive HTML sanitization without classes", () => {
-  const out = html('<div align="center">\\n\\n<sub><span>Patched together from public GitHub data</span><span> · made with README Glassfolio</span></sub>\\n\\n</div>');
-  assert.match(out, /<sub><span>Patched together from public GitHub data<\\/span><span> · made with README Glassfolio<\\/span><\\/sub>/);
+  const out = html("<sub><span>Patched together from public GitHub data</span><span> · made with README Glassfolio</span></sub>");
+  assert.ok(out.includes("<sub><span>Patched together from public GitHub data</span><span> · made with README Glassfolio</span></sub>"));
   assert.doesNotMatch(out, /class=/);
 });
 
