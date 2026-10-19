@@ -19,7 +19,7 @@ inputs:
     required: false
     default: ""
   theme:
-    description: "Colours for the classic look: auto, aurora, cyber, sunset, emerald, royal, graphite or paper."
+    description: "Colours: auto, aurora, cyber, sunset, emerald, royal, graphite or paper. In a world, auto keeps its own colours and any other theme recolours all of it, showpiece included."
     required: false
     default: ""
   config:
