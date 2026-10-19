@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * build-guide-pdf.js: turns docs/HOW_TO_USE.md (and its screenshots in docs/guide/) into a printable PDF guide,
- * docs/Patch-your-profile-guide.pdf, so the Markdown on GitHub and the downloadable PDF always say the same thing.
+ * docs/README-Glassfolio-guide.pdf, so the Markdown on GitHub and the downloadable PDF always say the same thing.
  * Run it again whenever the guide or its screenshots change.
  *
  * Optional developer tool. It needs Playwright, which this project deliberately does not depend on:
@@ -19,7 +19,7 @@ const path = require("path");
 
 const DOCS = path.join(__dirname, "..", "docs");
 const SRC = path.join(DOCS, "HOW_TO_USE.md");
-const OUT = path.join(DOCS, "Patch-your-profile-guide.pdf");
+const OUT = path.join(DOCS, "README-Glassfolio-guide.pdf");
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 function inline(s) {
@@ -121,11 +121,11 @@ aside.note { margin: 2mm 0 6mm; padding: 3mm 4mm; border-left: 3px solid #8b5cf6
 const md = fs.readFileSync(SRC, "utf8");
 const steps = (md.match(/^### Step/gm) || []).length;
 const parts = [...md.matchAll(/^## Part \d+: (.*)$/gm)].map((m) => m[1]);
-const cover = '<section class="cover"><div class="kicker">Step-by-step guide</div><h1 style="display:block">Patch your profile</h1>' +
-  "<p>Turn your GitHub profile into a live, self-updating README: a moving wave header, stats and streak cards, a contribution heatmap, " +
-  "a 3D contribution universe, your projects and Connect buttons, in light and dark versions.</p>" +
+const cover = '<section class="cover"><div class="kicker">Step-by-step guide</div><h1 style="display:block">README Glassfolio</h1>' +
+  "<p>Turn your GitHub profile into a designed, self-updating README: eleven designs, an animated showpiece, stats and streak cards, " +
+  "a contribution heatmap, your projects and Connect buttons, in light and dark versions.</p>" +
   '<div class="url">readme-glassfolio.in</div><ol>' + parts.map((p) => "<li>" + esc(p) + "</li>").join("") + "</ol></section>";
-const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Patch your profile: step-by-step guide</title><style>' + CSS + "</style></head><body>" + cover + toHtml(md) + "</body></html>";
+const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>README Glassfolio: step-by-step guide</title><style>' + CSS + "</style></head><body>" + cover + toHtml(md) + "</body></html>";
 
 (async () => {
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -143,7 +143,7 @@ const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
   await page.pdf({
     path: OUT, format: "A4", printBackground: true, preferCSSPageSize: true,
     displayHeaderFooter: true, headerTemplate: "<span></span>",
-    footerTemplate: '<div style="width:100%;font:8px system-ui,sans-serif;color:#9ca3af;padding:0 16mm;display:flex;justify-content:space-between"><span>Patch your profile · readme-glassfolio.in</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'
+    footerTemplate: '<div style="width:100%;font:8px system-ui,sans-serif;color:#9ca3af;padding:0 16mm;display:flex;justify-content:space-between"><span>README Glassfolio · readme-glassfolio.in</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'
   });
   await browser.close();
   console.log("Wrote " + path.relative(process.cwd(), OUT) + " (" + steps + " step sections, " + parts.length + " parts)");

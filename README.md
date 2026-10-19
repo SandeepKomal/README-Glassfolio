@@ -1,103 +1,46 @@
-# readme-diff
+# README Glassfolio
 
-Turn any GitHub username into a profile README that stands out: a themed banner, stats, a contribution heatmap, a language card, a timeline, project cards and link buttons, all as plain SVG files in your own profile repo. Pick a theme, check the result in a GitHub-style preview, then publish it in one click or download a zip.
+Turn any GitHub username into a designed profile README: a banner, stats and streak cards, a contribution heatmap, projects, a timeline and Connect buttons, plus an animated scene drawn from your own data. Pick one of eleven designs or the classic look, check it in a preview that matches GitHub, then publish it to your profile repository in one commit. Turn on daily updates and a small workflow in your own repository keeps the numbers current.
 
-- **No workflows required for the core app.** An optional daily-update workflow can be generated for your own profile repo.
-- **No third-party services.** No badge or stats APIs. Data comes straight from `api.github.com`, and every card is drawn in your browser.
-- **Three ways to use it.** A static web page, a command-line tool, and share links. All share one engine (`js/core.js`).
+- **Runs in your browser.** No server, no account, no third-party image or stats service. Data comes from `api.github.com` and every image is drawn locally as SVG.
+- **Your files, in your repository.** The README and its images live in `<user>/<user>`. The optional daily workflow uses no third-party actions.
+- **Three ways to run it.** The website, a command-line tool, and a GitHub Action, all built on the same engine.
 
-**New here? Follow the [step-by-step guide with screenshots](docs/HOW_TO_USE.md)** (also [on the website](https://readme-glassfolio.in/how-to-use.html) and as a [PDF](docs/Patch-your-profile-guide.pdf)): create your profile repository and a token, make your README on [readme-glassfolio.in](https://readme-glassfolio.in/), publish, and check the daily updates.
+**Website:** [readme-glassfolio.in](https://readme-glassfolio.in/) · **Guide:** [step by step with screenshots](https://readme-glassfolio.in/how-to-use.html) (also [in this repository](docs/HOW_TO_USE.md) and as a [PDF](docs/README-Glassfolio-guide.pdf))
 
-## Preview
+![The README Glassfolio website](docs/website-preview.jpg)
 
-![The tool: a themed preview that shows the README as GitHub will show it](docs/website-preview.jpg)
+A README made with it (the sample profile, Royal theme), as GitHub shows it on its dark and light pages:
 
-A profile README made with it (the sample profile, Royal theme, default options), as GitHub shows it on its dark and light pages: wave header, stats, heatmap, 3D contribution universe, languages, timeline, projects, Connect buttons and wave footer:
+![An example README on GitHub's dark and light pages](docs/example-readme-dark-and-light.jpg)
 
-![The same example README on GitHub's dark page and on its light page](docs/example-readme-dark-and-light.jpg)
+## Quick start
 
-<img src="docs/mobile-preview.jpg" alt="The tool on a phone" width="260">
+### On the website
 
-## Project layout
+1. Create a public repository named exactly like your username (`<user>/<user>`).
+2. Open [readme-glassfolio.in](https://readme-glassfolio.in/) and press **Build my README**.
+3. Enter your username, choose a design, theme and showpiece, and fill in what you want visitors to read.
+4. Press **Publish to GitHub** and paste a fine-grained token (see [Token setup](#token-setup)), or press **Download zip** and upload the files yourself.
 
-```
-index.html        The page
-css/style.css     Glass / neon theme for the page
-js/core.js        Engine: parse input, build the model, write the README and banner (no network, no DOM)
-js/cards.js       Draws the stats, streak, heatmap, languages, timeline, project and connect cards as SVG files
-js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe v2.0.0)
-js/worlds.js      Draws the eleven worlds: complete designs for every card, the banner, section dividers and footer
-js/showpieces.js  Draws the fourteen animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden, year in code, newspaper, passport, constellation sky, commit forecast, pulse, ink scroll, block city)
-js/github.js      Fetches profile, repos and activity from the GitHub API
-js/preview.js     Shows the README as a GitHub profile page would (safe, whitelist-based renderer)
-js/publish.js     Commits the README, banner and cards to <user>/<user> in one commit
-js/automation.js  Writes the daily-update workflow, config and a copy of the generator for your profile repo
-js/zip.js         Tiny ZIP writer so every generated file downloads together
-js/app.js         Wires the page to the engine
-cli.js            Command-line version (Node 18+)
-action.yml        The GitHub Action (Marketplace metadata)
-test/*.test.js    Tests (node:test, no dependencies)
-tools/            Optional developer tools, all need Playwright: layout-fuzz.js (measures card text in a real browser), day-night-check.js (plays a full day of sunrise and sunset on a visitor's device) and build-guide-pdf.js (rebuilds docs/Patch-your-profile-guide.pdf from docs/HOW_TO_USE.md)
-docs/             Example screenshots
-```
+### From the command line
 
-## Run the web app
-
-It's static files, so any static server works:
-
-```bash
-npm run serve        # or: python3 -m http.server 8080
-# open http://localhost:8080
-```
-
-The **Download zip** button gives you everything: `README.md`, `banner.svg` and a `cards/` folder. Upload all of it to your `username/username` repo, otherwise the images show as broken.
-
-Opening `index.html` directly from disk also works in most browsers. "Use sample data" works without a network.
-
-### Host it on GitHub Pages
-
-1. Push this folder to a GitHub repository.
-2. Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. The repository workflow deploys the static root directly.
-4. The site is live at `https://<user>.github.io/<repo>/`.
-
-For this repository, the deployed site is **https://sandeepkomal.github.io/README-Glassfolio/**. See [docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md) for deployment and troubleshooting.
-
-## Hosted site
-
-README-Glassfolio is deployed as a static GitHub Pages site:
-
-**https://sandeepkomal.github.io/README-Glassfolio/**
-
-Deployment is handled by the repository workflow at `.github/workflows/pages.yml`. The application itself does not require a backend or build service.
-
-## Documentation
-
-- [Documentation hub](docs/README.md)
-- [GitHub Pages deployment guide](docs/GITHUB_PAGES.md)
-- [Security policy](SECURITY.md)
-
-## Security and license
-
-The project is released under the **MIT License**. See [LICENSE](LICENSE).
-
-The browser application uses a restrictive Content-Security-Policy, keeps publishing tokens in memory, and includes security-focused tests. See [SECURITY.md](SECURITY.md).
-
-## Use the CLI
+Node 18 or later, no dependencies:
 
 ```bash
 node cli.js https://github.com/DevopsNimbus
-node cli.js DevopsNimbus --style changelog --role "Cloud Engineer" --stack "AWS, Terraform"
-node cli.js DevopsNimbus --showpiece metro   # add an animated showpiece under the banner
-node cli.js --sample            # no network
-GITHUB_TOKEN=ghp_xxx node cli.js DevopsNimbus   # exact full-year streaks
+node cli.js DevopsNimbus --world observatory --role "Cloud Engineer" --stack "AWS, Terraform"
+node cli.js DevopsNimbus --showpiece metro
+node cli.js --sample                                   # built-in sample data, no network
+GITHUB_TOKEN=github_pat_xxx node cli.js DevopsNimbus   # full-year heatmap and exact streaks
+GITHUB_TOKEN=github_pat_xxx node cli.js DevopsNimbus --publish --daily
 ```
 
-Files are written to `./out/`: `README.md`, `banner.svg` and `cards/`. Run `node cli.js --help` for every option. Set `GITHUB_TOKEN` to raise the API rate limit.
+Files are written to `./out/`: `README.md`, `banner.svg` and `cards/`. Run `node cli.js --help` for every option.
 
-## Use it as a GitHub Action
+### As a GitHub Action
 
-Add this to a workflow in your profile repo (`<user>/<user>`), and the README is rebuilt on every run:
+Add a workflow to your profile repository:
 
 ```yaml
 name: Profile README
@@ -113,242 +56,197 @@ jobs:
       - uses: actions/checkout@v4
       - uses: SandeepKomal/README-Glassfolio@main
         with:
-          world: observatory          # or airport, transit, broadsheet, botanical, atlas, museum, ink, periodic, abyss; empty for classic
-          # showpiece: yearcode       # any showpiece, or none
+          world: observatory        # any design, or leave empty for the classic look
+          # showpiece: yearcode     # any showpiece, or none
           # config: .readme-patch/config.json
 ```
 
-Inputs: `username` (defaults to the repo owner), `world`, `showpiece`, `theme`, `config`, `out`, `commit` (default `true`: commits only when something changed) and `token` (defaults to the workflow token). Every input reaches the shell as an environment variable, never pasted into the script.
+Inputs: `username` (defaults to the repository owner), `world`, `showpiece`, `theme`, `config`, `out`, `commit` (default `true`; commits only when something changed) and `token` (defaults to the workflow token). Inputs reach the shell as environment variables.
 
-## Two ways to use the result
+## Publishing
 
-Every card is an SVG image file that sits next to `README.md` in your profile repo (`<user>/<user>`). GitHub shows images stored in a repo, but not images embedded inside a README, so the README and its image files always travel together. Nothing runs on a server and no third-party service is involved.
+Every card is an SVG file stored next to `README.md` in `<user>/<user>`. GitHub shows images stored in a repository, so the README and its images always travel together.
 
 | | What you do | Needs |
 | --- | --- | --- |
-| **Publish** (easiest) | Click *Publish to GitHub*, paste a token. One commit lands in `<user>/<user>`. | A fine-grained token |
-| **Download zip** | Download the zip and upload everything to `<user>/<user>`. | Nothing |
+| **Publish** | Press *Publish to GitHub* and paste a token. One commit lands in `<user>/<user>`. | A fine-grained token |
+| **Download zip** | Upload everything in the zip to `<user>/<user>`. A missing image shows as broken. | Nothing |
 
-### Publish: commit straight to your profile
+Publishing refuses to write to anyone else's profile, handles a brand-new empty repository, and explains what's wrong when the repository is missing or the token lacks permission.
 
-1. Create the repo `<user>/<user>` on GitHub if you don't have it (public, and the name must match your username).
-2. Create a [fine-grained token](https://github.com/settings/personal-access-tokens/new) as shown in [Token setup](#token-setup) below.
-3. In the website, click **Publish to GitHub**, paste the token and press **Publish**. All files go in as one commit. The token is sent only to api.github.com and is never stored.
+### Token setup
 
-#### Token setup
+One fine-grained token covers reading your data, publishing and adding daily updates. Create it at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new):
 
-One fine-grained token covers everything: reading your data, publishing, and adding [daily updates](#keep-the-stats-fresh-every-day). Create it at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new):
-
-**Repository access:** choose *Only select repositories* and pick your profile repository, for example `your-username/your-username`.
-
-**Repository permissions:**
+- **Repository access:** *Only select repositories*, and pick `your-username/your-username`.
+- **Repository permissions:**
 
 | Permission | Setting | Why |
 | --- | --- | --- |
-| Contents | **Read and write** | Commit the README, banner and cards |
-| Workflows | **Read and write** | Add the daily-update workflow in `.github/workflows/` (only needed for *Daily updates*) |
+| Contents | Read and write | Commit the README, banner and cards |
+| Workflows | Read and write | Add the daily-update workflows (only needed for daily updates) |
 | Metadata | Read-only | Set automatically by GitHub |
 
-Nothing else is needed: no Administration, Issues, Pull requests, Actions, Pages or Secrets. GitHub requires *Contents* **and** *Workflows* write access for any change under `.github/workflows/`.
+With a classic token, tick `public_repo`, plus `workflow` for daily updates. If the token can write files but not workflows, the README and cards are still published and the page says what to add.
 
-With a classic token instead, tick `public_repo`, plus `workflow` for daily updates.
+### Daily updates
 
-Paste the token into the **Publish** box itself. If that box is left empty, Publish uses the token from *Exact data*, which is often created with no permissions at all. If the token can write files but not workflows, the README and cards are still published, and the page says that daily updates were not added and what to change on that token. You can edit an existing token's permissions; you don't need a new one.
+A published README is a snapshot. With *Keep my stats fresh every day* (on by default once your own profile is loaded, or `--daily` from the terminal), publishing also adds:
 
-It refuses to publish to anyone else's profile, handles a brand-new empty repo, and gives a plain message when the repo is missing or the token lacks permission.
+- `.github/workflows/update-readme.yml`: runs once a day, at a time derived from your username, and whenever you press *Run workflow*.
+- `.github/workflows/update-universe.yml`: when the 3D universe is on, redraws `cards/universe.svg` every 6 hours.
+- `.readme-patch/`: your saved choices (`config.json`) and a copy of the generator, so the repository is self-contained.
 
-From the terminal: `GITHUB_TOKEN=github_pat_xxx node cli.js <user> --publish --theme cyber`.
+Each run reads your public GitHub data, rebuilds `README.md` and the images, and commits only if something changed, as `github-actions[bot]`. Good to know:
 
-### Keep the stats fresh every day
+- The workflows have no `uses:` lines, only shell steps that run the copy in `.readme-patch/`. Their only permission is `contents: write`, they use no secrets, and they only talk to `api.github.com`.
+- `README.md`, `banner.svg`, `banner-light.svg` and the `.svg` files in `cards/` are rewritten every run. Change `.readme-patch/config.json`, or publish again from the website, instead of editing them by hand. Nothing else in the repository is touched.
+- If GitHub's activity can't be read on a given day, the run stops without changing anything.
+- `config.json` holds your choices (theme, job title, skills, LinkedIn name), so it's visible in your public repository.
+- GitHub pauses scheduled workflows in a public repository after 60 days without activity; re-enable them in the Actions tab.
+- To stop, delete the workflow files or disable them in the Actions tab. Your README stays as it is.
 
-A published README is a **snapshot**: the numbers are as of the moment you published. GitHub profile READMEs are static files, so something has to run on a schedule to refresh them, and with no server of ours the only place that can be is a small GitHub Action in **your own profile repo**. *Keep my stats fresh every day* is **on by default** on the page as soon as your own profile is loaded (untick it for a one-off snapshot; from the terminal, use `--daily`), and publishing adds:
+## Designs, themes and showpieces
 
-- `.github/workflows/update-readme.yml`: runs once a day, at a time derived from your username so profiles don't all run at once (shown in the page, for example 22:26 UTC), and whenever you press *Run workflow* in the Actions tab.
-- `.readme-patch/`: your saved choices (`config.json`) and a copy of this generator, so your repo is self-contained and you can read every line that runs.
-- `.github/workflows/update-universe.yml`, only when the [3D contribution universe](#look-and-options) is on: redraws just `cards/universe.svg` (and its light twin) every 6 hours, and commits only if it changed (as *Update 3D universe*). It takes turns with the daily workflow, so they never push at the same time.
+Choose in order: a **design**, then a **theme**, then a **showpiece**. Each choice follows the ones above it, so the whole README matches by default.
 
-Each run reads your public GitHub data, rebuilds `README.md` and the images, and commits **only if something changed** (as `github-actions[bot]`).
+### Designs
 
-What to know before you switch it on:
+A design restyles everything from banner to footer: every card, the fonts, the colours in light and dark, an animated divider in place of each section heading, the footer and a matching showpiece. Use `--world <name>`, or leave it out for the classic glass look.
 
-- **No third-party code.** The workflow has no `uses:` line at all: only plain shell steps that run the copy in `.readme-patch/`. Its only permission is `contents: write`, it uses no secrets, and it only talks to `api.github.com`.
-- **It rewrites `README.md` and the images every day**, so edits you make to those by hand will be replaced. Change `.readme-patch/config.json` (or publish again from the page) instead. The files it manages are `README.md`, `banner.svg`, `banner-light.svg` and every `.svg` in `cards/`; nothing else in the repo is touched.
-- **It never publishes worse data.** If GitHub's activity can't be read on a given day (an outage, a rate limit), the run stops and changes nothing, so you keep yesterday's good profile instead of a half-empty one.
-- **Your token needs one more permission** to add the workflow file: *Workflows: Read and write* for a fine-grained token, or the `workflow` scope for a classic one (see [Token setup](#token-setup)). Without it, your README and cards are still published, but daily updates are left out and the page tells you exactly what to add.
-- **It's free** for public repositories. A run takes well under a minute.
-- **GitHub pauses scheduled workflows** in a public repo after 60 days without activity. Re-enable it in the Actions tab if that happens.
-- **To stop it**, delete the workflow file (and `update-universe.yml`, if you have it) or disable them in the Actions tab. Your README and images stay as they are.
-- The commits come from `github-actions[bot]`, so they don't count towards your contribution graph.
-
-`config.json` contains your choices (theme, job title, skills, LinkedIn name), so it's visible in your public repo.
-
-### Download zip
-
-Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) to `<user>/<user>`, for example by dragging them into the repo page on github.com. If an image is missing, it shows as a broken picture.
-
-## Look and options
-
-**Worlds: a complete design for the whole README.** Pick a world under *Look → Design* (or in the Worlds gallery on the page), or use `--world <name>`. A world changes everything from start to end: the banner, every card (stats, streak, heatmap, languages, timeline, projects, connect, and the employer and skills cards), the fonts, the colours in light and dark, an **animated divider that opens each section** in place of a plain heading, the footer, and a showpiece to match. The classic glass look and its themes stay the default.
-
-| World | The idea | Cards | Between sections | Showpiece |
-| --- | --- | --- | --- | --- |
-| `airport` | Airport departure boards | Amber on black, split-flap tiles that fold, flap-tile heatmap, tick-mark streak dials | *GATE 01* on flap tiles, a plane crossing a dashed flight path | Departures board |
-| `transit` | Metro signage | Roundel headings, a stripe in your top language colours, station-dot heatmap, ring lines with stations | The line runs to the section's station, says the next stop, and a train passes | Metro map |
-| `broadsheet` | A newspaper | Your name as the masthead, serif type, double rules, halftone heatmap, printed in ink tones | *§ II · Stack* between rules, with an ink roller crossing them | Front page |
-| `observatory` | A star chart | Deep sky with a celestial grid and starfield, contributions as twinkling stars, a planet orbiting each streak dial | A chart number, the title in italic serif, a comet crossing | Constellation sky |
-| `botanical` | A herbarium | Pressed-specimen sheets with tape and a swaying sprig, leaves for contributions, leafy wreaths | A vine with swaying leaves and a plate label | Code garden |
-| `atlas` | An antique sea chart | Parchment with contour lines and a double neatline, compass headings, dashed route rules, elevation-tinted heatmap, compass-rose dials | A scale bar, the title in a cartouche, a ship sailing the route | Passport |
-| `museum` | A gallery | Brass-trimmed placards with screws and a breathing spotlight, mosaic heatmap, gilt-framed dials; the banner hangs your name in a gilded frame behind velvet ropes | *ROOM 02*, the title in italic serif, a spotlight sweeping the wall | Holo trading card |
-| `ink` | Sumi-e on washi | Washi fibres, brush-stroke rules, your vermilion seal in the corner, ink-blot heatmap, an ensō for every streak | A brush stroke with the title, a sakura petal drifting across | Ink scroll |
-| `periodic` | A lab notebook | Graph paper, an element tile for every card title, element-coloured heatmap, electron shells that orbit; the banner makes you an element | The section as an element tile and a molecule chain that vibrates | Vital signs |
-| `abyss` | The deep sea | Water that deepens down each card, swaying light rays and rising bubbles, glowing plankton for contributions, sonar rings that ping | A depth marker and fish swimming past | Commit forecast |
-| `voxel` | An isometric block city | A soft sky with an isometric grid, a contribution heatmap of little cubes, hex-ringed streak gauges, a cube on every heading | Rows of cubes and an original hover-bot flying across; the footer is a skyline of your recent days | Block city |
-
-**One look, everywhere.** Pick in this order: *Design* (classic or a world), then *Theme* (or *Custom* colours), then *Showpiece*. Everything follows the choices above it, so the whole README always matches; change any of it at the end if you like. In a world, Theme *Auto* keeps the world's own colours, and any other theme, or your own two colours, recolours the entire design: banner, every card, the dividers, the footer and the showpiece. Accents are adjusted automatically so they stay readable on each world's surface, in light and dark. Picking a design puts the showpiece back on *Auto* (the design's own scene), and the picker's thumbnails redraw in your current design and colours, so what you see there is what you get.
-
-Transit, Broadsheet, Botanical, Atlas, Museum, Ink, Periodic and Abyss each have a light and a dark print; Airport and Observatory are dark objects (a board, a sky) that look the same in any light. **Motion in every block.** Every image in a world moves, not just the banner and dividers. Each card carries its world's own small motion: an Airport heading's flap tile flips and its status lamp blinks, the busiest heatmap days flicker like board lights; a train runs along each Transit card's stripe; an ink roller sweeps each Broadsheet rule; an Atlas heading's compass needle swings while a ship sails its route; each Ink seal stamps and a petal drifts across; Periodic heading tiles pulse and the hottest cells react; Observatory stars twinkle; Botanical sprigs sway; the Museum spotlight breathes; Abyss rays sway, bubbles rise and plankton glows. In every look, classic included, project arrows nudge, Connect arrows glide, the newest point on the timeline pulses, and language and skill bars catch a moving sheen.
-
-All motion is CSS inside the images, only gentle loops (nothing waits to appear), follows *Subtle motion*, and stands still for visitors who prefer reduced motion; the still image is always the finished design. Text-only READMEs keep plain headings.
-
-**For employers.** Recruiters spend about ten seconds on a profile, so the *For employers* panel puts what they look for right under the banner. Every field is optional, and a README only changes once one is filled in:
-
-- **Open to** and a **Résumé link** (https only) make an *Open to work* card with a Résumé button; the card and a plain link under it both open your CV.
-- **Certifications** become badges on that card.
-- **Recruiter summary** adds three plain lines written from your data: what you're strongest in (with the repos and stars that show it), your best result, and how consistently you contribute.
-- **Skills with proof** adds a card to Stack that backs each skill with evidence: how many public repos use it, their stars and the latest one. A skill no repo shows is left out rather than claimed.
-- **Impact numbers** per project (up to three, like *40+ accounts watched, 99.9% uptime, 3× faster*) appear as a bold strip on that project's card. With numbers on any card, every card gets the strip, so the row stays even; cards without numbers show their own stars, start year and last update.
-
-From the terminal: `--open-to`, `--resume`, `--certs`, `--summary`, `--proof` and `--impact "api: 40+ users, 99.9% uptime; web: 3x faster"`.
-
-**Showpieces.** One full-width animated scene, right under the banner, drawn from your own repos and activity. Nobody else's profile has the same one, because the data is yours. Pick one in *Look → Showpiece* (or the gallery on the page), or use `--showpiece <name>`. On *Auto* you get the look's own scene: *Pulse* in the classic look, or the chosen design's showpiece. `--showpiece none` (or *None*) leaves it out.
-
-Every showpiece sits in the same frame as your cards (the glass panel in the classic look, or your design's frame), on the same surface, in the same fonts, and is drawn in your theme's colours, so the scene under the banner always matches the rest of the README.
-
-| Showpiece | Your data becomes | Motion |
+| Design | Idea | Showpiece |
 | --- | --- | --- |
-| `departures` | A split-flap departures board: featured repos are flights (year, name, description, stars as the gate), and each gets a status from its activity (the latest push is *Boarding*, older ones *Shipped*, *On time* or *Landed*). Contributions, PRs, streak and repos sit underneath. | Letters flip now and then, *Boarding* blinks, and a ticker along the bottom says what you're open to |
-| `holo` | A collectible trading card: contributions are HP, your contribution graph is the card art, your best project and your pull requests are the two attacks. Your next three repos are a fanned deck, rarer with more stars. | A rainbow foil sweep and sparkles |
-| `metro` | A metro map: each top language is a line, its newest repos are stations placed by the year they were made, and every line runs into your own interchange. | Trains ride the lines |
-| `vinyl` | An album: the cover shows your year's contributions, your projects are the tracklist, and the equaliser is your contributions per month (per week with 90 days of data). | The record spins, the bars bounce, the progress bar plays |
-| `vitals` | A bedside monitor: the ECG is drawn from your monthly commits, heart rate is your streak, and pull requests, reviews and stars are the other vitals, with a rhythm and prognosis from how regularly you contribute. | Traces scroll, the heart beats |
-| `garden` | A garden: each project is a flower, taller with more stars and coloured by language, and the grass is your contribution graph, one blade per half week. A night sky for dark-mode visitors and a day sky for light. | Flowers and grass sway, fireflies (or pollen) drift, clouds pass |
-| `yearcode` | Year in Code: six bold tiles with your total, top language, busiest month, longest streak, best day and a coding personality worked out from when you contribute (*The Streak Machine*, *The Weekend Warrior*, *The Tuesday Titan*…). | Colour blobs drift, confetti falls, tiles breathe |
-| `newspaper` | *The Daily Commit*: a front page with your year as the headline, your top repo as the lead story, a halftone of your activity, markets (stars, followers, PRs), the commit weather and a classified ad for what you're open to. | The EXTRA! stamp pulses and a breaking-news ticker runs along the bottom |
-| `passport` | An open passport: the photo page with your details and a machine-readable zone, and a visa stamp for every language you've shipped in, with the year you first used it. | A holographic sheen crosses the page and the stamps thump down one by one |
-| `constellation` | Your sky: each top language is a constellation, each repo a star that's bigger with more stars, named after the brightest. | Stars twinkle, the sky drifts, a shooting star crosses now and then |
-| `pulse` | The classic look's own: your year of contributions as one glowing waveform on glass, with your headline numbers, languages and busiest week marked. | A bright point travels the line, a soft scan sweeps across, the peak pings |
-| `scroll` | The Ink design's own: an ink-wash landscape whose far ridges are your months and near hills your recent weeks, a three-line poem from your profile and your three best works along the foot. | The ensō moon turns, mist drifts, birds cross and petals fall |
-| `city` | The Voxel design's own: up to half a year of contributions as an isometric city, one stack of blocks a day, taller when busier, beside your headline numbers. | An original hover-bot patrols the skyline, its eyes blink and its thruster glows; the busiest blocks pulse |
-| `weather` | A commit forecast: your chance of commits on any day, the last seven days as weather (more work, more sun), a forecast discussion and a radar of the last 12 weeks. | The sun turns, clouds drift, the radar sweeps and each echo flares as it passes |
+| `airport` | Split-flap departure boards, amber on black | Departures board |
+| `transit` | Metro signage, with a stripe in your language colours | Metro map |
+| `broadsheet` | A newspaper with your name as the masthead | Front page |
+| `observatory` | A star chart; contributions as twinkling stars | Constellation sky |
+| `botanical` | A herbarium; leaves for contributions | Code garden |
+| `atlas` | An antique sea chart with a compass rose | Passport |
+| `museum` | A gallery: gilded frame, brass placards, velvet ropes | Holo trading card |
+| `ink` | Sumi-e on washi, with a vermilion seal | Ink scroll |
+| `periodic` | A lab notebook with element tiles | Vital signs |
+| `abyss` | The deep sea: light rays, plankton, sonar | Commit forecast |
+| `voxel` | An isometric city of contribution blocks, with a hover-bot | Block city |
 
-Like every other image, a showpiece gets a light and a dark version with *Day and night*, follows *Subtle motion*, stands still for visitors who prefer reduced motion, is kept fresh by the daily update, and needs nothing but the data the cards already use. It's left out of text-only READMEs.
+### Themes
 
-**Themes.** Pick `auto` (colours chosen from the username, so every profile differs), or one of seven fixed themes: `aurora`, `cyber`, `sunset`, `emerald`, `royal`, `graphite` and the light `paper`. Every banner and card follows the theme. Text contrast is checked in the tests for all of them.
+`auto` picks colours from the username, or choose `aurora`, `cyber`, `sunset`, `emerald`, `royal`, `graphite` or the light `paper`. *Custom* (or `--colors "#ff8800,#00c2a8"`) takes any two colours and adjusts them to stay readable. In a design, `auto` keeps the design's own colours; any other theme recolours all of it.
 
-**Your own colours.** Choose *Custom* and pick any two accent colours. Backgrounds are built from near-black tinted by your colours, accents are lightened automatically if they'd be hard to read, and the light version of an adaptive README darkens them just enough. The tests throw 300 random and extreme colour pairs at it (pure black, pure white, neon, grey) and check that body text, headings and accents stay readable in dark and light. From the terminal: `--colors "#ff8800,#00c2a8"`.
+### Showpieces
 
-**Motion.** Aurora light drifts, rings and the timeline draw in, heatmap columns fade up, and the banner's orbit turns slowly. It's plain CSS inside each SVG, with no scripts. Every animation only describes its *starting* state, so the still image is always the finished design, and anyone with "reduce motion" on sees exactly that still image. Switch it off with the *Subtle motion* checkbox or `--no-animation`. The files stay small (the largest, a full-year heatmap, is about 45 KB).
+One full-width animated scene under the banner, drawn from your repositories and activity. On *Auto* you get the look's own scene; `--showpiece none` leaves it out.
 
-**Contribution heatmap.** Day-by-day cells laid out by weekday like GitHub's own graph, with month and weekday labels, a level legend and headline numbers (total, best day, daily average). With a token it covers the past year; without one it shows the last 90 days of public activity.
-
-**Layouts.**
-
-| Layout | Projects |
+| Showpiece | Your data becomes |
 | --- | --- |
-| `showcase` (default) | Clickable project cards |
-| `changelog` | A release-notes card: a rail of glowing year markers, with an ADDED row (language, name, description, stars) for each repo, newest year first |
+| `departures` | A split-flap board: featured repos as flights, with a status from their activity |
+| `holo` | A collectible trading card, with your next repos as a fanned deck |
+| `metro` | A metro map: languages as lines, repos as stations by year |
+| `vinyl` | An album: projects as the tracklist, months as an equaliser |
+| `vitals` | A bedside monitor: commits as the ECG, your streak as the heart rate |
+| `garden` | Repos as flowers sized by stars; the grass is your contribution graph |
+| `yearcode` | Year in Code: six tiles, including a coding personality |
+| `newspaper` | *The Daily Commit*: your year as the headline, your top repo as the lead story |
+| `passport` | An open passport with a visa stamp for every language |
+| `constellation` | Languages as constellations, repos as stars |
+| `weather` | A commit forecast with a radar of recent weeks |
+| `pulse` | Your year as one glowing waveform (the classic look's own) |
+| `scroll` | An ink-wash landscape of your year (Ink's own) |
+| `city` | An isometric city of recent contributions (Voxel's own) |
 
-The job title you enter is shown right after your name, as "Role at Company" (the company comes from your GitHub profile). If you leave it blank, your GitHub bio is used. An optional tagline appears as a smaller line beneath it.
+Every showpiece sits in the same frame as your cards and uses your theme's colours.
 
-Both layouts can include a banner, stats, streak and heatmap cards, a Languages card (proportion bar, legend and tool pills), a timeline card, project cards and a row of clickable Connect buttons. With cards switched off, you get a text-only README with no image files. A language donut chart is available as an opt-in extra: with cards on it's drawn inside the Languages card (total repos in the middle, a legend with share bars beside it); in text mode it's a Mermaid pie.
+## More options
 
-**Day and night (light and dark).** *Day and night: follow each visitor's light or dark mode* is **on by default** (turn it off with `--no-adaptive`, or untick it on the page). It writes two complete image sets: your chosen theme for dark-mode visitors and a light twin (`-light.svg`) for everyone else, wrapped in `<picture>` with `prefers-color-scheme`, the mechanism GitHub documents for profile READMEs. So your profile is light for visitors whose device (or GitHub) is in light mode and dark for those in dark mode. Many phones and computers switch to dark at sunset on their own, so in practice it follows each visitor's day and night, and an open page swaps live when their device flips. **A README can't read a clock** (GitHub strips scripts, and CSS has no time of day), so it follows the visitor's own setting, not a time you pick; someone who keeps their device in one mode always sees that one. This was checked in a real browser by simulating a full day on the visitor's device: all images swap together at sunrise and sunset, with nothing mixed or missing. Because each set is only ever shown on its matching GitHub page, both sets are **flat, in exactly the page colour** (`#ffffff` in light, `#0d1117` in dark) and framed only by GitHub's own hairline border (`#d1d9e0` / `#3d444d`), so the cards look like GitHub's own boxes instead of floating on the page; the theme lives on in the accents, rings, heatmap and motion. Light twins keep each theme's identity with accents darkened until they reach a readable 4:1 contrast. If your theme is already light (Paper), the dark partner is Royal. It roughly doubles the number of files.
+- **For employers.** *Open to*, a *Résumé* link (https only) and *Certifications* make a card right under the banner. *Recruiter summary* adds three lines written from your data, *Skills with proof* backs each skill with the repos that use it, and *Impact numbers* add a metrics strip to project cards. CLI: `--open-to`, `--resume`, `--certs`, `--summary`, `--proof`, `--impact "api: 40+ users, 99.9% uptime; web: 3x faster"`.
+- **Day and night.** On by default: every image gets a light twin, and GitHub shows each visitor the set that matches their light or dark mode. `--no-adaptive` writes one set.
+- **Motion.** Gentle CSS loops inside the SVGs, with no scripts. Visitors who prefer reduced motion see the still image, which is always the finished design. `--no-animation` turns motion off.
+- **Layouts.** `showcase` (project cards) or `changelog` (projects as release notes).
+- **Sections.** Banner, wave header and footer, cards, heatmap, timeline, projects, Connect links, language bars, a language donut, *Recently pushed* and the 3D contribution universe can each be switched on or off.
+- **Section order and featured projects.** `--order projects,stats,connect` and `--featured api,web,docs` (up to six).
+- **3D contribution universe.** Your year as a 3D pie of months with your top repos orbiting as planets, plus your contribution mix. Ported from [Git3D Universe](https://github.com/SandeepKomal/Git3D-Universe) (MIT). `--universe-style theme` matches your theme.
+- **Share links.** *Copy share link* makes a URL like `?user=DevopsNimbus&theme=cyber&role=Cloud+Engineer` that reopens the same setup.
+- **Downloads.** Every image as SVG or PNG, all PNGs as a zip, and a 1280×640 share image for LinkedIn or X (`--share-image`).
+- **Footer credit.** The README ends with "made with README Glassfolio". `--no-credit` removes it.
 
-**Share links.** *Copy share link* produces a URL like `?user=DevopsNimbus&theme=cyber&role=Cloud+Engineer`. Opening it rebuilds the same setup and generates straight away. Only values that differ from the defaults are included, and anything invalid in a link is ignored.
-
-**Section order.** The *Order & projects* group has ↑/↓ buttons to put GitHub stats, Stack, Timeline, Projects and Connect in any order (keyboard friendly, with the focus following the moved item). The banner stays first and the footer last, and sections you've switched off stay off. From the terminal: `--order projects,stats,connect`.
-
-**Featured projects.** Instead of "most stars wins", tick the repos you want, up to six, and they appear in the order you ticked them (numbered badges show it). Pick none to go back to your most-starred. Names that don't exist on the loaded profile are dropped, so a saved pick can't show a stranger's repo. From the terminal: `--featured api,web,docs`.
-
-**Downloads.** The *Files* tab has SVG and PNG buttons on every image, and *Download all as PNG (zip)*. PNGs are 2× size and are always the finished design (an animated SVG would otherwise be caught at its first, faded-out frame). Use PNG where a site won't take SVG, such as LinkedIn, X or Slack.
-
-**Share image.** Under the files there's a 1280×640 picture with your name, title, skills and four headline numbers, ready for LinkedIn, X or a repository's social preview. It always uses your theme, light/dark choice and custom colours, is never animated, and is deliberately kept out of the README package, the zip and the publish commit. From the terminal: `--share-image`.
-
-**Wave header and footer.** On by default (untick *Wave header and footer*, or use `--no-wave`, for the orbit banner and a plain footer): the banner is a gradient band in your theme's accents, with your name, title and first skills centred on it and two translucent waves drifting along its lower edge, plus a matching wave footer above the credit line. It's drawn by this tool (no outside image service like capsule-render), everything outside the waves is transparent so it melts into GitHub's light or dark page, the gradient is darkened just enough to keep the white text readable in every theme, and the waves stand still for visitors who prefer reduced motion. With *Day and night* you get light and dark versions like every other image.
-
-**3D contribution universe.** On by default (untick *3D contribution universe*, or use `--no-universe`, to leave it out): a full-width card under the heatmap shows your year as a 3D pie of month wedges standing on a floating disc round a glowing core, read clockwise like a clock face. Each wedge spans its month and rises with that month's contributions, carries the month's name, and the busiest month is outlined in gold with a label above the pie. Your top repos orbit it as lit planets sized by stars (the most-starred one has rings), passing behind the pie on the far side and in front of it on the near side. In the top-left corner a small upright 3D pie shows your **contribution mix**: commits, pull requests, issues and code review as shares of those four (like GitHub's activity overview), each with its percentage and name on a leader line. A glass card in the bottom-right shows the month colours and your peak day. It's ported from Git3D Universe v2.0.0 (`SandeepKomal/Git3D-Universe` on GitHub, MIT licence, Copyright (c) 2026 Sandeep Komal Pothu) and reworked to fit this project:
-
-- **Kept fresh, no extra token.** It's drawn from the same data as the other cards. With [daily updates](#keep-the-stats-fresh-every-day) on, the daily workflow redraws it with everything else, and publishing also adds `.github/workflows/update-universe.yml`, which redraws just the universe tile every 6 hours in between. Neither needs a token beyond the one you publish with, and neither uses a third-party action. If you used the standalone Git3D Universe Action before (for example `git3d-universe.yml` or `test-git3d-universe.yml`), you can delete its workflow from your profile repo.
-- **Two colour styles.** *Universe colours* (or `--universe-style`) picks them. **Cosmic** (the default, `neon`, a name kept from earlier versions so saved choices and share links still work) uses Git3D Universe's own palettes: deep space with a starfield at night, a soft dawn sky by day, one colour wheel for the months (teal, sky, indigo, violet, rose and gold), and four contribution-mix colours checked for colour-blind separation. **Match my theme** (`theme`) takes every colour from the theme you pick (including Custom colours). Either way, *Day and night* gives it a light twin for GitHub's white page and a dark one for GitHub's dark page, like the other cards.
-- **Names are never cut off.** Planet names sit in a layer above everything. On the near side they always show; on the far side a name shows while it's in clear sky and hides only while it would cross the pie. Month names are white at night and dark by day, so there's no white text on a light card.
-- **Respects reduced motion.** The planets orbit with CSS (and swell slightly as they come closer), so visitors who prefer reduced motion see them standing still, and *Subtle motion* off gives a still picture.
-- **Data window.** With a token the month pie covers the past year and the contribution mix uses GraphQL's totals for the same year (*last 12 months*). Without one the pie shows the last 90 days of public activity (a few wide wedges) and the mix uses public search totals (*all time*); code reviews come from a `reviewed-by:` search. A number GitHub can't give is left out of the mix rather than shown as zero.
-
-**Recently pushed.** Tick *Recently pushed* (or use `--recent`) to add a card with your five latest pushes, each with its language and date, and a pulsing marker on the newest. It's off by default, works in every layout, and moves with the other sections. With cards switched off it becomes a plain list.
-
-**Text that always fits.** Repo names and descriptions can be any length, in any font the viewer has, so the cards don't guess at text widths. Where two pieces of text share a row, they're laid out as one flowing text so the second always starts after the first, and anything too long fades out at the edge of its column instead of colliding. `tools/layout-fuzz.js` proves it: it renders about 1,800 cards of extreme names (wide letters, narrow letters, 90-character names, million-star counts) in a real browser and measures every text box.
-
-**Footer credit.** The README footer ends with "made with Patch your profile", linked back to the page that generated it. Untick *Footer credit link* (or use `--no-credit`) to remove it.
-
-## Using the page
-
-- **Profile tab.** The preview shows your README as GitHub will show it, inside a mock profile page with a *Light / Dark* switch and a *Desktop / Phone* switch. The frame is drawn at GitHub's real widths (896px, or a 390px phone) and scaled as a whole to fit the panel, so the proportions you see are the proportions visitors see. It uses a small renderer written for this tool (`js/preview.js`) that only understands what the tool writes. It builds elements from a whitelist and never inserts raw HTML, so markup inside a bio or repo description can't do anything. *Files* lists every image, and *Markdown* shows the README as a diff.
-- **Make it even better.** Once a real profile is loaded, a short checklist with a score points out what's missing (job title, skills, LinkedIn, repo descriptions, a token for the full-year heatmap, a website). Clicking a tip jumps to the control that fixes it, and the tip disappears once it's done.
-- **Remembers your choices.** Theme, text fields and switches are saved in this browser's local storage so they're still there next time. The token and your username are never saved. *Reset all options* clears it. A share link always wins over saved choices.
-- **Clear errors.** While GitHub is being read you see a loading skeleton. If you hit the rate limit, the message offers *Add a token*, and if you're offline it offers *Use sample data*. Neither leaves you with a blank preview.
-- **Keyboard and phones.** Tabs follow the standard pattern (arrow keys, Home and End), controls have visible focus rings, and the layout is checked at phone width: no sideways scrolling and no card poking off the screen.
-
-## Security
-
-The page is built to be safe to paste a token into, and the browser enforces it rather than just the code being careful:
-
-- **A strict Content-Security-Policy** (a `<meta>` tag at the top of `index.html`): scripts only from this site, network requests only to this site and `https://api.github.com`, no frames or plugins, no form posts, no inline scripts or styles, no `eval`. An injected script can't run, and nothing can be sent to another server.
-- **The daily job is yours, and small.** It's a workflow file and a copy of the generator in your own repo, with no third-party actions, no secrets and one permission. The page reads those generator files from its own site (the policy allows `'self'` for that and nothing else but `api.github.com`).
-- **No HTML injection.** The page never uses `innerHTML` or inserts untrusted markup. The Profile preview builds elements from a whitelist and only shows images the tool generated.
-- **Tokens stay in memory.** A token is sent to `api.github.com` and nowhere else, cleared after publishing, and is not an option at all, so it can't be saved or put in a share link. The page sends no referrer.
-- **Proved, not assumed.** The browser tests run every flow (generate, downloads, publish) with zero policy violations, then attack the page: an injected script, an inline event handler, `eval`, and attempts to reach another host by `fetch`, XHR, image, stylesheet, iframe, form post and WebSocket. All are blocked and nothing reaches the attacker's address. `test/page.test.js` fails if anyone adds an inline script, `innerHTML`, `eval`, a new host or a stored token, and was itself checked by deliberately introducing each of those mistakes.
-
-What a policy can't do: it doesn't stop a page from navigating away (for example `window.location = ...`), which is one more reason the page avoids inserting untrusted markup in the first place. Run your own copy, and use a fine-grained token limited to your profile repo.
-
-## Test
-
-```bash
-npm test
-```
-
-Optional, needs Playwright (the project itself has no dependencies):
-
-```bash
-npm install --no-save playwright && npx playwright install chromium
-node tools/layout-fuzz.js          # renders ~1,800 extreme cards and measures every text box
-node tools/day-night-check.js      # simulates a visitor's device going light at sunrise and dark at sunset
-```
-
-## Stats and streaks
-
-The stats card (commits, pull requests, issues, stars, followers), the streak card (current streak, longest streak, active days, weekly chart) and the 3D universe's contribution mix (commits, pull requests, issues, code reviews) use two data sources:
+## How the numbers are fetched
 
 | | Without a token | With a token |
 | --- | --- | --- |
 | Commits, PRs, issues, code reviews | Search API totals (public, all time) | GraphQL, past year |
-| Streaks and active days | Public events feed, up to the last 90 days | Full contribution calendar, past year |
-| Requests per profile | about 9 (60 per hour limit) | 3 |
+| Heatmap, streaks and active days | Public events feed, up to the last 90 days | Contribution calendar, past year |
+| Requests per profile | About 9 (60 per hour without a token) | 3 |
 
-Without a token the streak is a lower bound, because GitHub only exposes about 90 days of public events. A token needs no scopes for public data and is never stored. Cards are generated locally as SVG, so there's no third-party image service. They share one visual language: deep-space glass panels with aurora light, a faint tech grid and neon accents. Each profile gets one of six curated neon color pairs, chosen from the username.
+Without a token the streak is a lower bound, because GitHub exposes only about 90 days of public events. A token needs no scopes for public data and is never stored.
 
 ## Limits
 
-- Only public data is used. Without a token, the heatmap and streaks come from GitHub's public events feed, which covers about the last 90 days; a token gives the full-year calendar.
-- **Phones.** GitHub shows a README about 360px wide. Paired cards (stats and streak, project cards, Connect buttons) use fixed pixel widths, so on a phone they stack at close to full size (a 14px label stays near 11px). The wide cards (heatmap, languages, timeline, changelog, recently pushed, banner) are drawn for a desktop column and shrink to roughly 40% on a phone, so their small text gets hard to read. The *Phone* preview shows exactly this. A narrower "compact" design for those cards would fix it and is the natural next step.
-- Motion is verified in Chromium. GitHub shows SVGs through its own image proxy, which allows inline CSS but not scripts, so the animations should play there too, but check your own profile once. If a viewer blocks them, the still image shows.
-- **The daily update has been tested here but not on GitHub itself.** The workflow's real shell steps ran against real git repositories and a fake GitHub API (first run, quiet day, busy day, outages, settings changes, files that aren't ours), but I couldn't run an actual scheduled GitHub Action. Whether GitHub's temporary `GITHUB_TOKEN` is accepted for the contribution calendar isn't confirmed; if it isn't, the update falls back to the public activity feed, which covers about 90 days. Press *Run workflow* once after publishing and check the run in the Actions tab.
-- Anonymous GitHub API access allows 60 requests an hour per network. Each profile uses about 9. A token (optional field in the page, or `GITHUB_TOKEN` for the CLI) raises that. The page never stores the token.
-- Language stats count repos per primary language, not lines of code.
+- Only public data is used, unless a token gives access to your contribution calendar (which follows your GitHub setting for private contributions).
+- GitHub shows a README about 360 px wide on a phone. Paired cards stack at close to full size; wide cards (heatmap, languages, timeline, banner) shrink, so their small text is harder to read. The *Phone* preview shows exactly this.
+- Motion is CSS inside each SVG. GitHub's image proxy allows it; a viewer that blocks it sees the still image.
+- Language statistics count repositories per primary language, not lines of code.
+- The daily workflow falls back to the public activity feed (about 90 days) if GitHub's workflow token can't read the contribution calendar. Run it once from the Actions tab after publishing and check the result.
 
-## Extend it
+## Security
 
-Add a section by writing a function in `js/core.js` that returns an array of markdown lines, then call it inside `buildReadme`. Add a layout by adding a case for `o.style` there and an `<option>` in `index.html`.
+The website is safe to paste a token into, and the browser enforces it:
+
+- A strict Content-Security-Policy allows scripts only from the site itself and network requests only to the site and `api.github.com`. There are no inline scripts or styles and no `eval`.
+- The page never inserts untrusted HTML. The preview builds elements from a whitelist.
+- Tokens stay in memory, are sent only to `api.github.com`, and are never saved or put in a share link.
+- `test/page.test.js` fails if an inline script, `innerHTML`, `eval`, a new network host or a stored token is added.
+
+See [SECURITY.md](SECURITY.md) for the full model and how to report a vulnerability.
+
+## Development
+
+The site is static files with no build step, and the project has no runtime dependencies.
+
+```bash
+npm run serve        # then open http://localhost:8080
+npm test             # node:test, no dependencies
+```
+
+```
+index.html        The home page and studio
+how-to-use.html   The step-by-step guide
+privacy.html      Privacy policy
+terms.html        Terms of service
+css/style.css     Styles for every page
+js/core.js        Engine: parses input, builds the model, writes the README and banner (no network, no DOM)
+js/cards.js       Draws the cards as SVG
+js/worlds.js      Draws the eleven designs: frames, headings, dividers, banners and footers
+js/showpieces.js  Draws the fourteen showpieces
+js/universe.js    Draws the 3D contribution universe
+js/github.js      Reads profile, repositories and activity from the GitHub API
+js/preview.js     Renders the README the way GitHub does (whitelist-based)
+js/publish.js     Commits the files to <user>/<user> in one commit
+js/automation.js  Writes the daily-update workflows, config and generator copy
+js/zip.js         Small ZIP writer for downloads
+js/app.js         Connects the studio to the engine
+js/site.js        The home page's showcase, story and scroll effects
+cli.js            Command-line version
+action.yml        The GitHub Action
+test/             Tests
+tools/            Optional tools that need Playwright (see below)
+docs/             Guide, screenshots and deployment notes
+```
+
+Optional tools, which need Playwright (`npm install --no-save playwright && npx playwright install chromium`):
+
+```bash
+node tools/layout-fuzz.js        # renders cards with extreme names and checks that no text overlaps
+node tools/day-night-check.js    # checks that the light and dark image sets swap together
+node tools/build-guide-pdf.js    # rebuilds docs/README-Glassfolio-guide.pdf from docs/HOW_TO_USE.md
+```
+
+The site deploys to GitHub Pages from `.github/workflows/pages.yml`. See [docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md).
+
+Some internal names come from the project's first name, *Patch your profile*: the `.readme-patch/` folder in profile repositories and the browser storage key `patch-your-profile.v1`. They stay as they are so existing profiles and saved settings keep working.
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT
+[MIT](LICENSE). The 3D contribution universe is ported from [Git3D Universe](https://github.com/SandeepKomal/Git3D-Universe), also MIT.

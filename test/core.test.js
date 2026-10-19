@@ -711,8 +711,8 @@ test("makeActivity keeps per-day numbers and the start date", () => {
 /* ---------- footer credit ---------- */
 test("footer credit links back to the site when it has an address, and can be switched off", () => {
   const withSite = core.buildReadme(core.SAMPLE, { siteUrl: "https://tool.example/patch" });
-  assert.match(withSite, /made with <a href="https:\/\/tool\.example\/patch">Patch your profile<\/a>/);
-  assert.match(core.buildReadme(core.SAMPLE, {}), /made with Patch your profile<\/sub>/);
+  assert.match(withSite, /made with <a href="https:\/\/tool\.example\/patch">README Glassfolio<\/a>/);
+  assert.match(core.buildReadme(core.SAMPLE, {}), /made with README Glassfolio<\/sub>/);
   const off = core.buildReadme(core.SAMPLE, { credit: false, siteUrl: "https://tool.example/patch" });
   assert.doesNotMatch(off, /made with|tool\.example/);
   assert.match(core.buildReadme(core.SAMPLE, { siteUrl: 'https://x.example/"><script>' }), /&quot;&gt;&lt;script&gt;/);

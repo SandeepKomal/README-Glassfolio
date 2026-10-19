@@ -10,6 +10,9 @@
  *   .readme-patch/package.json            pins the folder to CommonJS, whatever else the repo contains
  *   .readme-patch/README.md               what all of this is and how to switch it off
  *
+ * The folder keeps its original name (.readme-patch, from the project's first name) because profiles that already
+ * run the daily update read their config from it.
+ *
  * ReadmeAutomation.buildAutomationFiles(login, options, sources) -> [{ name, data }]
  *   sources: { "cli.js": "…", "js/core.js": "…", … } for every path in RUNTIME (read from disk, or fetched by the page)
  */
@@ -47,7 +50,7 @@
   function workflowYaml(login) {
     var t = schedule(login);
     return [
-      "# Keeps your profile stats fresh. Written by \"Patch your profile\"; this file is yours to read, change or delete.",
+      "# Keeps your profile stats fresh. Written by README Glassfolio; this file is yours to read, change or delete.",
       "#",
       "# Every day it rebuilds README.md and the images from " + DIR + "/config.json and commits only if something changed.",
       "# It uses NO third-party actions: every step is plain shell, and the generator it runs is the copy in " + DIR + "/.",
@@ -114,7 +117,7 @@
   function universeWorkflowYaml(login) {
     var t = schedule(login), h = t.hour % 6;
     return [
-      "# Keeps the 3D contribution universe (cards/universe.svg) fresh. Written by \"Patch your profile\"; this file is yours to read, change or delete.",
+      "# Keeps the 3D contribution universe (cards/universe.svg) fresh. Written by README Glassfolio; this file is yours to read, change or delete.",
       "#",
       "# Every 6 hours it redraws only the universe tile from " + DIR + "/config.json and commits only if it changed.",
       "# The daily \"Update profile README\" workflow redraws everything, including the universe, once a day.",
@@ -177,7 +180,7 @@
     return [
       "# .readme-patch",
       "",
-      "This folder keeps your profile stats fresh. It was added by **Patch your profile**.",
+      "This folder keeps your profile stats fresh. It was added by **README Glassfolio**.",
       "",
       "- **What runs:** `.github/workflows/update-readme.yml` runs every day at " + two(t.hour) + ":" + two(t.minute) + " UTC (and whenever you press *Run workflow* in the Actions tab).",
       "- **What it does:** it reads your public GitHub data, rebuilds `README.md`, `banner*.svg` and `cards/*.svg` from `config.json`, and commits only if something changed.",
@@ -186,7 +189,7 @@
       "",
       "## Changing how your profile looks",
       "",
-      "`README.md` and the images are rewritten every day, so edits made to them by hand will be replaced. Change `config.json` instead, or open the Patch your profile page and publish again.",
+      "`README.md` and the images are rewritten every day, so edits made to them by hand will be replaced. Change `config.json` instead, or open README Glassfolio and publish again.",
       "",
       "The files it manages are `README.md`, `banner.svg`, `banner-light.svg` and every `.svg` inside `cards/`. Older ones it no longer produces are removed. Nothing else in the repository is ever touched, so keep your own images elsewhere (or as other file types).",
       "",

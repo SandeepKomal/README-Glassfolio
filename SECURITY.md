@@ -1,6 +1,6 @@
 # Security Policy
 
-README-Glassfolio is a browser-first application that reads GitHub data and can optionally write generated profile files to a user's own GitHub profile repository.
+README Glassfolio is a browser-first application that reads GitHub data and can optionally write generated profile files to a user's own GitHub profile repository.
 
 ## Supported version
 
@@ -106,4 +106,4 @@ Before merging security-sensitive changes:
 
 ## License
 
-README-Glassfolio is released under the MIT License. See [LICENSE](LICENSE).
+README Glassfolio is released under the MIT License. See [LICENSE](LICENSE).

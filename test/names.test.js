@@ -33,10 +33,10 @@ function collect(re, group) {
   return found;
 }
 
-// the project's own repository is the one real address the site links to (its "Source code on GitHub" link)
-const PROJECT_REPO = "SandeepKomal/README-Glassfolio";
+// the real addresses the project links to: its own repository, and Git3D Universe, which the 3D universe is ported from
+const PROJECT_REPOS = ["SandeepKomal/README-Glassfolio", "SandeepKomal/Git3D-Universe"];
 test("every github.com/<name> in the project is the sample identity, a placeholder or a GitHub page", () => {
-  collect(new RegExp("github\\.com\\/(?!" + PROJECT_REPO.replace(/[/-]/g, "\\$&") + "\\b)([A-Za-z0-9_-]+)", "g"), 1).forEach(({ file, value }) =>
+  collect(new RegExp("github\\.com\\/(?!(?:" + PROJECT_REPOS.map((r) => r.replace(/[/-]/g, "\\$&")).join("|") + ")\\b)([A-Za-z0-9_-]+)", "g"), 1).forEach(({ file, value }) =>
     assert.ok(PLACEHOLDER_USERS.has(value) || GITHUB_PAGES.has(value), file + " mentions github.com/" + value + ", which isn't the sample identity or a known placeholder"));
 });
 

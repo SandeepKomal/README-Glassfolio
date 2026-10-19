@@ -788,7 +788,7 @@
   function footer(o) {
     var base = "Patched together from public GitHub data";
     if (!o.credit) return "<sub>" + base + ".</sub>";
-    return "<sub>" + base + " · " + (o.siteUrl ? 'made with <a href="' + esc(o.siteUrl) + '">Patch your profile</a>' : "made with Patch your profile") + "</sub>";
+    return "<sub>" + base + " · " + (o.siteUrl ? 'made with <a href="' + esc(o.siteUrl) + '">README Glassfolio</a>' : "made with README Glassfolio") + "</sub>";
   }
 
   function buildReadme(m, options) {
