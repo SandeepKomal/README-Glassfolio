@@ -12,7 +12,6 @@
  *   passport    an open passport: the photo page with a machine-readable zone, and one visa stamp per language
  *   constellation  languages as constellations, repos as stars sized by their stars, with a shooting star
  *   weather     a commit forecast: chance of commits, the last seven days as weather, a radar of recent weeks
- *   launch      launch control: the top repo on the pad, telemetry from stars, streak and weekly pace, a countdown
  *
  * Like the cards, motion is plain CSS inside the SVG (no scripts), only ambient loops, and visitors who prefer reduced
  * motion (or anyone with Subtle motion off) get the same scene standing still.
@@ -163,8 +162,9 @@
     out.push('<text x="40" y="48" font-family="' + SANS + '" font-size="13" font-weight="600" letter-spacing="2.6" fill="' + MUTED + '">✈ DEPARTURES · @' + esc(trunc(m.login, 28).toUpperCase()) + "</text>");
     var starTxt = "★" + fmt(m.stars);
     out.push(flap(starTxt, W - 40 - starTxt.length * 21 + 2, 28, false, AMBER, 0.5));
-    out.push(flap(trunc(m.name, 24).replace(/…$/, ""), 40, 70, true, AMBER, 0.45));
-    if (f.role) out.push('<text x="40" y="156" font-family="' + SANS + '" font-size="15" font-weight="600" letter-spacing="3" fill="#c9c9cd">' + esc(trunc(f.role, 62).toUpperCase()) + "</text>");
+    // in the Airport world the banner already carries the name on flaps, so this board leads with its title
+    out.push(flap(o.world === "airport" ? "DEPARTURES" : trunc(m.name, 24).replace(/…$/, ""), 40, 70, true, AMBER, 0.45));
+    if (f.role && o.world !== "airport") out.push('<text x="40" y="156" font-family="' + SANS + '" font-size="15" font-weight="600" letter-spacing="3" fill="#c9c9cd">' + esc(trunc(f.role, 62).toUpperCase()) + "</text>");
 
     // columns
     var COL = { since: 40, flight: 140, dest: 428, gate: 712, status: 812 };
@@ -720,7 +720,8 @@
     out.push('<g clip-path="url(#nc)"><rect width="' + W + '" height="' + H + '" fill="' + PAPER + '"/><rect width="' + W + '" height="' + H + '" fill="url(#grain)"/>');
     // masthead
     out.push('<rect x="40" y="30" width="' + (W - 80) + '" height="3" fill="' + INK + '"/>');
-    out.push('<text x="' + W / 2 + '" y="92" text-anchor="middle" font-family="' + SERIF + '" font-size="58" font-weight="700" letter-spacing="-1" fill="' + INK + '">The Daily Commit</text>');
+    // in the Broadsheet world the banner is already the masthead, so this page is its front page
+    out.push('<text x="' + W / 2 + '" y="92" text-anchor="middle" font-family="' + SERIF + '" font-size="58" font-weight="700" letter-spacing="-1" fill="' + INK + '">' + (o.world === "broadsheet" ? "Front Page" : "The Daily Commit") + "</text>");
     out.push('<rect x="40" y="108" width="' + (W - 80) + '" height="1" fill="' + INK + '"/><rect x="40" y="134" width="' + (W - 80) + '" height="3" fill="' + INK + '"/>');
     out.push('<g font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.4" fill="' + INK + '"><text x="44" y="126">VOL. ' + vol + " · No. " + esc(commas(f.total !== null ? f.total : m.publicRepos)) + '</text><text x="' + W / 2 + '" y="126" text-anchor="middle">' + esc(dateline) + '</text><text x="' + (W - 44) + '" y="126" text-anchor="end">PRICE: ONE PULL REQUEST</text></g>');
     // headline
@@ -978,72 +979,8 @@
     return svgOpen(W, H, "Commit forecast for " + m.login) + motion(p, css) + out.join("") + "</svg>";
   }
 
-  /* ================= L. launch control ================= */
-  function launch(m, o, p) {
-    var f = facts(m, o), r = rng(core.hash(m.login + "launch")), W = 960, H = 600, out = [];
-    var top = f.projects[0], perWeek = f.weeks.length ? Math.round(f.weeks.reduce(function (t, v) { return t + v; }, 0) / f.weeks.length) : 0;
-    var GREEN = "#3ef07c", AMBER = "#ffb547", INK = "#e6edf5", DIM = "#7d8ea3";
-    out.push("<defs>" +
-      '<linearGradient id="sp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + (p.light ? "#1b2a55" : "#03050d") + '"/><stop offset="1" stop-color="' + (p.light ? "#e0745a" : "#1b1030") + '"/></linearGradient>' +
-      '<linearGradient id="body" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cfd6df"/><stop offset="0.45" stop-color="#ffffff"/><stop offset="1" stop-color="#9aa6b5"/></linearGradient>' +
-      '<radialGradient id="fl" cx="0.5" cy="0"><stop offset="0" stop-color="#fff6b0"/><stop offset="0.4" stop-color="#ffb000"/><stop offset="1" stop-color="#ff3d00" stop-opacity="0"/></radialGradient>' +
-      '<clipPath id="lc"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath><clipPath id="gc"><rect x="500" y="460" width="420" height="104"/></clipPath></defs>');
-    out.push('<g clip-path="url(#lc)"><rect width="' + W + '" height="' + H + '" fill="url(#sp)"/>');
-    for (var i = 0; i < 60; i++) out.push('<circle cx="' + Math.round(r() * 460) + '" cy="' + Math.round(r() * 380) + '" r="' + (r() * 1.2 + 0.3).toFixed(1) + '" fill="#ffffff" fill-opacity="' + (0.3 + r() * 0.5).toFixed(2) + '"/>');
-    // the pad, the tower and the rocket
-    out.push('<rect x="0" y="520" width="480" height="80" fill="#0c0f16"/><rect x="120" y="508" width="220" height="14" rx="3" fill="#3a4250"/>');
-    out.push('<g stroke="#8a5a2b" stroke-width="3"><line x1="320" y1="160" x2="320" y2="510"/><line x1="350" y1="160" x2="350" y2="510"/>');
-    for (var t = 0; t < 7; t++) out.push('<line x1="320" y1="' + (170 + t * 48) + '" x2="350" y2="' + (210 + t * 48) + '"/>');
-    out.push('</g><rect x="250" y="250" width="70" height="5" fill="#8a5a2b"/>');
-    // smoke
-    for (var s = 0; s < 6; s++) out.push("<g" + (p.anim ? ' class="sm" style="animation-delay:-' + (s * 0.6).toFixed(1) + 's"' : "") + '><circle cx="' + (170 + s * 24) + '" cy="512" r="' + (18 + (s % 3) * 8) + '" fill="#c9ced6" fill-opacity="0.35"/></g>');
-    out.push("<g" + (p.anim ? ' class="shake"' : "") + ">");
-    out.push("<g" + (p.anim ? ' class="flame" style="transform-origin:230px 470px"' : "") + '><path d="M212 470 Q230 560 248 470Z" fill="url(#fl)"/><path d="M220 470 Q230 520 240 470Z" fill="#ffffff" fill-opacity="0.8"/></g>');
-    out.push('<path d="M200 470 L200 230 Q230 150 260 230 L260 470Z" fill="url(#body)"/>');
-    out.push('<path d="M230 150 Q245 180 260 230 L200 230 Q215 180 230 150Z" fill="' + p.a1 + '"/>');
-    out.push('<path d="M200 400 L172 470 L200 460Z M260 400 L288 470 L260 460Z" fill="' + p.a2 + '"/>');
-    out.push('<circle cx="230" cy="290" r="18" fill="#203a6b" stroke="#9aa6b5" stroke-width="4"/><text x="230" y="295" text-anchor="middle" font-family="' + SANS + '" font-size="13" font-weight="900" fill="#ffffff">' + esc(core.initials(m)) + "</text>");
-    out.push('<text x="230" y="380" text-anchor="middle" font-family="' + SANS + '" font-size="11" font-weight="900" letter-spacing="2" fill="#203a6b" transform="rotate(-90 230 380)">' + esc(trunc(m.login, 14).toUpperCase()) + "</text>");
-    out.push("</g>");
-    // the console
-    out.push('<rect x="480" y="0" width="480" height="' + H + '" fill="#070b12" fill-opacity="0.82"/>');
-    out.push('<text x="500" y="52" font-family="' + MONO + '" font-size="12" letter-spacing="2" fill="' + DIM + '">MISSION CONTROL · @' + esc(trunc(m.login, 20).toUpperCase()) + "</text>");
-    out.push('<text x="500" y="88" font-family="' + MONO + '" font-size="' + fit(top ? top.name : "first launch", 26, 15, 420, 0.62) + '" font-weight="700" fill="' + INK + '">' + esc((top ? trunc(top.name, 28) : "FIRST LAUNCH").toUpperCase()) + "</text>");
-    out.push('<text x="500" y="112" font-family="' + MONO + '" font-size="12" fill="' + DIM + '">VEHICLE: ' + esc((top && top.lang ? top.lang : m.langs[0] ? m.langs[0].name : "TBD").toUpperCase()) + (f.role ? " · CREW: " + esc(trunc(f.role, 26).toUpperCase()) : "") + "</text>");
-    // countdown: ten numbers, each lit for a second in turn, then liftoff
-    if (p.anim) {
-      for (var c = 10; c >= 0; c--) out.push('<text x="920" y="88" text-anchor="end" class="cd" style="animation-delay:' + (10 - c) + 's" font-family="' + MONO + '" font-size="26" font-weight="700" fill="' + (c ? AMBER : GREEN) + '" opacity="0">' + (c ? "T−" + ("0" + c).slice(-2) : "LIFTOFF") + "</text>");
-    } else out.push('<text x="920" y="88" text-anchor="end" font-family="' + MONO + '" font-size="20" font-weight="700" fill="' + GREEN + '">GO FOR LAUNCH</text>');
-    var tele = [["ALTITUDE", fmt(m.stars) + " ★", m.stars / Math.max(m.stars, 100)], ["VELOCITY", perWeek + " / WEEK", Math.min(1, perWeek / 50)],
-      ["FUEL", (f.streak || 0) + (f.streak === 1 ? " DAY" : " DAYS"), f.longest ? (f.streak || 0) / f.longest : 0], ["PAYLOAD", m.publicRepos + " REPOS", Math.min(1, m.publicRepos / 50)]];
-    tele.forEach(function (x, k) {
-      var y = 160 + k * 52;
-      out.push('<text x="500" y="' + y + '" font-family="' + MONO + '" font-size="12" letter-spacing="1.5" fill="' + DIM + '">' + x[0] + '</text><text x="920" y="' + y + '" text-anchor="end" font-family="' + MONO + '" font-size="15" font-weight="700" fill="' + INK + '">' + esc(x[1]) + "</text>");
-      out.push('<rect x="500" y="' + (y + 10) + '" width="420" height="8" rx="4" fill="#1c2533"/><rect x="500" y="' + (y + 10) + '" width="' + Math.max(6, Math.min(1, x[2]) * 420).toFixed(1) + '" height="8" rx="4" fill="' + (k === 2 ? AMBER : GREEN) + '"/>');
-    });
-    var checks = [["BUILD", true], ["TESTS", true], ["DOCS", !!(top && top.desc)], ["STARS", m.stars > 0], ["CREW", m.followers > 0], ["STREAK", f.streak > 0]];
-    checks.forEach(function (x, k) {
-      var cx = 500 + (k % 3) * 142, cy = 382 + Math.floor(k / 3) * 30;
-      out.push('<circle cx="' + (cx + 6) + '" cy="' + (cy - 4) + '" r="5" fill="' + (x[1] ? GREEN : AMBER) + '"' + (p.anim && !x[1] ? ' class="bk"' : "") + '/><text x="' + (cx + 18) + '" y="' + cy + '" font-family="' + MONO + '" font-size="12" font-weight="700" fill="' + INK + '">' + x[0] + " " + (x[1] ? "GO" : "HOLD") + "</text>");
-    });
-    // telemetry trace: weekly contributions, scrolling
-    var wk = f.weeks.length ? f.weeks : [1, 3, 2, 4, 3, 5, 4, 6], wm = Math.max.apply(null, wk.concat([1])), step = 30, seq = [];
-    while (seq.length * step < 420 + wk.length * step) seq = seq.concat(wk);
-    var d = seq.map(function (v, k) { return (k ? "L" : "M") + (k * step) + "," + (556 - v / wm * 76).toFixed(1); }).join(" ");
-    out.push('<text x="500" y="446" font-family="' + MONO + '" font-size="11" letter-spacing="1.5" fill="' + DIM + '">TELEMETRY · CONTRIBUTIONS PER WEEK</text>');
-    out.push('<g clip-path="url(#gc)"><g transform="translate(500 0)"><g' + (p.anim ? ' class="tm" style="animation-duration:' + (wk.length * 0.8).toFixed(1) + 's"' : "") + '><path d="' + d + '" fill="none" stroke="' + GREEN + '" stroke-width="2"/></g></g></g>');
-    out.push("</g>");
-    var css = "@keyframes cd{0%{opacity:1}8.9%{opacity:1}9%{opacity:0}100%{opacity:0}}.cd{animation:cd 11s steps(1) infinite}" +
-      "@keyframes flame{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.25)}}.flame{animation:flame .18s ease-in-out infinite}" +
-      "@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(.6px,-.4px)}75%{transform:translate(-.6px,.4px)}}.shake{animation:shake .25s linear infinite}" +
-      "@keyframes sm{0%{transform:translate(0,0) scale(.6);opacity:.9}100%{transform:translate(-40px,-30px) scale(1.6);opacity:0}}.sm{transform-box:fill-box;transform-origin:center;animation:sm 3s ease-out infinite}" +
-      "@keyframes tm{to{transform:translateX(-" + (wk.length * step) + "px)}}.tm{animation:tm 8s linear infinite}" +
-      "@keyframes bk{50%{opacity:.25}}.bk{animation:bk 1s steps(2) infinite}";
-    return svgOpen(W, H, "Launch control for " + m.login) + motion(p, css) + out.join("") + "</svg>";
-  }
-
   var SCENES = { departures: departures, holo: holo, metro: metro, vinyl: vinyl, vitals: vitals, garden: garden,
-    yearcode: yearcode, newspaper: newspaper, passport: passport, constellation: constellation, weather: weather, launch: launch };
+    yearcode: yearcode, newspaper: newspaper, passport: passport, constellation: constellation, weather: weather };
 
   /** The chosen showpiece as an SVG string, or null when none is chosen. */
   function build(m, options, palette) {

@@ -300,7 +300,8 @@
     if (user) q.set("user", user);
     if (o.theme !== DEFAULTS.theme) q.set("theme", o.theme);
     if (o.style !== DEFAULTS.style) q.set("style", o.style);
-    if (SHOWPIECE_KEYS.indexOf(o.showpiece) !== -1) q.set("showpiece", o.showpiece);
+    if (SHOWPIECE_KEYS.indexOf(o.showpiece) !== -1 || o.showpiece === "none") q.set("showpiece", o.showpiece);
+    if (worldOf(o)) q.set("world", o.world);
     if (o.universeStyle !== DEFAULTS.universeStyle && UNIVERSE_STYLES.indexOf(o.universeStyle) !== -1) q.set("universeStyle", o.universeStyle);
     SHARE_TEXT.forEach(function (k) { if (o[k]) q.set(k, String(o[k]).slice(0, 160)); });
     SHARE_ACCENTS.forEach(function (k) { if (validHex(o[k])) q.set(k, o[k].toLowerCase()); });
@@ -321,7 +322,9 @@
     var style = q.get("style");
     if (style === "showcase" || style === "changelog") opts.style = style;
     var show = q.get("showpiece");
-    if (SHOWPIECE_KEYS.indexOf(show) !== -1) opts.showpiece = show;
+    if (SHOWPIECE_KEYS.indexOf(show) !== -1 || show === "none") opts.showpiece = show;
+    var wd = q.get("world");
+    if (WORLD_KEYS.indexOf(wd) !== -1) opts.world = wd;
     var ustyle = q.get("universeStyle");
     if (UNIVERSE_STYLES.indexOf(ustyle) !== -1) opts.universeStyle = ustyle;
     SHARE_TEXT.forEach(function (k) { var v = q.get(k); if (v) opts[k] = oneLine(v).slice(0, 160); });
@@ -369,7 +372,7 @@
   var DEFAULTS = {
     style: "showcase", theme: "auto", accent1: "", accent2: "", order: "", featured: "", adaptive: true, mode: "", suffix: "", animate: true, heatmap: true, credit: true, siteUrl: "", tagline: "", role: "", stack: "", linkedin: "",
     banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true, universe: true, universeStyle: "neon", wave: true,
-    showpiece: "", openTo: "", resume: "", certs: "", impact: "", summary: false, proof: false
+    showpiece: "", world: "", openTo: "", resume: "", certs: "", impact: "", summary: false, proof: false
   };
   function withDefaults(o) {
     var out = {}, k;
@@ -438,7 +441,7 @@
   function stack(m, o) {
     var useCard = o.cards && (m.langs.length || toolList(m, o).length);
     if (!useCard && !m.langs.length && !wantsProof(m, o)) return [];
-    var out = ["## Stack", ""];
+    var out = [head(o, "stack", "Stack"), ""];
     if (useCard) {
       out.push('<div align="center">', "", pic(o, "cards/languages.svg", 'alt="Languages and tools for ' + esc(m.login) + '" width="100%"'), "", "</div>", "");
     } else if (o.bars) {
@@ -467,14 +470,14 @@
     var shown = pickProjects(m, o);
     if (!shown.length) return [];
     if (!shown.some(function (r) { return r.desc; })) {
-      var plain = ["## Projects", ""];
+      var plain = [head(o, "projects", "Projects"), ""];
       shown.forEach(function (r) {
         plain.push("- [" + r.name + "](" + r.url + ")" + (r.lang ? " · " + r.lang : "") + (r.stars ? " · ★ " + r.stars : ""));
       });
       plain.push("");
       return plain;
     }
-    var out = ["## Projects", "", "| Repo | What it does | Lang | Stars |", "| --- | --- | --- | ---: |"];
+    var out = [head(o, "projects", "Projects"), "", "| Repo | What it does | Lang | Stars |", "| --- | --- | --- | ---: |"];
     shown.forEach(function (r) {
       out.push("| [" + cell(r.name) + "](" + r.url + ") | " + cell(r.desc || "-") + " | " + cell(r.lang || "-") + " | " + r.stars + " |");
     });
@@ -515,6 +518,36 @@
   /** The 3D contribution universe: opt-in, card mode only, and only when there is activity to draw. */
   function wantsUniverse(m, o) { return !!(o.cards && o.universe && m.activity && m.activity.daily && m.activity.daily.length); }
   function wantsRecent(m, o) { return !!(o.cards && o.recent && m.recent && m.recent.length); }
+
+  /* ---------- worlds ----------
+   * A world is a complete design for the whole README (worlds.js draws it): banner, every card, an animated divider
+   * that opens each section, and a footer. It brings its own showpiece unless the person picks another (or "none"). */
+  var WORLDS = [
+    { key: "airport", label: "Airport", showpiece: "departures", blurb: "Split-flap departure boards from top to bottom: amber on black, flap tiles that fold, a plane crossing between sections." },
+    { key: "transit", label: "Transit", showpiece: "metro", blurb: "Metro signage: roundels, line stripes in your language colours, and a train pulling through every section." },
+    { key: "broadsheet", label: "Broadsheet", showpiece: "newspaper", blurb: "A newspaper: your name as the masthead, serif type, double rules, halftone heatmap, an ink roller on every rule." },
+    { key: "observatory", label: "Observatory", showpiece: "constellation", blurb: "A star chart: deep sky, a celestial grid, contributions as twinkling stars and a comet between sections." },
+    { key: "botanical", label: "Botanical", showpiece: "garden", blurb: "A herbarium: pressed-specimen sheets with tape and sprigs, leaves for contributions, vines that sway." },
+    { key: "atlas", label: "Atlas", showpiece: "passport", blurb: "An antique sea chart: parchment, contour lines, a compass rose that turns, and a ship sailing between sections." },
+    { key: "museum", label: "Museum", showpiece: "holo", blurb: "A gallery: your name in a gilded frame, brass-trimmed placards, a drifting spotlight and velvet ropes." },
+    { key: "ink", label: "Ink", showpiece: "garden", blurb: "Sumi-e on washi paper: brush strokes, an ensō for each streak, your vermilion seal and falling sakura petals." },
+    { key: "periodic", label: "Periodic", showpiece: "vitals", blurb: "A lab notebook: graph paper, an element tile for every section, electron shells and molecules that vibrate." },
+    { key: "abyss", label: "Abyss", showpiece: "weather", blurb: "The deep sea: light rays and rising bubbles, bioluminescent plankton, sonar rings, jellyfish and swaying kelp." }
+  ];
+  var WORLD_KEYS = WORLDS.map(function (w) { return w.key; });
+  function worldOf(o) { return WORLD_KEYS.indexOf(o && o.world) !== -1 ? WORLDS[WORLD_KEYS.indexOf(o.world)] : null; }
+  /** A section heading: the plain Markdown one, or in a world (with cards) the world's animated divider, titled in its alt text. */
+  function head(o, key, title) {
+    if (!(o.cards && worldOf(o))) return "## " + title;
+    return '<div align="center">\n\n' + pic(o, "cards/divider-" + key + ".svg", 'alt="' + esc(title) + '" width="100%"') + "\n\n</div>";
+  }
+  /** The showpiece to draw: the person's pick, else the world's own; "none" switches it off. */
+  function showpieceKey(o) {
+    if (o.showpiece === "none") return "";
+    if (SHOWPIECE_KEYS.indexOf(o.showpiece) !== -1) return o.showpiece;
+    var w = worldOf(o);
+    return w ? w.showpiece : "";
+  }
 
   /* ---------- for employers ----------
    * What a recruiter looks for in the first ten seconds: what you're open to, proof of impact, credentials, and a
@@ -628,14 +661,13 @@
     { key: "newspaper", label: "The Daily Commit", blurb: "A front page: your year is the headline, your top repo the lead story, with markets, weather and classifieds." },
     { key: "passport", label: "Passport", blurb: "An open passport with your details and a visa stamp for every language you've shipped in." },
     { key: "constellation", label: "Constellation sky", blurb: "Each language is a constellation, each repo a star that shines brighter with more stars." },
-    { key: "weather", label: "Commit forecast", blurb: "Your chance of commits, the last seven days as weather, and a radar sweep over recent weeks." },
-    { key: "launch", label: "Launch control", blurb: "Your top repo on the launch pad, with telemetry from your stars, streak and weekly pace, and a countdown." }
+    { key: "weather", label: "Commit forecast", blurb: "Your chance of commits, the last seven days as weather, and a radar sweep over recent weeks." }
   ];
   var SHOWPIECE_KEYS = SHOWPIECES.map(function (s) { return s.key; });
-  function wantsShowpiece(m, o) { return !!(o.cards && SHOWPIECE_KEYS.indexOf(o.showpiece) !== -1); }
+  function wantsShowpiece(m, o) { return !!(o.cards && showpieceKey(o)); }
   function showpieceSection(m, o) {
     if (!wantsShowpiece(m, o)) return [];
-    var label = SHOWPIECES[SHOWPIECE_KEYS.indexOf(o.showpiece)].label;
+    var label = SHOWPIECES[SHOWPIECE_KEYS.indexOf(showpieceKey(o))].label;
     return ['<div align="center">', "", pic(o, "cards/showpiece.svg", 'alt="' + esc(label + " for " + m.login) + '" width="100%"'), "", "</div>", ""];
   }
 
@@ -677,7 +709,7 @@
 
   function statsSection(m, o) {
     var two = !!m.activity;
-    var out = ["## GitHub stats", "", '<div align="center">', ""];
+    var out = [head(o, "stats", "GitHub stats"), "", '<div align="center">', ""];
     var heat = o.heatmap && m.activity && m.activity.daily && m.activity.daily.length;
     // one paragraph for the whole grid: side by side and stacked cards get the same small gutter, and the
     // half-width pair lines up with the full-width heatmap's edges instead of sitting indented inside it
@@ -693,7 +725,7 @@
   function projectCards(m, o) {
     var top = pickProjects(m, o);
     if (!top.length) return [];
-    var out = ["## Projects", "", '<div align="center">', ""];
+    var out = [head(o, "projects", "Projects"), "", '<div align="center">', ""];
     top.forEach(function (r, i) {
       out.push('<a href="' + esc(r.url) + '">' + pic(o, "cards/project-" + (i + 1) + ".svg", 'alt="' + esc(r.name) + '" width="' + HALF + '"') + "</a>");
     });
@@ -704,10 +736,10 @@
   function timeline(m, o) {
     if (!o.timeline || !m.all.length) return [];
     if (o.cards) {
-      return ["## Timeline", "", '<div align="center">', "", pic(o, "cards/timeline.svg", 'alt="Timeline of repositories created by ' + esc(m.login) + '" width="100%"'), "", "</div>", ""];
+      return [head(o, "timeline", "Timeline"), "", '<div align="center">', "", pic(o, "cards/timeline.svg", 'alt="Timeline of repositories created by ' + esc(m.login) + '" width="100%"'), "", "</div>", ""];
     }
     var repos = m.all.filter(function (r) { return r.created; }).sort(function (a, b) { return a.created < b.created ? -1 : 1; }).slice(-8);
-    var out = ["## Timeline", "", "```mermaid", "gitGraph"];
+    var out = [head(o, "timeline", "Timeline"), "", "```mermaid", "gitGraph"];
     if (m.since) out.push('   commit id: "Joined GitHub ' + m.since + '"');
     repos.forEach(function (r) { out.push('   commit id: "' + safeId(r.name) + '"'); });
     out.push("```", "");
@@ -717,11 +749,11 @@
   /** Card versions of the two sections: a heading, then one image. */
   function changelogSection(m, o) {
     if (!wantsChangelog(m, o)) return [];
-    return ["## Changelog", "", '<div align="center">', "", pic(o, "cards/changelog.svg", 'alt="Changelog of repositories created by ' + esc(m.login) + '" width="100%"'), "", "</div>", ""];
+    return [head(o, "changelog", "Changelog"), "", '<div align="center">', "", pic(o, "cards/changelog.svg", 'alt="Changelog of repositories created by ' + esc(m.login) + '" width="100%"'), "", "</div>", ""];
   }
   function recentSection(m, o) {
     if (!wantsRecent(m, o)) return [];
-    return ["## Recently pushed", "", '<div align="center">', "", pic(o, "cards/recent.svg", 'alt="Recently pushed repositories of ' + esc(m.login) + '" width="100%"'), "", "</div>", ""];
+    return [head(o, "recent", "Recently pushed"), "", '<div align="center">', "", pic(o, "cards/recent.svg", 'alt="Recently pushed repositories of ' + esc(m.login) + '" width="100%"'), "", "</div>", ""];
   }
 
   function recent(m) {
@@ -736,14 +768,14 @@
     var items = connectItems(m, o);
     if (o.cards) {
       var w = items.length === 4 ? "204" : "270";   // pixels: 3 (or 4 narrower) span the 832px desktop column like the cards above, and on a phone they stack at near full size
-      var out = ["## Connect", "", '<div align="center">', ""];
+      var out = [head(o, "connect", "Connect"), "", '<div align="center">', ""];
       items.forEach(function (it) {
         out.push('<a href="' + esc(it.url) + '">' + pic(o, "cards/connect-" + it.key + ".svg", 'alt="' + esc(it.label) + '" width="' + w + '"') + "</a>");
       });
       out.push("", "</div>", "");
       return out;
     }
-    return ["## Connect", "", '<div align="center">', "",
+    return [head(o, "connect", "Connect"), "", '<div align="center">', "",
       items.map(function (it) { return "**[" + it.label + "](" + it.url + ")**"; }).join(" · "), "", "</div>", ""];
   }
 
@@ -770,7 +802,7 @@
       connect: function () { return o.links ? links(m, o) : []; }
     };
     sectionOrder(o).forEach(function (k) { L = L.concat(parts[k]()); });
-    if (o.wave && o.cards) L.push('<div align="center">', "", pic(o, "cards/footer.svg", 'alt="" width="100%"'), "", footer(o), "", "</div>", "");
+    if ((o.wave || worldOf(o)) && o.cards) L.push('<div align="center">', "", pic(o, "cards/footer.svg", 'alt="" width="100%"'), "", footer(o), "", "</div>", "");
     else L.push("---", footer(o), "");
     return L.join("\n");
   }
@@ -965,6 +997,6 @@
     palette: palette, streaks: streaks, weeklyCounts: weeklyCounts, daysFromEvents: daysFromEvents,
     makeActivity: makeActivity, MAX_PROJECT_CARDS: MAX_PROJECT_CARDS, toolList: toolList, connectItems: connectItems, designation: designation,
     THEMES: THEMES, THEME_ORDER: THEME_ORDER, LANG_COLORS: LANG_COLORS, fxStyle: fxStyle, fx: fx,
-    toQuery: toQuery, fromQuery: fromQuery, contrast: contrast, tips: tips, changelogData: changelogData, wantsChangelog: wantsChangelog, wantsRecent: wantsRecent, wantsUniverse: wantsUniverse, wantsShowpiece: wantsShowpiece, wantsHire: wantsHire, wantsProof: wantsProof, skillProof: skillProof, recruiterSummary: recruiterSummary, certList: certList, resumeUrl: resumeUrl, parseImpact: parseImpact, impactFor: impactFor, anyImpact: anyImpact, oneLine: oneLine, SHOWPIECES: SHOWPIECES, SHOWPIECE_KEYS: SHOWPIECE_KEYS, hash: hash, initials: initials, subtitle: subtitle, chipNames: chipNames, paletteFor: paletteFor, mixHex: mixHex, pickProjects: pickProjects, sectionOrder: sectionOrder, SECTIONS: SECTIONS, validHex: validHex
+    toQuery: toQuery, fromQuery: fromQuery, contrast: contrast, tips: tips, changelogData: changelogData, wantsChangelog: wantsChangelog, wantsRecent: wantsRecent, wantsUniverse: wantsUniverse, wantsShowpiece: wantsShowpiece, showpieceKey: showpieceKey, WORLDS: WORLDS, WORLD_KEYS: WORLD_KEYS, worldOf: worldOf, wantsHire: wantsHire, wantsProof: wantsProof, skillProof: skillProof, recruiterSummary: recruiterSummary, certList: certList, resumeUrl: resumeUrl, parseImpact: parseImpact, impactFor: impactFor, anyImpact: anyImpact, oneLine: oneLine, SHOWPIECES: SHOWPIECES, SHOWPIECE_KEYS: SHOWPIECE_KEYS, hash: hash, initials: initials, subtitle: subtitle, chipNames: chipNames, paletteFor: paletteFor, mixHex: mixHex, pickProjects: pickProjects, sectionOrder: sectionOrder, SECTIONS: SECTIONS, validHex: validHex
   };
 });

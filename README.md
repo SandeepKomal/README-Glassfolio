@@ -26,7 +26,8 @@ css/style.css     Glass / neon theme for the page
 js/core.js        Engine: parse input, build the model, write the README and banner (no network, no DOM)
 js/cards.js       Draws the stats, streak, heatmap, languages, timeline, project and connect cards as SVG files
 js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe v2.0.0)
-js/showpieces.js  Draws the twelve animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden, year in code, newspaper, passport, constellation sky, commit forecast, launch control)
+js/worlds.js      Draws the ten worlds: complete designs for every card, the banner, section dividers and footer
+js/showpieces.js  Draws the eleven animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden, year in code, newspaper, passport, constellation sky, commit forecast)
 js/github.js      Fetches profile, repos and activity from the GitHub API
 js/preview.js     Shows the README as a GitHub profile page would (safe, whitelist-based renderer)
 js/publish.js     Commits the README, banner and cards to <user>/<user> in one commit
@@ -34,6 +35,7 @@ js/automation.js  Writes the daily-update workflow, config and a copy of the gen
 js/zip.js         Tiny ZIP writer so every generated file downloads together
 js/app.js         Wires the page to the engine
 cli.js            Command-line version (Node 18+)
+action.yml        The GitHub Action (Marketplace metadata)
 test/*.test.js    Tests (node:test, no dependencies)
 tools/            Optional developer tools, all need Playwright: layout-fuzz.js (measures card text in a real browser), day-night-check.js (plays a full day of sunrise and sunset on a visitor's device) and build-guide-pdf.js (rebuilds docs/Patch-your-profile-guide.pdf from docs/HOW_TO_USE.md)
 docs/             Example screenshots
@@ -92,6 +94,31 @@ GITHUB_TOKEN=ghp_xxx node cli.js DevopsNimbus   # exact full-year streaks
 ```
 
 Files are written to `./out/`: `README.md`, `banner.svg` and `cards/`. Run `node cli.js --help` for every option. Set `GITHUB_TOKEN` to raise the API rate limit.
+
+## Use it as a GitHub Action
+
+Add this to a workflow in your profile repo (`<user>/<user>`), and the README is rebuilt on every run:
+
+```yaml
+name: Profile README
+on:
+  schedule: [{ cron: "17 6 * * *" }]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SandeepKomal/README-Glassfolio@main
+        with:
+          world: observatory          # or airport, transit, broadsheet, botanical, atlas, museum, ink, periodic, abyss; empty for classic
+          # showpiece: yearcode       # any showpiece, or none
+          # config: .readme-patch/config.json
+```
+
+Inputs: `username` (defaults to the repo owner), `world`, `showpiece`, `theme`, `config`, `out`, `commit` (default `true`: commits only when something changed) and `token` (defaults to the workflow token). Every input reaches the shell as an environment variable, never pasted into the script.
 
 ## Two ways to use the result
 
@@ -161,6 +188,23 @@ Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) 
 
 ## Look and options
 
+**Worlds: a complete design for the whole README.** Pick a world under *Look → Design* (or in the Worlds gallery on the page), or use `--world <name>`. A world changes everything from start to end: the banner, every card (stats, streak, heatmap, languages, timeline, projects, connect, and the employer and skills cards), the fonts, the colours in light and dark, an **animated divider that opens each section** in place of a plain heading, the footer, and a showpiece to match. The classic glass look and its themes stay the default.
+
+| World | The idea | Cards | Between sections | Showpiece |
+| --- | --- | --- | --- | --- |
+| `airport` | Airport departure boards | Amber on black, split-flap tiles that fold, flap-tile heatmap, tick-mark streak dials | *GATE 01* on flap tiles, a plane crossing a dashed flight path | Departures board |
+| `transit` | Metro signage | Roundel headings, a stripe in your top language colours, station-dot heatmap, ring lines with stations | The line runs to the section's station, says the next stop, and a train passes | Metro map |
+| `broadsheet` | A newspaper | Your name as the masthead, serif type, double rules, halftone heatmap, printed in ink tones | *§ II · Stack* between rules, with an ink roller crossing them | Front page |
+| `observatory` | A star chart | Deep sky with a celestial grid and starfield, contributions as twinkling stars, a planet orbiting each streak dial | A chart number, the title in italic serif, a comet crossing | Constellation sky |
+| `botanical` | A herbarium | Pressed-specimen sheets with tape and a swaying sprig, leaves for contributions, leafy wreaths | A vine with swaying leaves and a plate label | Code garden |
+| `atlas` | An antique sea chart | Parchment with contour lines and a double neatline, compass headings, dashed route rules, elevation-tinted heatmap, compass-rose dials | A scale bar, the title in a cartouche, a ship sailing the route | Passport |
+| `museum` | A gallery | Brass-trimmed placards with screws and a breathing spotlight, mosaic heatmap, gilt-framed dials; the banner hangs your name in a gilded frame behind velvet ropes | *ROOM 02*, the title in italic serif, a spotlight sweeping the wall | Holo trading card |
+| `ink` | Sumi-e on washi | Washi fibres, brush-stroke rules, your vermilion seal in the corner, ink-blot heatmap, an ensō for every streak | A brush stroke with the title, a sakura petal drifting across | Code garden |
+| `periodic` | A lab notebook | Graph paper, an element tile for every card title, element-coloured heatmap, electron shells that orbit; the banner makes you an element | The section as an element tile and a molecule chain that vibrates | Vital signs |
+| `abyss` | The deep sea | Water that deepens down each card, swaying light rays and rising bubbles, glowing plankton for contributions, sonar rings that ping | A depth marker and fish swimming past | Commit forecast |
+
+Transit, Broadsheet, Botanical, Atlas, Museum, Ink, Periodic and Abyss each have a light and a dark print; Airport and Observatory are dark objects (a board, a sky) that look the same in any light. All motion is CSS inside the images, follows *Subtle motion*, and stands still for visitors who prefer reduced motion. Text-only READMEs keep plain headings.
+
 **For employers.** Recruiters spend about ten seconds on a profile, so the *For employers* panel puts what they look for right under the banner. Every field is optional, and a README only changes once one is filled in:
 
 - **Open to** and a **Résumé link** (https only) make an *Open to work* card with a Résumé button; the card and a plain link under it both open your CV.
@@ -186,7 +230,6 @@ From the terminal: `--open-to`, `--resume`, `--certs`, `--summary`, `--proof` an
 | `passport` | An open passport: the photo page with your details and a machine-readable zone, and a visa stamp for every language you've shipped in, with the year you first used it. | A holographic sheen crosses the page and the stamps thump down one by one |
 | `constellation` | Your sky: each top language is a constellation, each repo a star that's bigger with more stars, named after the brightest. | Stars twinkle, the sky drifts, a shooting star crosses now and then |
 | `weather` | A commit forecast: your chance of commits on any day, the last seven days as weather (more work, more sun), a forecast discussion and a radar of the last 12 weeks. | The sun turns, clouds drift, the radar sweeps and each echo flares as it passes |
-| `launch` | Launch control: your top repo on the pad, with telemetry from stars (altitude), weekly pace (velocity), streak (fuel) and repos (payload), go/no-go checks and a weekly trace. | A countdown from T−10 to liftoff, flame and smoke, a scrolling telemetry trace |
 
 Like every other image, a showpiece gets a light and a dark version with *Day and night*, follows *Subtle motion*, stands still for visitors who prefer reduced motion, is kept fresh by the daily update, and needs nothing but the data the cards already use. It's left out of text-only READMEs.
 
