@@ -614,3 +614,37 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
   .privacy-callout a{min-height:44px;flex-wrap:wrap;align-content:center;font-size:.9rem}
 }
 
+/* Reset control: visible, calm secondary action that uses the existing blue palette. */
+#reset{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:38px;
+  padding:0 15px;
+  border:1px solid var(--line-strong);
+  border-radius:999px;
+  background:var(--surface);
+  color:var(--accent);
+  font:600 .85rem var(--sans);
+  text-decoration:none;
+  transition:background-color .18s var(--ease),border-color .18s var(--ease),color .18s var(--ease),transform .18s var(--ease);
+}
+#reset::before{
+  content:"↺";
+  font-size:1.05rem;
+  line-height:1;
+}
+@media (hover:hover){
+  #reset:hover{
+    background:var(--accent-tint);
+    border-color:var(--accent);
+    color:var(--accent-hover);
+    text-decoration:none;
+  }
+}
+#reset:active{transform:translateY(1px)}
+@media (max-width:600px){
+  #reset{min-height:44px;padding:0 16px}
+}
+
