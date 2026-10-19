@@ -288,11 +288,11 @@
 
   /* ---------- shareable links ----------
    * A link like ?user=DevopsNimbus&theme=cyber reopens the tool with the same choices, so people can share their setup. */
-  var SHARE_TEXT = ["role", "tagline", "stack", "linkedin"];
+  var SHARE_TEXT = ["role", "tagline", "stack", "linkedin", "openTo", "certs"];
   var SHARE_ACCENTS = ["accent1", "accent2"];
   // the 3D universe's colours: Git3D Universe's own cosmic palettes ("neon" is the option's original name, kept so saved choices and links still work), or the profile's own theme
   var UNIVERSE_STYLES = ["neon", "theme"];
-  var SHARE_FLAGS = ["adaptive", "animate", "heatmap", "credit", "banner", "cards", "bars", "pie", "timeline", "proj", "recent", "links", "universe", "wave"];
+  var SHARE_FLAGS = ["adaptive", "animate", "heatmap", "credit", "banner", "cards", "bars", "pie", "timeline", "proj", "recent", "links", "universe", "wave", "summary", "proof"];
 
   /** Only values that differ from the defaults go into the link, so links stay short. */
   function toQuery(user, options) {
@@ -306,6 +306,8 @@
     SHARE_ACCENTS.forEach(function (k) { if (validHex(o[k])) q.set(k, o[k].toLowerCase()); });
     if (sectionOrder(o).join(",") !== SECTIONS.join(",")) q.set("order", sectionOrder(o).join(","));
     if (o.featured) q.set("featured", String(o.featured).slice(0, 400));
+    if (resumeUrl(o)) q.set("resume", resumeUrl(o));
+    if (o.impact) q.set("impact", String(o.impact).slice(0, 600));
     SHARE_FLAGS.forEach(function (k) { if (o[k] !== DEFAULTS[k]) q.set(k, o[k] ? "1" : "0"); });
     return q.toString();
   }
@@ -328,6 +330,10 @@
     if (ord) { var clean = sectionOrder({ order: ord }); if (clean.join(",") !== SECTIONS.join(",")) opts.order = clean.join(","); }
     var feat = q.get("featured");
     if (feat) opts.featured = oneLine(feat).slice(0, 400);
+    var res = q.get("resume");
+    if (res && resumeUrl({ resume: res })) opts.resume = resumeUrl({ resume: res });
+    var imp = q.get("impact");
+    if (imp) opts.impact = oneLine(imp).slice(0, 600);
     SHARE_FLAGS.forEach(function (k) { var v = q.get(k); if (v === "0" || v === "1") opts[k] = v === "1"; });
     return { user: user, opts: opts };
   }
@@ -363,7 +369,7 @@
   var DEFAULTS = {
     style: "showcase", theme: "auto", accent1: "", accent2: "", order: "", featured: "", adaptive: true, mode: "", suffix: "", animate: true, heatmap: true, credit: true, siteUrl: "", tagline: "", role: "", stack: "", linkedin: "",
     banner: true, cards: true, bars: true, pie: false, timeline: true, proj: true, recent: false, links: true, universe: true, universeStyle: "neon", wave: true,
-    showpiece: ""
+    showpiece: "", openTo: "", resume: "", certs: "", impact: "", summary: false, proof: false
   };
   function withDefaults(o) {
     var out = {}, k;
@@ -431,7 +437,7 @@
 
   function stack(m, o) {
     var useCard = o.cards && (m.langs.length || toolList(m, o).length);
-    if (!useCard && !m.langs.length) return [];
+    if (!useCard && !m.langs.length && !wantsProof(m, o)) return [];
     var out = ["## Stack", ""];
     if (useCard) {
       out.push('<div align="center">', "", pic(o, "cards/languages.svg", 'alt="Languages and tools for ' + esc(m.login) + '" width="100%"'), "", "</div>", "");
@@ -449,6 +455,11 @@
       out.push("```", "");
     }
     if (!useCard && !o.bars && !o.pie) out.push(m.langs.map(function (l) { return "`" + l.name + "`"; }).join(" "), "");
+    if (wantsProof(m, o)) out.push('<div align="center">', "", pic(o, "cards/skills.svg", 'alt="Skills with proof for ' + esc(m.login) + '" width="100%"'), "", "</div>", "");
+    else if (o.proof && !o.cards) skillProof(m, o).forEach(function (x, i, all) {
+      out.push("- **" + x.skill.replace(/[*_`]/g, "") + "**: " + x.repos + (x.repos === 1 ? " repo" : " repos") + (x.stars ? ", " + x.stars + " stars" : "") + (x.latest ? ", latest " + x.latest : ""));
+      if (i === all.length - 1) out.push("");
+    });
     return out;
   }
 
@@ -505,6 +516,104 @@
   function wantsUniverse(m, o) { return !!(o.cards && o.universe && m.activity && m.activity.daily && m.activity.daily.length); }
   function wantsRecent(m, o) { return !!(o.cards && o.recent && m.recent && m.recent.length); }
 
+  /* ---------- for employers ----------
+   * What a recruiter looks for in the first ten seconds: what you're open to, proof of impact, credentials, and a
+   * way to reach your CV. Every field is empty by default, so a README only changes once someone fills one in. */
+
+  /** A résumé link, only when it is a plain http(s) address (it ends up in an href). */
+  function resumeUrl(o) {
+    var u = oneLine(o && o.resume);
+    return /^https?:\/\/[^\s"'<>`]+$/i.test(u) && u.length <= 300 ? u : "";
+  }
+  function certList(o) { return unique(list(o && o.certs)).map(function (c) { return c.slice(0, 40); }).slice(0, 8); }
+
+  /**
+   * Impact numbers per project, written like "drift-radar: 40+ accounts watched, 99.9% uptime; tf-modules: 40 modules".
+   * Repo names can't contain ":" or ";", so those separate the entries. Each metric splits into its number and label.
+   */
+  function parseImpact(text) {
+    var out = {};
+    String(text || "").split(";").forEach(function (entry) {
+      var at = entry.indexOf(":");
+      if (at < 1) return;
+      var repo = oneLine(entry.slice(0, at)).toLowerCase(), metrics = [];
+      entry.slice(at + 1).split(",").forEach(function (raw) {
+        var t = plain(raw).slice(0, 48);
+        if (!t) return;
+        var mm = /^([~<>≈]?\$?[\d][\d.,]*\s?(?:[%+×x]|[kKmMbB](?![a-z])|ms\b|s\b|h\b)*\+?)\s*(.*)$/.exec(t);
+        metrics.push(mm ? { value: mm[1].replace(/\s+$/, ""), label: mm[2] } : { value: t, label: "" });
+      });
+      if (repo && metrics.length) out[repo] = metrics.slice(0, 3);
+    });
+    return out;
+  }
+  function impactFor(o, repo) { return (parseImpact(o && o.impact)[String(repo && repo.name || repo).toLowerCase()]) || []; }
+  /** Projects shown in the README with impact numbers attached. */
+  function anyImpact(m, o) { return pickProjects(m, o).some(function (r) { return impactFor(o, r).length; }); }
+
+  /** Up to three plain lines a recruiter can read in five seconds, drawn from the profile and the person's own numbers. */
+  function recruiterSummary(m, o) {
+    var lines = [], langs = m.langs.slice(0, 2).map(function (l) { return l.name; });
+    var stack = list(o.stack).slice(0, 2), focus = stack.length ? stack : langs;
+    if (focus.length) {
+      var n = m.all.filter(function (r) { return focus.some(function (f) { return matchesSkill(r, f); }); });
+      var st = n.reduce(function (t, r) { return t + r.stars; }, 0);
+      lines.push("Strongest in " + focus.join(" and ") + ": " + n.length + (n.length === 1 ? " public repo" : " public repos") + (st ? ", " + st + " stars" : "") + ".");
+    }
+    var best = pickProjects(m, o).filter(function (r) { return impactFor(o, r).length; })[0];
+    if (best) {
+      var im = impactFor(o, best)[0];
+      lines.push("Best result: " + (im.value + (im.label ? " " + im.label : "")) + " with " + best.name + ".");
+    } else if (m.top.length && m.top[0].stars) {
+      lines.push("Most starred: " + m.top[0].name + " (" + m.top[0].stars + " stars)" + (m.top[0].desc ? ", " + m.top[0].desc.charAt(0).toLowerCase() + m.top[0].desc.slice(1).replace(/\.$/, "") : "") + ".");
+    }
+    var a = m.activity;
+    if (a && (a.total || a.active)) {
+      var span = a.source === "graphql" ? "in the past year" : "in the last " + a.windowDays + " days";
+      lines.push((a.total ? a.total + " contributions " : a.active + " active days ") + span + (a.longest ? ", with a " + a.longest + "-day streak" : "") + ".");
+    }
+    return lines.slice(0, 3).map(function (l) { return l.length > 110 ? l.slice(0, 109) + "\u2026" : l; });
+  }
+
+  /** Does a repo show this skill? Its language, a topic, or its name or description naming it. */
+  function matchesSkill(r, skill) {
+    var s = String(skill).toLowerCase().trim(), slug = s.replace(/\s+/g, "-");
+    if (!s) return false;
+    if (String(r.lang).toLowerCase() === s) return true;
+    if ((r.topics || []).some(function (t) { return t.toLowerCase() === slug || t.toLowerCase() === s; })) return true;
+    var re = new RegExp("(^|[^a-z0-9])" + s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z0-9])", "i");
+    return re.test(r.name.replace(/[-_]/g, " ")) || re.test(r.desc || "");
+  }
+  /** Each skill with the evidence for it: how many repos, their stars, and the latest one. Skills with no evidence are left out. */
+  function skillProof(m, o) {
+    var skills = unique(list(o.stack).concat(m.langs.map(function (l) { return l.name; }))).slice(0, 8);
+    return skills.map(function (sk) {
+      var repos = m.all.filter(function (r) { return matchesSkill(r, sk); });
+      var latest = repos.slice().sort(function (a, b) { return a.pushed < b.pushed ? 1 : -1; })[0];
+      return { skill: sk, repos: repos.length, stars: repos.reduce(function (t, r) { return t + r.stars; }, 0), latest: latest ? latest.name : "" };
+    }).filter(function (x) { return x.repos; }).slice(0, 6);
+  }
+  function wantsHire(m, o) { return !!(oneLine(o.openTo) || resumeUrl(o) || certList(o).length || o.summary); }
+  function wantsProof(m, o) { return !!(o.cards && o.proof && skillProof(m, o).length); }
+
+  /** The "for employers" block, right under the banner: a card in card mode, a few plain lines otherwise. */
+  function hireSection(m, o) {
+    if (!wantsHire(m, o)) return [];
+    var res = resumeUrl(o), out = ['<div align="center">', ""];
+    if (o.cards) {
+      var img = pic(o, "cards/hire.svg", 'alt="' + esc(oneLine(o.openTo) ? "Open to: " + oneLine(o.openTo) : "About " + m.login) + '" width="100%"');
+      out.push(res ? '<a href="' + esc(res) + '">' + img + "</a>" : img, "");
+      if (res) out.push('<a href="' + esc(res) + '"><b>View my résumé</b></a>', "");
+    } else {
+      if (oneLine(o.openTo)) out.push("**Open to:** " + plain(o.openTo).replace(/[*_]/g, ""), "");
+      if (certList(o).length) out.push("**Certified:** " + certList(o).map(function (c) { return c.replace(/[*_|]/g, ""); }).join(" · "), "");
+      if (o.summary) recruiterSummary(m, o).forEach(function (l) { out.push(l.replace(/[*_]/g, ""), ""); });
+      if (res) out.push('<a href="' + esc(res) + '"><b>View my résumé</b></a>', "");
+    }
+    out.push("</div>", "");
+    return out;
+  }
+
   /* ---------- showpieces ----------
    * One full-width animated scene under the banner, drawn from the profile's own data (showpieces.js draws them).
    * Off ("") by default, so existing READMEs keep their look until someone picks one. */
@@ -514,7 +623,13 @@
     { key: "metro", label: "Metro map", blurb: "Languages are metro lines, repos are stations by year, all running into your own interchange." },
     { key: "vinyl", label: "Now playing", blurb: "Your work as an album: projects are the tracklist, months are a bouncing equaliser." },
     { key: "vitals", label: "Vital signs", blurb: "A bedside monitor: commits as the heartbeat, streak as heart rate, PRs and reviews as vitals." },
-    { key: "garden", label: "Code garden", blurb: "Repos grow as flowers by stars, the grass is your contribution graph. Night or day, with the visitor's theme." }
+    { key: "garden", label: "Code garden", blurb: "Repos grow as flowers by stars, the grass is your contribution graph. Night or day, with the visitor's theme." },
+    { key: "yearcode", label: "Year in Code", blurb: "Your year in review: six bold tiles with your total, top language, busiest month, streak, best day and coding personality." },
+    { key: "newspaper", label: "The Daily Commit", blurb: "A front page: your year is the headline, your top repo the lead story, with markets, weather and classifieds." },
+    { key: "passport", label: "Passport", blurb: "An open passport with your details and a visa stamp for every language you've shipped in." },
+    { key: "constellation", label: "Constellation sky", blurb: "Each language is a constellation, each repo a star that shines brighter with more stars." },
+    { key: "weather", label: "Commit forecast", blurb: "Your chance of commits, the last seven days as weather, and a radar sweep over recent weeks." },
+    { key: "launch", label: "Launch control", blurb: "Your top repo on the launch pad, with telemetry from your stars, streak and weekly pace, and a countdown." }
   ];
   var SHOWPIECE_KEYS = SHOWPIECES.map(function (s) { return s.key; });
   function wantsShowpiece(m, o) { return !!(o.cards && SHOWPIECE_KEYS.indexOf(o.showpiece) !== -1); }
@@ -640,7 +755,7 @@
   }
 
   function buildReadme(m, options) {
-    var o = withDefaults(options), L = [].concat(header(m, o), showpieceSection(m, o));
+    var o = withDefaults(options), L = [].concat(header(m, o), showpieceSection(m, o), hireSection(m, o));
     var cardProjects = o.cards && o.style !== "changelog";
     var parts = {
       stats: function () { return o.cards ? statsSection(m, o) : []; },
@@ -850,6 +965,6 @@
     palette: palette, streaks: streaks, weeklyCounts: weeklyCounts, daysFromEvents: daysFromEvents,
     makeActivity: makeActivity, MAX_PROJECT_CARDS: MAX_PROJECT_CARDS, toolList: toolList, connectItems: connectItems, designation: designation,
     THEMES: THEMES, THEME_ORDER: THEME_ORDER, LANG_COLORS: LANG_COLORS, fxStyle: fxStyle, fx: fx,
-    toQuery: toQuery, fromQuery: fromQuery, contrast: contrast, tips: tips, changelogData: changelogData, wantsChangelog: wantsChangelog, wantsRecent: wantsRecent, wantsUniverse: wantsUniverse, wantsShowpiece: wantsShowpiece, SHOWPIECES: SHOWPIECES, SHOWPIECE_KEYS: SHOWPIECE_KEYS, hash: hash, initials: initials, subtitle: subtitle, chipNames: chipNames, paletteFor: paletteFor, mixHex: mixHex, pickProjects: pickProjects, sectionOrder: sectionOrder, SECTIONS: SECTIONS, validHex: validHex
+    toQuery: toQuery, fromQuery: fromQuery, contrast: contrast, tips: tips, changelogData: changelogData, wantsChangelog: wantsChangelog, wantsRecent: wantsRecent, wantsUniverse: wantsUniverse, wantsShowpiece: wantsShowpiece, wantsHire: wantsHire, wantsProof: wantsProof, skillProof: skillProof, recruiterSummary: recruiterSummary, certList: certList, resumeUrl: resumeUrl, parseImpact: parseImpact, impactFor: impactFor, anyImpact: anyImpact, oneLine: oneLine, SHOWPIECES: SHOWPIECES, SHOWPIECE_KEYS: SHOWPIECE_KEYS, hash: hash, initials: initials, subtitle: subtitle, chipNames: chipNames, paletteFor: paletteFor, mixHex: mixHex, pickProjects: pickProjects, sectionOrder: sectionOrder, SECTIONS: SECTIONS, validHex: validHex
   };
 });

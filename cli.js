@@ -21,11 +21,18 @@ Options:
   --role <text>         Job title, shown right after the name
   --stack <text>        Skills and tools (comma separated)
   --linkedin <text>     LinkedIn username or URL
+  --open-to <text>      What you're open to, shown right under the banner (like "Senior platform roles · Remote")
+  --resume <url>        A https:// link to your CV: a Résumé button and link under the banner
+  --certs <list>        Certifications, comma separated, shown as badges
+  --summary             Add a three-line recruiter summary written from your data
+  --proof               Add "Skills, with proof": each skill backed by the repos that show it
+  --impact <text>       Impact numbers per project, like "api: 40+ users, 99.9% uptime; web: 3x faster"
   --no-banner --no-cards --no-bars --pie --no-timeline --no-projects --no-links
   --recent              Add a "Recently pushed" card (your latest five repos, in any layout)
   --no-universe         Leave out the 3D contribution universe (on by default, from Git3D Universe)
   --no-wave             Use the orbit banner and a plain footer instead of the wave header and footer (on by default)
-  --showpiece <name>    One animated scene under the banner: departures, holo, metro, vinyl, vitals, garden (or none, the default)
+  --showpiece <name>    One animated scene under the banner: departures, holo, metro, vinyl, vitals, garden,
+                        yearcode, newspaper, passport, constellation, weather, launch (or none, the default)
   --universe-style <neon|theme>  The universe's colours: Git3D Universe's own cosmic palettes (neon, the default) or the theme's
   --universe-only       Rebuild only cards/universe.svg (and its light twin); used by the 3D universe workflow
   --no-adaptive         One card set only. By default there are dark and light sets, and GitHub shows the one matching the viewer
@@ -112,6 +119,12 @@ function parseArgs(argv) {
       case "--role": o.opts.role = next(); break;
       case "--stack": o.opts.stack = next(); break;
       case "--linkedin": o.opts.linkedin = next(); break;
+      case "--open-to": o.opts.openTo = next(); break;
+      case "--resume": o.opts.resume = next(); if (!core.resumeUrl({ resume: o.opts.resume })) throw new Error("--resume needs a full https:// link, like --resume https://example.com/cv.pdf"); break;
+      case "--certs": o.opts.certs = next(); break;
+      case "--summary": o.opts.summary = true; break;
+      case "--proof": o.opts.proof = true; break;
+      case "--impact": o.opts.impact = next(); break;
       case "--no-timeline": o.opts.timeline = false; break;
       case "--out": o.out = next(); break;
       case "--publish": o.publish = true; break;

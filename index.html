@@ -22,7 +22,7 @@
 <a class="skip" href="#main">Skip to the tool</a>
 <div class="wrap">
   <h1><span class="minus">Template</span> <span class="plus">Patch</span> your profile</h1>
-  <p class="lede">Turn any GitHub username into a profile README that people actually stop and look at: a moving wave header, themed cards, a contribution heatmap, a 3D contribution universe and real stats, kept fresh every day. Free, runs in your browser, with no server and no third-party service.</p>
+  <p class="lede">Turn any GitHub username into a profile README that people actually stop and look at, and that recruiters can read in ten seconds: twelve animated showpieces, themed cards, your impact in numbers, a contribution heatmap and real stats, kept fresh every day. Free, runs in your browser, with no server and no third-party service.</p>
 
   <form class="ask" id="ask">
     <input type="text" id="url" placeholder="https://github.com/your-username" aria-label="GitHub profile URL or username" autocomplete="off" spellcheck="false">
@@ -42,16 +42,9 @@
           <label for="accent2">Accent 2<input type="color" id="accent2" value="#8b5cf6"></label>
           <p class="hint">Any two colours work. Text and accents are adjusted automatically so they always stay readable, in dark and light.</p>
         </div>
-        <label class="f" for="showpiece">Showpiece <span class="new">new</span></label>
-        <select id="showpiece">
-          <option value="">None</option>
-          <option value="departures">Departures board</option>
-          <option value="holo">Holo trading card</option>
-          <option value="metro">Metro map</option>
-          <option value="vinyl">Now playing</option>
-          <option value="vitals">Vital signs</option>
-          <option value="garden">Code garden</option>
-        </select>
+        <label class="f" id="pieceLabel">Showpiece <span class="new">new</span></label>
+        <input type="hidden" id="showpiece" value="">
+        <div class="pieces" id="pieces" role="radiogroup" aria-labelledby="pieceLabel"></div>
         <p class="hint" id="showHint">One animated scene under your banner, drawn from your own repos and activity.</p>
         <div class="chk"><input type="checkbox" id="o-adaptive" checked><label for="o-adaptive">Day and night: follow each visitor's light or dark mode</label></div>
         <p class="hint">Adds a light twin of every image. A visitor whose device (or GitHub) is in light mode sees light cards; in dark mode, dark ones. Many phones and computers switch to dark at sunset by themselves, so your profile follows each visitor's day and night. About twice the files.</p>
@@ -61,6 +54,23 @@
           <option value="showcase">Showcase: project cards</option>
           <option value="changelog">Changelog: projects as release notes</option>
         </select>
+      </details>
+
+      <details class="grp hire" open>
+        <summary>For employers <span class="new">new</span></summary>
+        <p class="hint">What recruiters look for in the first ten seconds. Everything here is optional, and appears right under your banner.</p>
+        <label class="f" for="openTo">Open to</label>
+        <input type="text" id="openTo" maxlength="90" placeholder="Senior platform roles · Remote or Berlin">
+        <label class="f" for="resume">Résumé link</label>
+        <input type="url" id="resume" maxlength="300" placeholder="https://example.com/cv.pdf" inputmode="url">
+        <p class="hint warn" id="resumeHint" hidden>That isn't a full https:// link yet, so it's left out for now.</p>
+        <label class="f" for="certs">Certifications (comma separated)</label>
+        <input type="text" id="certs" maxlength="240" placeholder="AWS Solutions Architect, CKA">
+        <div class="chk"><input type="checkbox" id="o-summary"><label for="o-summary">Recruiter summary: three lines written from your data</label></div>
+        <div class="chk"><input type="checkbox" id="o-proof"><label for="o-proof">Skills with proof: each skill backed by your repos</label></div>
+        <label class="f" id="impactLabel">Impact numbers</label>
+        <p class="hint">Up to three per project, comma separated. Numbers stand out on the project cards: <em>40+ accounts watched, 99.9% uptime, 3× faster</em>.</p>
+        <div class="impact" id="impactList" role="group" aria-labelledby="impactLabel"></div>
       </details>
 
       <details class="grp" open>
@@ -210,7 +220,7 @@
   </main>
   <section class="band" id="showpieces" aria-labelledby="showTitle">
     <h2 id="showTitle">Showpieces: a scene nobody else has</h2>
-    <p class="sub">Six animated scenes built from your own data, placed right under your banner. Your repos become flights, stations, trading cards, album tracks or flowers. Tap one to put it on your profile.</p>
+    <p class="sub">Twelve animated scenes built from your own data, placed right under your banner. Your repos become flights, stations, trading cards, album tracks, stars, stamps or headlines. Tap one to put it on your profile.</p>
     <div class="gallery show" id="showGrid"></div>
   </section>
 

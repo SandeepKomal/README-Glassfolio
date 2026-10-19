@@ -3,10 +3,10 @@
   "use strict";
   var auto = window.ReadmeAutomation, core = window.ReadmeCore, gh = window.ReadmeGitHub, cardsLib = window.ReadmeCards, previewLib = window.ReadmePreview;
   var $ = function (s) { return document.querySelector(s); };
-  var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [] };
+  var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [], impact: {} };
 
-  var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe", wave: "o-wave" };
-  var TEXTS = { style: "#style", showpiece: "#showpiece", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
+  var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe", wave: "o-wave", summary: "o-summary", proof: "o-proof" };
+  var TEXTS = { style: "#style", showpiece: "#showpiece", openTo: "#openTo", resume: "#resume", certs: "#certs", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
   var STORE_KEY = "patch-your-profile.v1";
 
   /* ---------- saved settings (this browser only; never the token) ---------- */
@@ -32,7 +32,7 @@
   function isDefaultOrder() { return state.order.join(",") === core.SECTIONS.join(","); }
   function opts() {
     var th = theme();
-    var o = { theme: th, siteUrl: siteUrl(), order: isDefaultOrder() ? "" : state.order.join(","), featured: state.featured.join(",") };
+    var o = { theme: th, siteUrl: siteUrl(), order: isDefaultOrder() ? "" : state.order.join(","), featured: state.featured.join(","), impact: impactText() };
     if (th === "custom") { o.accent1 = $("#accent1").value; o.accent2 = $("#accent2").value; }
     Object.keys(TEXTS).forEach(function (k) { o[k] = $(TEXTS[k]).value.trim(); });
     Object.keys(FLAGS).forEach(function (k) { o[k] = document.getElementById(FLAGS[k]).checked; });
@@ -47,7 +47,13 @@
     if (o.accent2) $("#accent2").value = o.accent2;
     if (o.order !== undefined) state.order = core.sectionOrder({ order: o.order });
     if (o.featured !== undefined) state.featured = o.featured ? o.featured.split(",").map(function (x) { return x.trim(); }).filter(Boolean) : [];
-    syncCustom(); syncShowpiece();
+    if (o.impact !== undefined) {
+      state.impact = {};
+      var parsed = core.parseImpact(o.impact);
+      Object.keys(parsed).forEach(function (k) { state.impact[k] = parsed[k].map(function (x) { return x.value + (x.label ? " " + x.label : ""); }).join(", "); });
+      impactKey = "";
+    }
+    syncCustom(); syncShowpiece(); syncResume(); renderImpact();
   }
 
   function persist() {
@@ -59,7 +65,7 @@
     var d = {};
     Object.keys(TEXTS).forEach(function (k) { d[k] = typeof core.DEFAULTS[k] === "string" ? core.DEFAULTS[k] : ""; });
     Object.keys(FLAGS).forEach(function (k) { d[k] = core.DEFAULTS[k]; });
-    d.theme = "auto"; d.order = ""; d.featured = ""; d.accent1 = "#38e8ff"; d.accent2 = "#8b5cf6";
+    d.theme = "auto"; d.order = ""; d.featured = ""; d.impact = ""; d.accent1 = "#38e8ff"; d.accent2 = "#8b5cf6";
     applyOptions(d);
     renderOrder(); renderFeatured();
     store.clear();
@@ -105,6 +111,72 @@
     });
   }
 
+  /** Thumbnails of every showpiece, drawn once from the sample profile: moving for the gallery, still for the picker. */
+  var thumbs = {};
+  function thumb(key, moving) {
+    var id = key + (moving ? ":m" : ":s");
+    if (!thumbs[id]) thumbs[id] = dataUri(window.ReadmeShowpieces.build(core.SAMPLE, { showpiece: key, role: "Platform Engineer", stack: "Terraform, AWS, Docker", animate: moving, openTo: "Platform roles · Remote" }));
+    return thumbs[id];
+  }
+  /** The picker in Look: "None" plus a thumbnail per scene, as one radio group (arrow keys move between them). */
+  function buildPicker() {
+    var box = $("#pieces");
+    [{ key: "", label: "None" }].concat(core.SHOWPIECES).forEach(function (s) {
+      var label = document.createElement("label"), input = document.createElement("input"), pc = document.createElement("span");
+      input.type = "radio"; input.name = "piece"; input.value = s.key; input.checked = !s.key;
+      input.setAttribute("aria-label", s.key ? s.label + " showpiece" : "No showpiece");
+      pc.className = "pc";
+      if (s.key) {
+        var img = document.createElement("img"); img.alt = ""; img.loading = "lazy"; img.width = 160; img.height = 100; img.src = thumb(s.key, false);
+        pc.appendChild(img);
+      } else {
+        var none = document.createElement("span"); none.className = "none"; none.textContent = "\u2205"; pc.appendChild(none);
+      }
+      var name = document.createElement("span"); name.textContent = s.label; pc.appendChild(name);
+      label.appendChild(input); label.appendChild(pc); box.appendChild(label);
+      input.addEventListener("change", function () { pickShowpiece(s.key, false); });
+    });
+  }
+  function pickShowpiece(key, scroll) {
+    $("#showpiece").value = key; syncShowpiece();
+    if (key && !$("#o-cards").checked) $("#o-cards").checked = true;
+    refresh();
+    if (scroll) $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /* ---------- for employers ---------- */
+  function syncResume() {
+    var v = $("#resume").value.trim();
+    $("#resumeHint").hidden = !v || !!core.resumeUrl({ resume: v });
+  }
+  /** The impact boxes: one per project the README shows, re-drawn only when that list changes so typing keeps focus. */
+  var impactKey = "";
+  function impactText() {
+    return Object.keys(state.impact).filter(function (k) { return state.impact[k].trim(); }).map(function (k) {
+      return k + ": " + state.impact[k].replace(/[;:]/g, " ").replace(/\s+/g, " ").trim();
+    }).join("; ");
+  }
+  function renderImpact() {
+    var box = $("#impactList");
+    if (!box) return;
+    var shown = state.model ? core.pickProjects(state.model, { featured: state.featured.join(",") }) : [];
+    var key = shown.map(function (r) { return r.name; }).join("|");
+    if (key === impactKey && box.childNodes.length) return;
+    impactKey = key;
+    box.textContent = "";
+    if (!shown.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = "Load a profile with public repos to add numbers to its projects."; box.appendChild(e); return; }
+    shown.forEach(function (r) {
+      var k = r.name.toLowerCase(), label = document.createElement("label"), head = document.createElement("span"), nm = document.createElement("b"), st = document.createElement("small");
+      nm.textContent = r.name; st.textContent = r.stars ? "\u2605 " + r.stars : "";
+      head.appendChild(nm); head.appendChild(st);
+      var input = document.createElement("input");
+      input.type = "text"; input.maxLength = 120; input.value = state.impact[k] || ""; input.placeholder = "40+ users, 99.9% uptime, 3× faster";
+      input.setAttribute("aria-label", "Impact numbers for " + r.name);
+      input.addEventListener("input", function () { state.impact[k] = input.value; refreshSoon(); });
+      label.appendChild(head); label.appendChild(input); box.appendChild(label);
+    });
+  }
+
   /** The showpiece gallery: each scene drawn from the sample profile, moving, as a thumbnail that picks it. */
   function buildShowpieces() {
     var grid = $("#showGrid");
@@ -112,21 +184,18 @@
       var b = document.createElement("button"); b.type = "button";
       var img = document.createElement("img");
       img.alt = s.label + " showpiece preview"; img.loading = "lazy"; img.width = 960; img.height = 580;
-      img.src = dataUri(window.ReadmeShowpieces.build(core.SAMPLE, { showpiece: s.key, role: "Platform Engineer", stack: "Terraform, AWS, Docker" }));
+      img.src = thumb(s.key, true);
       var cap = document.createElement("span"); cap.className = "cap";
       var name = document.createElement("b"); name.textContent = s.label;
       cap.appendChild(name); cap.appendChild(document.createTextNode(s.blurb));
       b.appendChild(img); b.appendChild(cap); grid.appendChild(b);
-      b.addEventListener("click", function () {
-        $("#showpiece").value = s.key; syncShowpiece();
-        if (!$("#o-cards").checked) $("#o-cards").checked = true;
-        refresh();
-        $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
-      });
+      b.addEventListener("click", function () { pickShowpiece(s.key, true); });
     });
   }
   function syncShowpiece() {
     var key = $("#showpiece").value, s = core.SHOWPIECES.filter(function (x) { return x.key === key; })[0];
+    var radio = document.querySelector('input[name="piece"][value="' + (s ? key : "") + '"]');
+    if (radio) radio.checked = true;
     $("#showHint").textContent = s ? s.blurb : "One animated scene under your banner, drawn from your own repos and activity.";
   }
 
@@ -210,6 +279,7 @@
       ? state.featured.length + " of " + MAX_FEATURED + " picked. They appear in this order."
       : "Pick up to " + MAX_FEATURED + ", in the order you want them. Pick none to show your most-starred repos.";
     $("#featClear").hidden = !state.featured.length;
+    renderImpact();
   }
 
   /** Keeps only chosen repos that exist on the profile just loaded, with their real capitalisation. */
@@ -630,8 +700,9 @@
   /* ---------- start ---------- */
   buildThemePicker();
   buildGallery();
+  buildPicker();
   buildShowpieces();
-  $("#showpiece").addEventListener("change", syncShowpiece);
+  $("#resume").addEventListener("input", syncResume);
   wireTabs();
   var saved = store.get();
   if (saved.opts) applyOptions(saved.opts);

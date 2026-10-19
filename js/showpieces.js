@@ -7,6 +7,12 @@
  *   vinyl       an album: the cover shows the year's number, projects are the tracklist, months bounce as an equaliser
  *   vitals      a bedside monitor: commits as the ECG, the streak as heart rate, PRs, reviews and stars as vitals
  *   garden      repos as flowers sized by stars, the contribution graph as grass; a night sky in dark, a day sky in light
+ *   yearcode    a year-in-review: six bold tiles (contributions, top language, busiest month, streak, best day, personality)
+ *   newspaper   "The Daily Commit": a front page with the year as its headline, the top repo as the lead story
+ *   passport    an open passport: the photo page with a machine-readable zone, and one visa stamp per language
+ *   constellation  languages as constellations, repos as stars sized by their stars, with a shooting star
+ *   weather     a commit forecast: chance of commits, the last seven days as weather, a radar of recent weeks
+ *   launch      launch control: the top repo on the pad, telemetry from stars, streak and weekly pace, a countdown
  *
  * Like the cards, motion is plain CSS inside the SVG (no scripts), only ambient loops, and visitors who prefer reduced
  * motion (or anyone with Subtle motion off) get the same scene standing still.
@@ -95,8 +101,23 @@
       weeks: a && a.weeks ? a.weeks : [], daily: daily, months: months, peak: peak,
       firstYear: years.length ? Math.min.apply(null, years) : Number(m.since) || 0,
       lastYear: years.length ? Math.max.apply(null, years) : Number(m.since) || 0,
-      newest: newest, projects: core.pickProjects(m, o), role: core.designation(m, o)
+      newest: newest, projects: core.pickProjects(m, o), role: core.designation(m, o),
+      best: bestDay(daily, start), weekdays: weekdayTotals(daily, start),
+      endYear: daily.length && !isNaN(start) ? new Date(start + (daily.length - 1) * 86400000).getUTCFullYear() : (years.length ? Math.max.apply(null, years) : Number(m.since) || 0)
     };
+  }
+  var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  function bestDay(daily, start) {
+    var bi = -1;
+    daily.forEach(function (v, i) { if (bi < 0 || v > daily[bi]) bi = i; });
+    if (bi < 0 || !daily[bi]) return null;
+    var d = new Date(start + bi * 86400000);
+    return { v: daily[bi], label: isNaN(start) ? "" : MONTHS[d.getUTCMonth()] + " " + d.getUTCDate(), day: isNaN(start) ? "" : DAYS[d.getUTCDay()] };
+  }
+  function weekdayTotals(daily, start) {
+    var w = [0, 0, 0, 0, 0, 0, 0];
+    if (!isNaN(start)) daily.forEach(function (v, i) { w[new Date(start + i * 86400000).getUTCDay()] += v; });
+    return w;
   }
   function daysBetween(a, b) { var x = Date.parse(a), y = Date.parse(b); return isNaN(x) || isNaN(y) ? 0 : Math.round((y - x) / 86400000); }
   function firstName(m) { return String(m.name || m.login).split(/\s+/)[0]; }
@@ -113,12 +134,19 @@
     function flap(text, x, y, big, color, rate) {
       var w = big ? 34 : 19, h = big ? 50 : 30, gap = big ? 3 : 2, s = "", chars = String(text).toUpperCase().split("");
       chars.forEach(function (ch, i) {
-        var gx = x + i * (w + gap), moving = p.anim && r() < rate;
-        s += '<g transform="translate(' + gx + " " + y + ')">' + (moving ? '<g class="f" style="animation-delay:-' + (r() * 6).toFixed(2) + 's">' : "") +
-          '<rect width="' + w + '" height="' + h + '" rx="' + (big ? 4 : 3) + '" fill="url(#tl)"/>' +
-          (ch === " " ? "" : '<text x="' + w / 2 + '" y="' + (big ? 37 : 22) + '" text-anchor="middle" font-family="' + MONO + '" font-weight="800" font-size="' + (big ? 36 : 18) + '" fill="' + (color || AMBER) + '">' + esc(ch) + "</text>") +
-          (moving ? "</g>" : "") + "</g>";
-        if (moving) flips++;
+        var gx = x + i * (w + gap), moving = p.anim && r() < rate, rx = big ? 4 : 3;
+        var face = '<rect width="' + w + '" height="' + h + '" rx="' + rx + '" fill="url(#tl)"/>' +
+          (ch === " " ? "" : '<text x="' + w / 2 + '" y="' + (big ? 37 : 22) + '" text-anchor="middle" font-family="' + MONO + '" font-weight="800" font-size="' + (big ? 36 : 18) + '" fill="' + (color || AMBER) + '">' + esc(ch) + "</text>");
+        s += '<g transform="translate(' + gx + " " + y + ')">' + face;
+        if (moving) {
+          // a real flap: the top half folds down over the hinge, the gap shows dark, then the lower flap drops into place
+          var dl = ' style="animation-delay:-' + (r() * 7).toFixed(2) + 's"';
+          s += '<rect class="fs"' + dl + ' width="' + w + '" height="' + h + '" rx="' + rx + '" fill="#08080a"/>' +
+            '<g class="fu"' + dl + '><svg width="' + w + '" height="' + h / 2 + '" overflow="hidden">' + face + "</svg></g>" +
+            '<g class="fd"' + dl + '><svg y="' + h / 2 + '" width="' + w + '" height="' + h / 2 + '" viewBox="0 ' + h / 2 + " " + w + " " + h / 2 + '" overflow="hidden">' + face + "</svg></g>";
+          flips++;
+        }
+        s += "</g>";
       });
       // one hinge line across the whole run
       s += '<rect x="' + x + '" y="' + (y + h / 2 - 0.5) + '" width="' + (chars.length * (w + gap) - gap) + '" height="1" fill="#000"/>';
@@ -191,8 +219,13 @@
     out.push("</g>");
     if (p.light) out.push('<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="17.5" fill="none" stroke="#d1d9e0"/>');
 
-    var css = "@keyframes fl{0%,88%{transform:scaleY(1)}91%{transform:scaleY(.06)}94%{transform:scaleY(1)}}" +
-      ".f{transform-box:fill-box;transform-origin:center;animation:fl 6s ease-in-out infinite}" +
+    var css = ".fu,.fd,.fs{transform-box:fill-box;animation-duration:7s;animation-iteration-count:infinite}" +
+      ".fu{transform-origin:center bottom;animation-name:fu;animation-timing-function:ease-in}" +
+      ".fd{transform-origin:center top;animation-name:fd;animation-timing-function:cubic-bezier(.3,1.6,.6,1)}" +
+      ".fs{opacity:0;animation-name:fs;animation-timing-function:steps(1)}" +
+      "@keyframes fu{0%,88%{transform:scaleY(1)}90.5%{transform:scaleY(0)}90.6%,100%{transform:scaleY(1)}}" +
+      "@keyframes fd{0%,90.5%{transform:scaleY(1)}90.6%{transform:scaleY(0)}93.5%,100%{transform:scaleY(1)}}" +
+      "@keyframes fs{0%,88%{opacity:0}88.1%,93.4%{opacity:1}93.5%,100%{opacity:0}}" +
       "@keyframes bk{50%{opacity:.25}}.bk{animation:bk 1.2s steps(2) infinite}" +
       "@keyframes tk{to{transform:translateX(-" + len + "px)}}.tk{animation:tk " + Math.round(len / 55) + "s linear infinite}";
     return svgOpen(W, H, "Departures board for " + m.login) + motion(p, css) + out.join("") + "</svg>";
@@ -211,12 +244,13 @@
       '<linearGradient id="navy" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#1c2b4a"/><stop offset="1" stop-color="#0f1830"/></linearGradient>' +
       '<linearGradient id="foil" x1="0" y1="0" x2="1" y2="0.25"><stop offset="0.2" stop-color="#ff3cbe" stop-opacity="0"/><stop offset="0.36" stop-color="#ff3cbe" stop-opacity="0.5"/><stop offset="0.46" stop-color="#3cf0ff" stop-opacity="0.5"/><stop offset="0.56" stop-color="#fff050" stop-opacity="0.45"/><stop offset="0.64" stop-color="#78ff8c" stop-opacity="0.4"/><stop offset="0.8" stop-color="#78ff8c" stop-opacity="0"/></linearGradient>' +
       '<clipPath id="inner"><rect x="70" y="50" width="310" height="460" rx="13"/></clipPath>' +
+      '<radialGradient id="glare"><stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0.12"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>' +
       '<filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000" flood-opacity="' + (L ? 0.25 : 0.55) + '"/></filter>' +
       '<filter id="gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter></defs>');
     out.push('<rect width="' + W + '" height="' + H + '" rx="18" fill="url(#bg)"/>');
 
     // the card, tilted a little
-    out.push('<g transform="rotate(-3 225 280)"><rect x="60" y="40" width="330" height="480" rx="20" fill="url(#gold)" filter="url(#sh)"/>');
+    out.push('<g transform="rotate(-3 225 280)"><g' + (p.anim ? ' class="tilt"' : "") + '><rect x="60" y="40" width="330" height="480" rx="20" fill="url(#gold)" filter="url(#sh)"/>');
     out.push('<rect x="70" y="50" width="310" height="460" rx="13" fill="url(#navy)"/><g clip-path="url(#inner)">');
     var lang = m.langs.length ? m.langs[0].name : "Code";
     out.push('<text x="86" y="76" font-family="' + SANS + '" font-size="10" font-weight="700" letter-spacing="2" fill="#9fd8ff">BASIC · ' + esc(trunc(lang, 16).toUpperCase()) + "</text>");
@@ -267,7 +301,8 @@
     [[118, 150, 0], [338, 236, 0.8], [250, 420, 1.6]].forEach(function (s) {
       out.push('<circle cx="' + s[0] + '" cy="' + s[1] + '" r="3" fill="#ffffff"' + (p.anim ? ' class="sp" style="animation-delay:' + s[2] + 's"' : ' opacity="0.7"') + "/>");
     });
-    out.push("</g></g>");
+    out.push('<ellipse cx="160" cy="140" rx="150" ry="110" fill="url(#glare)" style="mix-blend-mode:screen"' + (p.anim ? ' class="gl"' : ' opacity="0.6"') + "/>");
+    out.push("</g></g></g>");
 
     // the rest of the deck
     var ink = L ? "#1d1630" : "#efe8fb", accent = L ? core.mixHex(p.a2, "#000000", 0.25) : "#c4a6ff";
@@ -288,7 +323,10 @@
         '<text x="' + (x + 20) + '" y="' + (y + 214) + '" font-family="' + SANS + '" font-size="11" fill="#c7d2ea">' + esc(trunc(repo.lang || "No language", 22)) + "</text></g>");
     });
     var css = "@keyframes hf{0%{transform:translateX(-260px)}100%{transform:translateX(420px)}}.hf{animation:hf 4.5s ease-in-out infinite alternate}" +
-      "@keyframes sp{0%,100%{opacity:0}50%{opacity:1}}.sp{animation:sp 2.4s ease-in-out infinite}";
+      "@keyframes sp{0%,100%{opacity:0}50%{opacity:1}}.sp{animation:sp 2.4s ease-in-out infinite}" +
+      "@keyframes gl{0%,100%{transform:translate(0,0)}50%{transform:translate(150px,260px)}}.gl{animation:gl 7s ease-in-out infinite}" +
+      "@keyframes tilt{0%,100%{transform:perspective(900px) rotateY(-4deg) rotateX(2deg)}50%{transform:perspective(900px) rotateY(4deg) rotateX(-2deg)}}" +
+      ".tilt{transform-box:fill-box;transform-origin:center;animation:tilt 7s ease-in-out infinite}";
     return svgOpen(W, H, "Trading card for " + m.login) + motion(p, css) + out.join("") + "</svg>";
   }
 
@@ -369,6 +407,7 @@
         out.push('<text x="' + s.x.toFixed(1) + '" y="' + (ln.y + (above ? -17 : 28)) + '" text-anchor="middle" font-family="' + SANS + '" font-size="13" font-weight="600" fill="' + INK + '">' + esc(label) + "</text>");
       });
     });
+    if (p.anim) [0, 1.2].forEach(function (dl) { out.push('<circle cx="' + hubX + '" cy="' + yHub + '" r="17" fill="none" stroke="' + INK + '" stroke-width="2" class="pu" style="transform-origin:' + hubX + "px " + yHub + "px;animation-delay:" + dl + 's"/>'); });
     out.push('<circle cx="' + hubX + '" cy="' + yHub + '" r="17" fill="' + STATION + '" stroke="' + INK + '" stroke-width="5"/>');
     out.push('<text x="' + (hubX + 28) + '" y="' + (yHub - 2) + '" font-family="' + SANS + '" font-size="14" font-weight="800" fill="' + INK + '">@' + esc(trunc(m.login, 12)) + "</text>");
     out.push('<text x="' + (hubX + 28) + '" y="' + (yHub + 15) + '" font-family="' + SANS + '" font-size="11" fill="' + MUTED + '">interchange</text>');
@@ -380,7 +419,8 @@
       out.push('<text x="' + (lx + 38) + '" y="' + (H - 32) + '" font-family="' + SANS + '" font-size="13" font-weight="700" fill="' + INK + '">' + esc(trunc(ln.name, 12)) + ' line <tspan font-weight="500" fill="' + MUTED + '">' + ln.pct + "%</tspan></text>");
       lx += 190;
     });
-    var css = "@keyframes tr{from{offset-distance:0%}to{offset-distance:100%}}.tr{animation-name:tr;animation-timing-function:linear;animation-iteration-count:infinite}";
+    var css = "@keyframes tr{from{offset-distance:0%}to{offset-distance:100%}}.tr{animation-name:tr;animation-timing-function:linear;animation-iteration-count:infinite}" +
+      "@keyframes pu{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.6);opacity:0}}.pu{animation:pu 2.4s cubic-bezier(.2,.6,.3,1) infinite}";
     return svgOpen(W, H, "Metro map for " + m.login) + motion(p, css) + out.join("") + "</svg>";
   }
 
@@ -406,6 +446,10 @@
       '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" font-family="' + SANS + '" font-size="9" font-weight="700" fill="#120c18">' + esc(trunc(m.login, 12).toUpperCase()) + "</text>" +
       '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="#120c18"/></g>');
     out.push('<circle cx="' + cx + '" cy="' + cy + '" r="160" fill="url(#sheen)"/>');
+    out.push("<g" + (p.anim ? ' class="arm" style="transform-origin:548px 86px"' : "") + ">" +
+      '<path d="M548 86 L514 236 L494 262" fill="none" stroke="#c9ccd3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<rect x="480" y="256" width="22" height="13" rx="3" fill="#2a2a30" stroke="#c9ccd3" stroke-width="2" transform="rotate(-50 491 262)"/></g>' +
+      '<circle cx="548" cy="86" r="15" fill="#2a2a30" stroke="#c9ccd3" stroke-width="3"/><circle cx="548" cy="86" r="5" fill="#c9ccd3"/>');
     // the sleeve
     out.push('<rect x="40" y="60" width="320" height="320" rx="6" fill="url(#cov)" filter="url(#sh)"/><rect x="40" y="60" width="320" height="320" rx="6" fill="#000" fill-opacity="0.12"/>');
     out.push('<text x="62" y="104" font-family="' + SERIF + '" font-size="16" font-style="italic" fill="#ffffff">' + esc(trunc(m.name, 30)) + "</text>");
@@ -446,6 +490,7 @@
       out.push('<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 24) + '" text-anchor="middle" font-family="' + SANS + '" font-size="11" font-weight="700" fill="' + DIM + '">' + esc(b.label) + "</text>");
     });
     var css = "@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin 3.2s linear infinite}" +
+      "@keyframes arm{0%,100%{transform:rotate(0)}50%{transform:rotate(.8deg)}}.arm{animation:arm 3.2s ease-in-out infinite}" +
       "@keyframes eq{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}.eq{animation:eq 1s ease-in-out infinite}" +
       "@keyframes pg{from{transform:scaleX(.15)}to{transform:scaleX(1)}}.pg{transform-box:fill-box;transform-origin:left center;animation:pg 9s linear infinite}";
     return svgOpen(W, H, "Now playing for " + m.login) + motion(p, css) + out.join("") + "</svg>";
@@ -607,7 +652,398 @@
     return svgOpen(W, H, "Code garden for " + m.login) + motion(p, css) + out.join("") + "</svg>";
   }
 
-  var SCENES = { departures: departures, holo: holo, metro: metro, vinyl: vinyl, vitals: vitals, garden: garden };
+  /* ================= G. year in code ================= */
+  function yearcode(m, o, p) {
+    var f = facts(m, o), r = rng(core.hash(m.login + "year")), W = 960, H = 620, out = [];
+    var year = f.endYear || "", top = m.langs[0];
+    // a personality from when the work happens
+    var weekTotal = f.weekdays.reduce(function (t, v) { return t + v; }, 0), persona;
+    if (!weekTotal) persona = { t: "The Explorer", d: "Just getting started. The best is ahead." };
+    else if (f.longest >= 30) persona = { t: "The Streak Machine", d: "Shows up every single day." };
+    else if ((f.weekdays[0] + f.weekdays[6]) / weekTotal > 0.35) persona = { t: "The Weekend Warrior", d: "Ships while everyone else is out." };
+    else {
+      var wi = f.weekdays.indexOf(Math.max.apply(null, f.weekdays));
+      persona = { t: "The " + DAYS[wi] + " Titan", d: "Does their best work on " + DAYS[wi] + "s." };
+    }
+    var tiles = [
+      { k: "Contributions", v: f.total !== null ? commas(f.total) : commas(m.all.length), s: f.total !== null ? (f.windowDays >= 360 ? "in the past year" : "in " + f.windowDays + " days") : "public repos", c: "#c6f432" },
+      { k: "Top language", v: top ? top.name : "—", s: top ? top.pct + "% of your repos" : "no languages yet", c: "#ff5fa2" },
+      { k: "Busiest month", v: f.peak && f.peak.v ? f.peak.label : "—", s: f.peak && f.peak.v ? commas(f.peak.v) + " contributions" : "quiet so far", c: "#2fe0ff" },
+      { k: "Longest streak", v: f.longest !== null ? String(f.longest) : "—", s: f.longest === 1 ? "day in a row" : "days in a row", c: "#ff9a3c" },
+      { k: "Best day", v: f.best ? f.best.label : "—", s: f.best ? f.best.v + " contributions on a " + f.best.day : "still to come", c: "#b79bff" },
+      { k: "Your coding personality", v: persona.t, s: persona.d, c: "#ffe7b3" }
+    ];
+    out.push("<defs>" +
+      '<linearGradient id="yb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a0b4f"/><stop offset="0.55" stop-color="#5b1067"/><stop offset="1" stop-color="#b3264f"/></linearGradient>' +
+      '<filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>' +
+      '<filter id="ts" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/></filter>' +
+      '<clipPath id="yc"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath></defs>');
+    out.push('<g clip-path="url(#yc)"><rect width="' + W + '" height="' + H + '" fill="url(#yb)"/>');
+    [[150, 120, "#ff5fa2"], [820, 90, "#2fe0ff"], [700, 560, "#c6f432"], [120, 560, "#ff9a3c"]].forEach(function (b, i) {
+      out.push("<g" + (p.anim ? ' class="bl" style="animation-duration:' + (14 + i * 3) + "s;animation-delay:-" + i * 2 + 's"' : "") + '><circle cx="' + b[0] + '" cy="' + b[1] + '" r="150" fill="' + b[2] + '" opacity="0.35" filter="url(#blur)"/></g>');
+    });
+    // confetti
+    var CONF = ["#c6f432", "#ff5fa2", "#2fe0ff", "#ffe7b3", "#ff9a3c"];
+    for (var c = 0; c < 26; c++) {
+      var cx = Math.round(r() * W), cy = Math.round(r() * H), rot = Math.round(r() * 180);
+      out.push("<g" + (p.anim ? ' class="cf" style="animation-duration:' + (6 + r() * 6).toFixed(1) + "s;animation-delay:-" + (r() * 10).toFixed(1) + 's"' : "") + '><rect x="' + cx + '" y="' + cy + '" width="8" height="4" rx="1" fill="' + CONF[c % 5] + '" opacity="0.8" transform="rotate(' + rot + " " + cx + " " + cy + ')"/></g>');
+    }
+    out.push('<text x="44" y="64" font-family="' + SANS + '" font-size="13" font-weight="800" letter-spacing="3.4" fill="#ffe7b3">YOUR ' + esc(year) + " IN CODE · @" + esc(trunc(m.login, 24).toUpperCase()) + "</text>");
+    var head = trunc(firstName(m), 18) + ", what a year.";
+    out.push('<text x="42" y="118" font-family="' + SANS + '" font-size="' + fit(head, 50, 30, 860, 0.56) + '" font-weight="900" letter-spacing="-1.5" fill="#ffffff">' + esc(head) + "</text>");
+    tiles.forEach(function (t, i) {
+      var col = i % 3, row = Math.floor(i / 3), x = 44 + col * 296, y = 156 + row * 222, rot = [-1.5, 1, -0.5, 1.2, -1, 0.8][i];
+      var big = t.v.length <= 8 ? 56 : fit(t.v, 40, 22, 236, 0.58);
+      out.push('<g transform="rotate(' + rot + " " + (x + 136) + " " + (y + 98) + ')"><g' + (p.anim ? ' class="pop" style="transform-origin:' + (x + 136) + "px " + (y + 98) + "px;animation-delay:-" + (i * 0.6).toFixed(1) + 's"' : "") + ">" +
+        '<rect x="' + x + '" y="' + y + '" width="272" height="196" rx="22" fill="' + t.c + '" filter="url(#ts)"/>' +
+        '<text x="' + (x + 22) + '" y="' + (y + 36) + '" font-family="' + SANS + '" font-size="12" font-weight="800" letter-spacing="2" fill="#1a0b2a" fill-opacity="0.7">' + esc(t.k.toUpperCase()) + "</text>" +
+        '<text x="' + (x + 20) + '" y="' + (y + 112) + '" font-family="' + SANS + '" font-size="' + big + '" font-weight="900" letter-spacing="-1.5" fill="#1a0b2a">' + esc(trunc(t.v, 20)) + "</text>" +
+        wrap(t.s, 34, 2).map(function (l, j) { return '<text x="' + (x + 22) + '" y="' + (y + 150 + j * 18) + '" font-family="' + SANS + '" font-size="14" font-weight="600" fill="#1a0b2a" fill-opacity="0.78">' + esc(l) + "</text>"; }).join("") +
+        "</g></g>");
+    });
+    out.push("</g>");
+    var css = "@keyframes bl{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,-40px)}}.bl{animation:bl 16s ease-in-out infinite}" +
+      "@keyframes cf{from{transform:translateY(-" + H + "px)}to{transform:translateY(" + H + "px)}}.cf{animation:cf 9s linear infinite}" +
+      "@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}.pop{animation:pop 3.6s ease-in-out infinite}";
+    return svgOpen(W, H, "Year in code for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
+  /* ================= H. the daily commit (newspaper) ================= */
+  function newspaper(m, o, p) {
+    var f = facts(m, o), W = 960, H = 660, out = [], INK = "#1a1712", PAPER = "#f3eee2", FADE = "#5c554a";
+    var top = f.projects[0], vol = Math.max(1, (f.endYear || 0) - (Number(m.since) || f.endYear || 0) + 1);
+    var d = f.newest ? new Date(f.newest + "T00:00:00Z") : null;
+    var dateline = d && !isNaN(d) ? DAYS[d.getUTCDay()].toUpperCase() + ", " + MONTHS[d.getUTCMonth()].toUpperCase() + " " + d.getUTCDate() + ", " + d.getUTCFullYear() : "LATE EDITION";
+    out.push("<defs>" +
+      '<pattern id="grain" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.6" fill="#8a7f6a" fill-opacity="0.12"/><circle cx="4" cy="4" r="0.5" fill="#8a7f6a" fill-opacity="0.08"/></pattern>' +
+      '<clipPath id="nc"><rect width="' + W + '" height="' + H + '" rx="10"/></clipPath></defs>');
+    out.push('<g clip-path="url(#nc)"><rect width="' + W + '" height="' + H + '" fill="' + PAPER + '"/><rect width="' + W + '" height="' + H + '" fill="url(#grain)"/>');
+    // masthead
+    out.push('<rect x="40" y="30" width="' + (W - 80) + '" height="3" fill="' + INK + '"/>');
+    out.push('<text x="' + W / 2 + '" y="92" text-anchor="middle" font-family="' + SERIF + '" font-size="58" font-weight="700" letter-spacing="-1" fill="' + INK + '">The Daily Commit</text>');
+    out.push('<rect x="40" y="108" width="' + (W - 80) + '" height="1" fill="' + INK + '"/><rect x="40" y="134" width="' + (W - 80) + '" height="3" fill="' + INK + '"/>');
+    out.push('<g font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.4" fill="' + INK + '"><text x="44" y="126">VOL. ' + vol + " · No. " + esc(commas(f.total !== null ? f.total : m.publicRepos)) + '</text><text x="' + W / 2 + '" y="126" text-anchor="middle">' + esc(dateline) + '</text><text x="' + (W - 44) + '" y="126" text-anchor="end">PRICE: ONE PULL REQUEST</text></g>');
+    // headline
+    var headline = (trunc(m.name, 24) + " ships " + (f.total !== null ? commas(f.total) + " contributions" : m.all.length + " repos")).toUpperCase();
+    out.push('<text x="' + W / 2 + '" y="188" text-anchor="middle" font-family="' + SERIF + '" font-size="' + fit(headline, 42, 22, 860, 0.74) + '" font-weight="700" letter-spacing="-0.5" fill="' + INK + '">' + esc(headline) + "</text>");
+    var sub = (f.role ? f.role.replace(/[.!]+$/, "") + ". " : "") + (top ? "Sources say " + top.name + " is drawing a crowd" + (top.stars ? " with " + commas(top.stars) + (top.stars === 1 ? " star." : " stars.") : ".") : "Quiet desk, big plans.");
+    out.push('<text x="' + W / 2 + '" y="218" text-anchor="middle" font-family="' + SERIF + '" font-size="' + fit(trunc(sub, 120), 17, 13, 860, 0.5) + '" font-style="italic" fill="' + FADE + '">' + esc(trunc(sub, 120)) + "</text>");
+    out.push('<rect x="40" y="236" width="' + (W - 80) + '" height="1" fill="' + INK + '"/>');
+    // column 1: the halftone "photo" of the year
+    out.push('<rect x="40" y="252" width="300" height="200" fill="#e7e0cf"/>');
+    var daily = f.daily.slice(-26 * 7), mx = Math.max.apply(null, daily.concat([1]));
+    for (var i = 0; i < 26 * 7; i++) {
+      var v = daily.length ? daily[Math.max(0, daily.length - 26 * 7 + i)] || 0 : (core.hash(m.login + i) % 4);
+      var col = i % 13, row = Math.floor(i / 13), rad = v ? 1.8 + (v / (daily.length ? mx : 3)) * 4.2 : 0.9;
+      out.push('<circle cx="' + (58 + col * 22).toFixed(1) + '" cy="' + (266 + row * 13.4).toFixed(1) + '" r="' + rad.toFixed(1) + '" fill="' + INK + '" fill-opacity="' + (v ? 0.85 : 0.18) + '"/>');
+    }
+    out.push('<text x="40" y="472" font-family="' + SERIF + '" font-size="12" font-style="italic" fill="' + FADE + '">FIG. 1: Half a year, one dot per day.</text>');
+    out.push('<text x="40" y="504" font-family="' + SERIF + '" font-size="15" font-weight="700" fill="' + INK + '">IN BRIEF</text>');
+    var brief = [];
+    if (f.streak) brief.push("Streak reaches " + f.streak + (f.streak === 1 ? " day" : " days") + ".");
+    if (f.peak && f.peak.v) brief.push(f.peak.label + " was the busiest month on record.");
+    if (m.langs[0]) brief.push(m.langs[0].name + " leads the language polls at " + m.langs[0].pct + "%.");
+    if (m.followers) brief.push(commas(m.followers) + " readers now follow the column.");
+    brief.slice(0, 4).forEach(function (b, k) { out.push('<text x="40" y="' + (528 + k * 21) + '" font-family="' + SERIF + '" font-size="13.5" fill="' + INK + '">▪ ' + esc(trunc(b, 44)) + "</text>"); });
+    out.push('<rect x="356" y="252" width="1" height="340" fill="' + INK + '" fill-opacity="0.4"/><rect x="666" y="252" width="1" height="340" fill="' + INK + '" fill-opacity="0.4"/>');
+    // column 2: the lead story
+    out.push('<text x="374" y="276" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">LEAD STORY</text>');
+    out.push('<text x="374" y="304" font-family="' + SERIF + '" font-size="' + (top ? fit(top.name, 26, 15, 276, 0.56) : 24) + '" font-weight="700" fill="' + INK + '">' + esc(top ? trunc(top.name, 30) : "A blank page") + "</text>");
+    var story = top ? (top.desc ? top.desc.replace(/\.$/, "") + ". " : "") + (top.lang ? "Written in " + top.lang + ", it " : "It ") + "has " + commas(top.stars) + (top.stars === 1 ? " star" : " stars") + " and " + commas(top.forks) + (top.forks === 1 ? " fork" : " forks") + " to its name" + (top.pushed ? ", with the latest change in " + MONTHS[Number(top.pushed.slice(5, 7)) - 1] + " " + top.pushed.slice(0, 4) : "") + ". " +
+      (f.projects[1] ? "Also on the desk: " + f.projects[1].name + (f.projects[2] ? " and " + f.projects[2].name : "") + "." : "") : "No public repositories yet. Reporters are standing by for the first push.";
+    var lines = wrap(story, 42, 9);
+    lines.forEach(function (l, k) { out.push('<text x="374" y="' + (332 + k * 20) + '" font-family="' + SERIF + '" font-size="14.5" fill="' + INK + '">' + esc(l) + "</text>"); });
+    var im = top ? core.impactFor(o, top) : [];
+    if (im.length) {
+      var iy = 332 + lines.length * 20 + 14;
+      out.push('<text x="374" y="' + iy + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">BY THE NUMBERS</text>');
+      im.forEach(function (x, k) { out.push('<text x="' + (374 + k * 96) + '" y="' + (iy + 30) + '" font-family="' + SERIF + '" font-size="22" font-weight="700" fill="' + INK + '">' + esc(trunc(x.value, 8)) + '</text><text x="' + (374 + k * 96) + '" y="' + (iy + 46) + '" font-family="' + SERIF + '" font-size="11" fill="' + FADE + '">' + esc(trunc(x.label, 14)) + "</text>"); });
+    }
+    // column 3: markets, weather, classifieds
+    var y3 = 276;
+    out.push('<text x="684" y="' + y3 + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">MARKETS</text>');
+    [["Stars", m.stars], ["Followers", m.followers], ["Repos", m.publicRepos], ["PRs", f.prs]].forEach(function (row, k) {
+      if (row[1] === null || row[1] === undefined) return;
+      var yy = y3 + 26 + k * 24;
+      out.push('<text x="684" y="' + yy + '" font-family="' + SERIF + '" font-size="15" fill="' + INK + '">' + row[0] + '</text><text x="918" y="' + yy + '" text-anchor="end" font-family="' + MONO + '" font-size="14" font-weight="700" fill="#1f7a3a">▲ ' + esc(fmt(row[1])) + "</text>");
+    });
+    y3 += 136;
+    out.push('<rect x="684" y="' + (y3 - 18) + '" width="236" height="1" fill="' + INK + '" fill-opacity="0.4"/>');
+    var chance = f.windowDays ? Math.round(f.active / f.windowDays * 100) : 0;
+    out.push('<text x="684" y="' + (y3 + 4) + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">WEATHER</text>');
+    out.push('<text x="684" y="' + (y3 + 34) + '" font-family="' + SERIF + '" font-size="26" font-weight="700" fill="' + INK + '">' + chance + "%</text>");
+    out.push('<text x="740" y="' + (y3 + 32) + '" font-family="' + SERIF + '" font-size="13.5" fill="' + INK + '">chance of commits</text>');
+    y3 += 70;
+    out.push('<rect x="684" y="' + (y3 - 18) + '" width="236" height="1" fill="' + INK + '" fill-opacity="0.4"/>');
+    out.push('<text x="684" y="' + (y3 + 4) + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">CLASSIFIEDS</text>');
+    var ad = core.oneLine(o.openTo) ? "AVAILABLE: " + core.oneLine(o.openTo) + ". Serious offers only. Contact @" + m.login + "." : "COLLABORATORS WANTED for " + (top ? top.name : "new projects") + ". Apply within: @" + m.login + ".";
+    wrap(ad, 34, 4).forEach(function (l, k) { out.push('<text x="684" y="' + (y3 + 28 + k * 18) + '" font-family="' + SERIF + '" font-size="13" fill="' + INK + '">' + esc(l) + "</text>"); });
+    // the EXTRA stamp and the ticker
+    out.push("<g" + (p.anim ? ' class="ex" style="transform-origin:860px 72px"' : "") + '><g transform="rotate(-12 860 72)"><rect x="806" y="48" width="108" height="46" rx="6" fill="' + PAPER + '" stroke="#c4271b" stroke-width="3"/><text x="860" y="81" text-anchor="middle" font-family="' + SERIF + '" font-size="26" font-weight="700" fill="#c4271b">EXTRA!</text></g></g>');
+    var tick = ("BREAKING ▸ " + [top ? top.name + " passes " + commas(top.stars) + " stars" : "", f.streak ? "streak hits " + f.streak + " days" : "", m.langs[0] ? m.langs[0].name + " remains the language of choice" : "", "follow @" + m.login + " for the next edition"].filter(Boolean).join(" ▸ ") + "   ").toUpperCase();
+    while (tick.length < 110) tick += tick;
+    var tl = Math.round(tick.length * 8.4), ty = H - 40;
+    out.push('<rect x="0" y="' + ty + '" width="' + W + '" height="40" fill="' + INK + '"/>');
+    out.push("<g" + (p.anim ? ' class="tk"' : "") + ' font-family="' + MONO + '" font-size="14" font-weight="700" fill="' + PAPER + '">' +
+      [0, tl].map(function (x) { return '<text x="' + x + '" y="' + (ty + 26) + '" textLength="' + tl + '" lengthAdjust="spacingAndGlyphs" xml:space="preserve">' + esc(tick) + "</text>"; }).join("") + "</g>");
+    out.push("</g>");
+    if (p.light) out.push('<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="9.5" fill="none" stroke="#d1d9e0"/>');
+    var css = "@keyframes ex{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}.ex{animation:ex 1.6s ease-in-out infinite}" +
+      "@keyframes tk{to{transform:translateX(-" + tl + "px)}}.tk{animation:tk " + Math.round(tl / 60) + "s linear infinite}";
+    return svgOpen(W, H, "The Daily Commit for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
+  /* ================= I. passport ================= */
+  function passport(m, o, p) {
+    var f = facts(m, o), W = 960, H = 600, out = [], L = p.light, INK = "#22303f", PAGE = "#f4efe2";
+    var words = String(m.name).trim().split(/\s+/), surname = (words.length > 1 ? words[words.length - 1] : m.name), given = words.length > 1 ? words.slice(0, -1).join(" ") : m.login;
+    var no = "GH" + ("0000000" + (core.hash(m.login) % 10000000)).slice(-7);
+    out.push("<defs>" +
+      '<pattern id="gu" width="40" height="16" patternUnits="userSpaceOnUse"><path d="M0 8 Q10 0 20 8 T40 8" fill="none" stroke="#7aa0c4" stroke-opacity="0.22"/><path d="M0 12 Q10 4 20 12 T40 12" fill="none" stroke="#c49a7a" stroke-opacity="0.16"/></pattern>' +
+      '<linearGradient id="holo" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0.3" stop-color="#ff3cbe" stop-opacity="0"/><stop offset="0.45" stop-color="#3cf0ff" stop-opacity="0.35"/><stop offset="0.55" stop-color="#fff050" stop-opacity="0.3"/><stop offset="0.7" stop-color="#78ff8c" stop-opacity="0"/></linearGradient>' +
+      '<clipPath id="lp"><rect x="60" y="50" width="420" height="500" rx="10"/></clipPath>' +
+      '<filter id="sh" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000" flood-opacity="' + (L ? 0.2 : 0.5) + '"/></filter></defs>');
+    out.push('<rect width="' + W + '" height="' + H + '" rx="18" fill="' + (L ? "#e6ebf3" : "#0b1a33") + '"/>');
+    out.push('<rect x="52" y="42" width="856" height="516" rx="16" fill="#18294a" filter="url(#sh)"/>');
+    out.push('<rect x="60" y="50" width="420" height="500" rx="10" fill="' + PAGE + '"/><rect x="480" y="50" width="420" height="500" rx="10" fill="' + PAGE + '"/>');
+    out.push('<rect x="60" y="50" width="840" height="500" fill="url(#gu)"/><rect x="478" y="50" width="4" height="500" fill="#000" fill-opacity="0.12"/>');
+    // the photo page
+    out.push('<text x="84" y="84" font-family="' + SANS + '" font-size="12" font-weight="800" letter-spacing="2.6" fill="' + INK + '">GITHUB · PASSPORT · PASSEPORT</text>');
+    out.push('<rect x="84" y="104" width="128" height="160" rx="6" fill="#dfe6ee" stroke="' + INK + '" stroke-opacity="0.3"/>');
+    out.push('<circle cx="148" cy="164" r="34" fill="#b9c6d6"/><path d="M98 264 Q148 196 198 264Z" fill="#b9c6d6"/>');
+    out.push('<text x="148" y="176" text-anchor="middle" font-family="' + SANS + '" font-size="30" font-weight="900" fill="' + INK + '">' + esc(core.initials(m)) + "</text>");
+    var fields = [["Type / Type", "P"], ["Code", "GH"], ["Passport No.", no], ["Surname / Nom", trunc(surname, 20).toUpperCase()], ["Given names / Prénoms", trunc(given, 22).toUpperCase()],
+      ["Nationality", "OPEN SOURCE"], ["Date of issue", m.since ? "01 JAN " + m.since : "—"], ["Profession", trunc((f.role || "Developer").toUpperCase(), 22)]];
+    fields.forEach(function (x, i) {
+      var fx = i < 3 ? 232 + (i % 3) * 82 : 232, fy = i < 3 ? 116 : 116 + (i - 2) * 30;
+      if (i < 3 && i > 0) fx = 232 + i * 72;
+      out.push('<text x="' + fx + '" y="' + fy + '" font-family="' + SANS + '" font-size="8.5" fill="' + INK + '" fill-opacity="0.6">' + x[0] + "</text>");
+      out.push('<text x="' + fx + '" y="' + (fy + 14) + '" font-family="' + MONO + '" font-size="12.5" font-weight="700" fill="' + INK + '">' + esc(x[1]) + "</text>");
+    });
+    out.push('<text x="84" y="296" font-family="' + SANS + '" font-size="8.5" fill="' + INK + '" fill-opacity="0.6">Signature of bearer</text>');
+    out.push('<text x="84" y="324" font-family="' + SERIF + '" font-size="26" font-style="italic" fill="#1f3c8a">' + esc(trunc(m.name, 24)) + "</text>");
+    out.push('<text x="84" y="364" font-family="' + SANS + '" font-size="8.5" fill="' + INK + '" fill-opacity="0.6">Languages spoken</text>');
+    out.push('<text x="84" y="380" font-family="' + MONO + '" font-size="12.5" font-weight="700" fill="' + INK + '">' + esc(trunc(m.langs.map(function (l) { return l.name.toUpperCase(); }).join(", ") || "—", 44)) + "</text>");
+    // machine-readable zone
+    function mrz(s, n) { s = String(s).toUpperCase().replace(/[^A-Z0-9]+/g, "<"); return (s + "<".repeat(n)).slice(0, n); }
+    var l1 = mrz("P<GHB" + surname + "<<" + given, 40), l2 = mrz(no + "<OSS" + (m.since || "0000") + "<" + m.publicRepos + "R<" + m.stars + "S", 40);
+    out.push('<rect x="72" y="452" width="396" height="80" rx="4" fill="#ffffff" fill-opacity="0.55"/>');
+    out.push('<text x="84" y="484" font-family="' + MONO + '" font-size="14.5" textLength="372" lengthAdjust="spacingAndGlyphs" fill="' + INK + '">' + esc(l1) + '</text><text x="84" y="514" font-family="' + MONO + '" font-size="14.5" textLength="372" lengthAdjust="spacingAndGlyphs" fill="' + INK + '">' + esc(l2) + "</text>");
+    out.push('<g clip-path="url(#lp)"><rect x="-300" y="50" width="900" height="500" fill="url(#holo)" style="mix-blend-mode:multiply"' + (p.anim ? ' class="hl"' : "") + "/></g>");
+    // the visa page: one stamp per language, plus the entry stamp
+    out.push('<text x="504" y="84" font-family="' + SANS + '" font-size="12" font-weight="800" letter-spacing="2.6" fill="' + INK + '">VISAS · ENTRIES · ' + (m.langs.length) + "</text>");
+    var stamps = m.langs.slice(0, 6).map(function (l) {
+      var rs = m.all.filter(function (x) { return x.lang === l.name; }), yrs = rs.map(function (x) { return String(x.created).slice(0, 4); }).filter(Boolean).sort();
+      return { t: l.name.toUpperCase(), a: "ENTRY " + (yrs[0] || "—"), b: rs.length + (rs.length === 1 ? " REPO" : " REPOS"), c: core.mixHex(langColor(l.name, p.a1), "#000000", 0.25) };
+    });
+    stamps.push({ t: "ADMITTED", a: m.since ? "SINCE " + m.since : "WELCOME", b: "@" + trunc(m.login, 14).toUpperCase(), c: "#1f3c8a", round: true });
+    stamps.forEach(function (st, i) {
+      var cx = 590 + (i % 3) * 112, cy = 160 + Math.floor(i / 3) * 128 + (i % 2) * 14, rot = [-12, 8, -4, 14, -9, 5, -16][i % 7], shape = st.round || i % 3 === 0 ? "c" : i % 3 === 1 ? "r" : "o";
+      var g = '<g transform="rotate(' + rot + " " + cx + " " + cy + ')" fill="none" stroke="' + st.c + '" stroke-width="2.4" opacity="0.88">';
+      if (shape === "c") g += '<circle cx="' + cx + '" cy="' + cy + '" r="48"/><circle cx="' + cx + '" cy="' + cy + '" r="42" stroke-width="1"/>';
+      else if (shape === "r") g += '<rect x="' + (cx - 54) + '" y="' + (cy - 34) + '" width="108" height="68" rx="6"/><rect x="' + (cx - 49) + '" y="' + (cy - 29) + '" width="98" height="58" rx="4" stroke-width="1"/>';
+      else g += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="56" ry="38"/>';
+      g += '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" stroke="none" fill="' + st.c + '" font-family="' + SANS + '" font-size="' + fit(st.t, 14, 8, 80, 0.66) + '" font-weight="900" letter-spacing="1">' + esc(trunc(st.t, 14)) + "</text>" +
+        '<text x="' + cx + '" y="' + (cy + 10) + '" text-anchor="middle" stroke="none" fill="' + st.c + '" font-family="' + MONO + '" font-size="9.5" font-weight="700">' + esc(st.a) + "</text>" +
+        '<text x="' + cx + '" y="' + (cy + 23) + '" text-anchor="middle" stroke="none" fill="' + st.c + '" font-family="' + MONO + '" font-size="8.5">' + esc(st.b) + "</text></g>";
+      out.push("<g" + (p.anim ? ' class="st" style="transform-origin:' + cx + "px " + cy + "px;animation-delay:" + (i * 1.1).toFixed(1) + "s;animation-duration:" + (stamps.length * 1.1 + 2).toFixed(1) + 's"' : "") + ">" + g + "</g>");
+    });
+    var css = "@keyframes hl{0%{transform:translateX(-200px)}100%{transform:translateX(560px)}}.hl{animation:hl 6s ease-in-out infinite alternate}" +
+      "@keyframes st{0%{transform:scale(1);opacity:1}3%{transform:scale(1.35);opacity:0}8%{transform:scale(.94);opacity:1}11%,100%{transform:scale(1);opacity:1}}.st{animation:st 9s ease-out infinite}";
+    return svgOpen(W, H, "Passport for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
+  /* ================= J. constellation sky ================= */
+  function constellation(m, o, p) {
+    var f = facts(m, o), r = rng(core.hash(m.login + "sky")), W = 960, H = 580, out = [];
+    out.push("<defs>" +
+      '<radialGradient id="sky" cx="0.5" cy="0.35" r="0.85"><stop offset="0" stop-color="' + (p.light ? "#24366e" : "#0d1640") + '"/><stop offset="1" stop-color="' + (p.light ? "#0e1a3d" : "#02040c") + '"/></radialGradient>' +
+      '<radialGradient id="star"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#ffffff" stop-opacity="0.7"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>' +
+      '<linearGradient id="shoot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#ffffff"/></linearGradient>' +
+      '<clipPath id="cc"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath></defs>');
+    out.push('<g clip-path="url(#cc)"><rect width="' + W + '" height="' + H + '" fill="url(#sky)"/>');
+    out.push('<path d="M-40 420 Q300 300 520 360 T1000 240" fill="none" stroke="#a9b8ff" stroke-opacity="0.07" stroke-width="90"/>');
+    out.push("<g" + (p.anim ? ' class="dr"' : "") + ">");
+    for (var i = 0; i < 110; i++) {
+      out.push('<circle cx="' + Math.round(r() * W) + '" cy="' + Math.round(r() * H) + '" r="' + (r() * 1.2 + 0.3).toFixed(1) + '" fill="#ffffff" fill-opacity="' + (0.3 + r() * 0.6).toFixed(2) + '"' +
+        (p.anim && i % 3 === 0 ? ' class="tw" style="animation-duration:' + (2 + r() * 3).toFixed(1) + "s;animation-delay:-" + (r() * 3).toFixed(1) + 's"' : "") + "/>");
+    }
+    out.push("</g>");
+    out.push('<text x="40" y="56" font-family="' + SERIF + '" font-size="30" font-weight="700" fill="#ffffff">The ' + esc(trunc(m.login, 24)) + " sky</text>");
+    var groups = m.langs.slice(0, 5).map(function (l) { return { lang: l.name, repos: m.all.filter(function (x) { return x.lang === l.name; }).sort(function (a, b) { return b.stars - a.stars; }).slice(0, 6) }; }).filter(function (g) { return g.repos.length; });
+    var mapped = groups.reduce(function (t, g) { return t + g.repos.length; }, 0), brightest = m.top[0];
+    out.push('<text x="40" y="82" font-family="' + SANS + '" font-size="13" fill="#b9c3ea">' + esc(groups.length + (groups.length === 1 ? " constellation" : " constellations") + " · " + mapped + " stars mapped" + (brightest ? " · brightest: " + trunc(brightest.name, 26) : "")) + "</text>");
+    var maxS = Math.max.apply(null, m.all.map(function (x) { return x.stars; }).concat([1]));
+    var CENTRES = [[230, 270], [500, 200], [760, 300], [360, 450], [680, 470]];
+    groups.forEach(function (g, gi) {
+      var c = CENTRES[gi], col = core.mixHex(langColor(g.lang, p.a1), "#ffffff", 0.35), pts = g.repos.map(function (repo, k) {
+        var ang = (k / g.repos.length) * Math.PI * 2 + r() * 0.8, rad = g.repos.length === 1 ? 0 : 55 + r() * 45;
+        return { x: c[0] + Math.cos(ang) * rad * 1.3, y: c[1] + Math.sin(ang) * rad * 0.8, repo: repo, size: 2.5 + 5 * Math.log(1 + repo.stars) / Math.log(1 + maxS) };
+      });
+      // a constellation needs a shape: small unnamed companions make up at least four points
+      for (var extra = pts.length; extra < 4; extra++) {
+        var ang2 = (extra / 4) * Math.PI * 2 + 0.6 + r() * 0.6, rad2 = 60 + r() * 40;
+        pts.push({ x: c[0] + Math.cos(ang2) * rad2 * 1.3, y: c[1] + Math.sin(ang2) * rad2 * 0.8, repo: null, size: 1.6 });
+      }
+      pts.forEach(function (pt) { pt.x = Math.max(40, Math.min(W - 40, pt.x)); pt.y = Math.max(110, Math.min(H - 40, pt.y)); });
+      out.push('<path d="M' + pts.map(function (pt) { return pt.x.toFixed(1) + "," + pt.y.toFixed(1); }).join(" L") + 'Z" fill="none" stroke="' + col + '" stroke-opacity="0.4" stroke-width="1.2"/>');
+      pts.forEach(function (pt, k) {
+        if (pt.repo) out.push('<circle cx="' + pt.x.toFixed(1) + '" cy="' + pt.y.toFixed(1) + '" r="' + (pt.size * 3).toFixed(1) + '" fill="url(#star)" opacity="0.5"' + (p.anim ? ' class="tw" style="animation-duration:' + (2.5 + k * 0.4).toFixed(1) + 's"' : "") + "/>");
+        out.push('<circle cx="' + pt.x.toFixed(1) + '" cy="' + pt.y.toFixed(1) + '" r="' + pt.size.toFixed(1) + '" fill="' + col + '"/>');
+        if (k === 0) out.push('<text x="' + (pt.x + pt.size + 6).toFixed(1) + '" y="' + (pt.y + 4).toFixed(1) + '" font-family="' + SANS + '" font-size="11.5" fill="#e6ebff" fill-opacity="0.85">' + esc(trunc(pt.repo.name, 18)) + " ★" + fmt(pt.repo.stars) + "</text>");
+      });
+      var low = pts.reduce(function (b, pt) { return pt.y > b.y ? pt : b; }, pts[0]);
+      out.push('<text x="' + c[0] + '" y="' + Math.min(H - 18, low.y + 30).toFixed(1) + '" text-anchor="middle" font-family="' + SERIF + '" font-size="15" font-style="italic" letter-spacing="1.5" fill="' + col + '">' + esc(trunc(g.lang, 14)) + (g.repos.length >= 3 ? " Major" : " Minor") + "</text>");
+    });
+    if (!groups.length) out.push('<text x="' + W / 2 + '" y="320" text-anchor="middle" font-family="' + SERIF + '" font-size="20" font-style="italic" fill="#e6ebff">A clear sky. Your first repo will be its first star.</text>');
+    out.push("<g" + (p.anim ? ' class="sh"' : ' opacity="0"') + '><line x1="0" y1="0" x2="120" y2="40" stroke="url(#shoot)" stroke-width="2" stroke-linecap="round" transform="translate(120 100)"/></g>');
+    out.push("</g>");
+    var css = "@keyframes tw{50%{opacity:.2}}.tw{animation:tw 3s ease-in-out infinite}" +
+      "@keyframes dr{0%,100%{transform:translate(0,0)}50%{transform:translate(-28px,12px)}}.dr{animation:dr 40s ease-in-out infinite}" +
+      "@keyframes sh{0%,82%{transform:translate(0,0);opacity:0}84%{opacity:1}92%{transform:translate(520px,170px);opacity:0}100%{opacity:0}}.sh{animation:sh 7s ease-in infinite}";
+    return svgOpen(W, H, "Constellation sky for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
+  /* ================= K. commit forecast ================= */
+  function weather(m, o, p) {
+    var f = facts(m, o), W = 960, H = 560, out = [], L = p.light;
+    var INK = L ? "#0d2a45" : "#ffffff", SOFT = L ? "#2f5b80" : "#b7cde0";
+    var chance = f.windowDays ? Math.round(f.active / f.windowDays * 100) : 0;
+    var last7 = f.daily.slice(-7), q = f.daily.filter(function (v) { return v > 0; }).sort(function (a, b) { return a - b; }), mid = q.length ? q[Math.floor(q.length / 2)] : 1;
+    function kind(v) { return !v ? "moon" : v < mid ? "cloud" : v < mid * 2 ? "part" : "sun"; }
+    var today = kind(last7.length ? Math.max(last7[last7.length - 1], last7[last7.length - 2] || 0) : 0);
+    var cond = { sun: "Sunny with scattered pull requests", part: "Partly cloudy, steady commits", cloud: "Overcast, light commits", moon: "Clear and quiet" }[today];
+    out.push("<defs>" +
+      '<linearGradient id="sk" x1="0" y1="0" x2="0.4" y2="1">' + (L ? '<stop offset="0" stop-color="#4facfe"/><stop offset="1" stop-color="#b8ecff"/>' : '<stop offset="0" stop-color="#0f2027"/><stop offset="0.5" stop-color="#203a43"/><stop offset="1" stop-color="#2c5364"/>') + "</linearGradient>" +
+      '<radialGradient id="sun"><stop offset="0" stop-color="#fff6b0"/><stop offset="0.6" stop-color="#ffd23f"/><stop offset="1" stop-color="#ffb000"/></radialGradient>' +
+      '<radialGradient id="rd"><stop offset="0" stop-color="#0d3b2a"/><stop offset="1" stop-color="#05140f"/></radialGradient>' +
+      '<linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ef07c" stop-opacity="0"/><stop offset="1" stop-color="#3ef07c" stop-opacity="0.55"/></linearGradient>' +
+      '<clipPath id="wc"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath><clipPath id="rc"><circle cx="760" cy="392" r="122"/></clipPath></defs>');
+    out.push('<g clip-path="url(#wc)"><rect width="' + W + '" height="' + H + '" fill="url(#sk)"/>');
+    function icon(k, x, y, s, cls) {
+      var g = "";
+      if (k === "sun" || k === "part") {
+        g += "<g" + (p.anim && cls ? ' class="rays" style="transform-origin:' + x + "px " + y + 'px"' : "") + ">";
+        for (var a = 0; a < 8; a++) g += '<rect x="' + (x - 2 * s) + '" y="' + (y - 34 * s) + '" width="' + 4 * s + '" height="' + 12 * s + '" rx="' + 2 * s + '" fill="#ffd23f" transform="rotate(' + a * 45 + " " + x + " " + y + ')"/>';
+        g += '</g><circle cx="' + x + '" cy="' + y + '" r="' + 18 * s + '" fill="url(#sun)"/>';
+      }
+      if (k === "moon") g += '<circle cx="' + x + '" cy="' + y + '" r="' + 18 * s + '" fill="#f5f0d0"/><circle cx="' + (x + 9 * s) + '" cy="' + (y - 6 * s) + '" r="' + 15 * s + '" fill="' + (L ? "#7fc4f0" : "#203a43") + '"/>';
+      if (k === "cloud" || k === "part") {
+        var cx = x + (k === "part" ? 14 * s : 0), cy = y + (k === "part" ? 12 * s : 0);
+        g += "<g" + (p.anim && cls ? ' class="cl"' : "") + ' fill="#ffffff" fill-opacity="0.95"><ellipse cx="' + cx + '" cy="' + (cy + 8 * s) + '" rx="' + 26 * s + '" ry="' + 12 * s + '"/><circle cx="' + (cx - 10 * s) + '" cy="' + cy + '" r="' + 12 * s + '"/><circle cx="' + (cx + 8 * s) + '" cy="' + (cy - 4 * s) + '" r="' + 15 * s + '"/></g>';
+      }
+      return g;
+    }
+    out.push('<text x="44" y="62" font-family="' + SANS + '" font-size="14" font-weight="700" letter-spacing="2" fill="' + SOFT + '">⌖ @' + esc(trunc(m.login, 24).toUpperCase()) + " · COMMIT FORECAST</text>");
+    out.push(icon(today, 120, 168, 2.2, true));
+    out.push('<text x="230" y="196" font-family="' + SANS + '" font-size="96" font-weight="200" letter-spacing="-4" fill="' + INK + '">' + chance + '<tspan font-size="48" dy="-36">%</tspan></text>');
+    out.push('<text x="44" y="268" font-family="' + SANS + '" font-size="22" font-weight="700" fill="' + INK + '">' + esc(cond) + "</text>");
+    out.push('<text x="44" y="296" font-family="' + SANS + '" font-size="15" fill="' + SOFT + '">' + esc("Chance of commits on any given day · High " + (f.best ? f.best.v : 0) + " · Streak " + (f.streak || 0) + (f.streak === 1 ? " day" : " days")) + "</text>");
+    // forecast discussion
+    out.push('<rect x="44" y="330" width="560" height="1" fill="' + INK + '" fill-opacity="0.2"/>');
+    out.push('<text x="44" y="358" font-family="' + SANS + '" font-size="12" font-weight="800" letter-spacing="2" fill="' + SOFT + '">FORECAST DISCUSSION</text>');
+    var disc = "Expect " + (m.langs[0] ? m.langs[0].name : "code") + " activity to continue" + (f.projects[0] ? ", centred on " + f.projects[0].name : "") + ". " +
+      (f.peak && f.peak.v ? f.peak.label + " brought the heaviest downpour on record (" + commas(f.peak.v) + "). " : "") + (f.streak >= 7 ? "A long warm spell is under way." : f.streak ? "Conditions are improving." : "A quiet front; a fresh push could break it.");
+    wrap(disc, 70, 4).forEach(function (l, k) { out.push('<text x="44" y="' + (386 + k * 22) + '" font-family="' + SANS + '" font-size="15" fill="' + INK + '" fill-opacity="0.9">' + esc(l) + "</text>"); });
+    // seven-day strip
+    out.push('<rect x="628" y="52" width="292" height="182" rx="16" fill="#ffffff" fill-opacity="' + (L ? 0.35 : 0.08) + '"/>');
+    out.push('<text x="648" y="80" font-family="' + SANS + '" font-size="12" font-weight="800" letter-spacing="2" fill="' + SOFT + '">LAST 7 DAYS</text>');
+    var a = m.activity, start = a && Date.parse(a.start + "T00:00:00Z");
+    (last7.length ? last7 : [0, 0, 0, 0, 0, 0, 0]).forEach(function (v, k, arr) {
+      var x = 668 + k * 40, idx = f.daily.length - arr.length + k, day = a && !isNaN(start) ? DAYS[new Date(start + idx * 86400000).getUTCDay()].slice(0, 2) : "";
+      out.push('<text x="' + x + '" y="108" text-anchor="middle" font-family="' + SANS + '" font-size="12" font-weight="700" fill="' + INK + '">' + day + "</text>");
+      out.push(icon(kind(v), x, 150, 0.48, false));
+      out.push('<text x="' + x + '" y="212" text-anchor="middle" font-family="' + SANS + '" font-size="15" font-weight="700" fill="' + INK + '">' + v + "</text>");
+    });
+    // radar: the last 12 weeks as echoes on a sweep
+    out.push('<circle cx="760" cy="392" r="122" fill="url(#rd)"/>');
+    [40, 80, 120].forEach(function (rr) { out.push('<circle cx="760" cy="392" r="' + rr + '" fill="none" stroke="#3ef07c" stroke-opacity="0.25"/>'); });
+    out.push('<path d="M638 392H882M760 270V514" stroke="#3ef07c" stroke-opacity="0.2"/>');
+    var weeks = f.weeks.slice(-12), wmax = Math.max.apply(null, weeks.concat([1]));
+    weeks.forEach(function (v, k) {
+      if (!v) return;
+      var ang = (k / 12) * Math.PI * 2 - Math.PI / 2, rad = 30 + (k % 3) * 30, x = 760 + Math.cos(ang) * rad, y = 392 + Math.sin(ang) * rad, t = v / wmax;
+      var turn = (((ang % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2);
+      out.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (6 + t * 12).toFixed(1) + '" fill="' + (t > 0.66 ? "#ff5a5a" : t > 0.33 ? "#ffd23f" : "#3ef07c") + '" fill-opacity="0.55"' +
+        (p.anim ? ' class="bp" style="transform-origin:' + x.toFixed(1) + "px " + y.toFixed(1) + "px;animation-delay:" + (turn * 4).toFixed(2) + 's"' : "") + "/>");
+    });
+    out.push('<g clip-path="url(#rc)"><g' + (p.anim ? ' class="sweep" style="transform-origin:760px 392px"' : "") + '><path d="M760 392 L882 392 A122 122 0 0 0 846 306 Z" fill="url(#sw)"/><line x1="760" y1="392" x2="882" y2="392" stroke="#3ef07c" stroke-width="2"/></g></g>');
+    out.push('<text x="760" y="540" text-anchor="middle" font-family="' + SANS + '" font-size="11" font-weight="700" letter-spacing="1.6" fill="' + SOFT + '">RADAR · LAST 12 WEEKS</text>');
+    out.push("</g>");
+    if (L) out.push('<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="17.5" fill="none" stroke="#d1d9e0"/>');
+    var css = "@keyframes rays{to{transform:rotate(360deg)}}.rays{animation:rays 24s linear infinite}" +
+      "@keyframes cl{0%,100%{transform:translateX(0)}50%{transform:translateX(14px)}}.cl{animation:cl 6s ease-in-out infinite}" +
+      "@keyframes sweep{to{transform:rotate(360deg)}}.sweep{animation:sweep 4s linear infinite}" +
+      "@keyframes bp{0%{opacity:1;transform:scale(1.3)}35%,100%{opacity:.35;transform:scale(1)}}.bp{animation:bp 4s ease-out infinite}";
+    return svgOpen(W, H, "Commit forecast for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
+  /* ================= L. launch control ================= */
+  function launch(m, o, p) {
+    var f = facts(m, o), r = rng(core.hash(m.login + "launch")), W = 960, H = 600, out = [];
+    var top = f.projects[0], perWeek = f.weeks.length ? Math.round(f.weeks.reduce(function (t, v) { return t + v; }, 0) / f.weeks.length) : 0;
+    var GREEN = "#3ef07c", AMBER = "#ffb547", INK = "#e6edf5", DIM = "#7d8ea3";
+    out.push("<defs>" +
+      '<linearGradient id="sp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + (p.light ? "#1b2a55" : "#03050d") + '"/><stop offset="1" stop-color="' + (p.light ? "#e0745a" : "#1b1030") + '"/></linearGradient>' +
+      '<linearGradient id="body" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cfd6df"/><stop offset="0.45" stop-color="#ffffff"/><stop offset="1" stop-color="#9aa6b5"/></linearGradient>' +
+      '<radialGradient id="fl" cx="0.5" cy="0"><stop offset="0" stop-color="#fff6b0"/><stop offset="0.4" stop-color="#ffb000"/><stop offset="1" stop-color="#ff3d00" stop-opacity="0"/></radialGradient>' +
+      '<clipPath id="lc"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath><clipPath id="gc"><rect x="500" y="460" width="420" height="104"/></clipPath></defs>');
+    out.push('<g clip-path="url(#lc)"><rect width="' + W + '" height="' + H + '" fill="url(#sp)"/>');
+    for (var i = 0; i < 60; i++) out.push('<circle cx="' + Math.round(r() * 460) + '" cy="' + Math.round(r() * 380) + '" r="' + (r() * 1.2 + 0.3).toFixed(1) + '" fill="#ffffff" fill-opacity="' + (0.3 + r() * 0.5).toFixed(2) + '"/>');
+    // the pad, the tower and the rocket
+    out.push('<rect x="0" y="520" width="480" height="80" fill="#0c0f16"/><rect x="120" y="508" width="220" height="14" rx="3" fill="#3a4250"/>');
+    out.push('<g stroke="#8a5a2b" stroke-width="3"><line x1="320" y1="160" x2="320" y2="510"/><line x1="350" y1="160" x2="350" y2="510"/>');
+    for (var t = 0; t < 7; t++) out.push('<line x1="320" y1="' + (170 + t * 48) + '" x2="350" y2="' + (210 + t * 48) + '"/>');
+    out.push('</g><rect x="250" y="250" width="70" height="5" fill="#8a5a2b"/>');
+    // smoke
+    for (var s = 0; s < 6; s++) out.push("<g" + (p.anim ? ' class="sm" style="animation-delay:-' + (s * 0.6).toFixed(1) + 's"' : "") + '><circle cx="' + (170 + s * 24) + '" cy="512" r="' + (18 + (s % 3) * 8) + '" fill="#c9ced6" fill-opacity="0.35"/></g>');
+    out.push("<g" + (p.anim ? ' class="shake"' : "") + ">");
+    out.push("<g" + (p.anim ? ' class="flame" style="transform-origin:230px 470px"' : "") + '><path d="M212 470 Q230 560 248 470Z" fill="url(#fl)"/><path d="M220 470 Q230 520 240 470Z" fill="#ffffff" fill-opacity="0.8"/></g>');
+    out.push('<path d="M200 470 L200 230 Q230 150 260 230 L260 470Z" fill="url(#body)"/>');
+    out.push('<path d="M230 150 Q245 180 260 230 L200 230 Q215 180 230 150Z" fill="' + p.a1 + '"/>');
+    out.push('<path d="M200 400 L172 470 L200 460Z M260 400 L288 470 L260 460Z" fill="' + p.a2 + '"/>');
+    out.push('<circle cx="230" cy="290" r="18" fill="#203a6b" stroke="#9aa6b5" stroke-width="4"/><text x="230" y="295" text-anchor="middle" font-family="' + SANS + '" font-size="13" font-weight="900" fill="#ffffff">' + esc(core.initials(m)) + "</text>");
+    out.push('<text x="230" y="380" text-anchor="middle" font-family="' + SANS + '" font-size="11" font-weight="900" letter-spacing="2" fill="#203a6b" transform="rotate(-90 230 380)">' + esc(trunc(m.login, 14).toUpperCase()) + "</text>");
+    out.push("</g>");
+    // the console
+    out.push('<rect x="480" y="0" width="480" height="' + H + '" fill="#070b12" fill-opacity="0.82"/>');
+    out.push('<text x="500" y="52" font-family="' + MONO + '" font-size="12" letter-spacing="2" fill="' + DIM + '">MISSION CONTROL · @' + esc(trunc(m.login, 20).toUpperCase()) + "</text>");
+    out.push('<text x="500" y="88" font-family="' + MONO + '" font-size="' + fit(top ? top.name : "first launch", 26, 15, 420, 0.62) + '" font-weight="700" fill="' + INK + '">' + esc((top ? trunc(top.name, 28) : "FIRST LAUNCH").toUpperCase()) + "</text>");
+    out.push('<text x="500" y="112" font-family="' + MONO + '" font-size="12" fill="' + DIM + '">VEHICLE: ' + esc((top && top.lang ? top.lang : m.langs[0] ? m.langs[0].name : "TBD").toUpperCase()) + (f.role ? " · CREW: " + esc(trunc(f.role, 26).toUpperCase()) : "") + "</text>");
+    // countdown: ten numbers, each lit for a second in turn, then liftoff
+    if (p.anim) {
+      for (var c = 10; c >= 0; c--) out.push('<text x="920" y="88" text-anchor="end" class="cd" style="animation-delay:' + (10 - c) + 's" font-family="' + MONO + '" font-size="26" font-weight="700" fill="' + (c ? AMBER : GREEN) + '" opacity="0">' + (c ? "T−" + ("0" + c).slice(-2) : "LIFTOFF") + "</text>");
+    } else out.push('<text x="920" y="88" text-anchor="end" font-family="' + MONO + '" font-size="20" font-weight="700" fill="' + GREEN + '">GO FOR LAUNCH</text>');
+    var tele = [["ALTITUDE", fmt(m.stars) + " ★", m.stars / Math.max(m.stars, 100)], ["VELOCITY", perWeek + " / WEEK", Math.min(1, perWeek / 50)],
+      ["FUEL", (f.streak || 0) + (f.streak === 1 ? " DAY" : " DAYS"), f.longest ? (f.streak || 0) / f.longest : 0], ["PAYLOAD", m.publicRepos + " REPOS", Math.min(1, m.publicRepos / 50)]];
+    tele.forEach(function (x, k) {
+      var y = 160 + k * 52;
+      out.push('<text x="500" y="' + y + '" font-family="' + MONO + '" font-size="12" letter-spacing="1.5" fill="' + DIM + '">' + x[0] + '</text><text x="920" y="' + y + '" text-anchor="end" font-family="' + MONO + '" font-size="15" font-weight="700" fill="' + INK + '">' + esc(x[1]) + "</text>");
+      out.push('<rect x="500" y="' + (y + 10) + '" width="420" height="8" rx="4" fill="#1c2533"/><rect x="500" y="' + (y + 10) + '" width="' + Math.max(6, Math.min(1, x[2]) * 420).toFixed(1) + '" height="8" rx="4" fill="' + (k === 2 ? AMBER : GREEN) + '"/>');
+    });
+    var checks = [["BUILD", true], ["TESTS", true], ["DOCS", !!(top && top.desc)], ["STARS", m.stars > 0], ["CREW", m.followers > 0], ["STREAK", f.streak > 0]];
+    checks.forEach(function (x, k) {
+      var cx = 500 + (k % 3) * 142, cy = 382 + Math.floor(k / 3) * 30;
+      out.push('<circle cx="' + (cx + 6) + '" cy="' + (cy - 4) + '" r="5" fill="' + (x[1] ? GREEN : AMBER) + '"' + (p.anim && !x[1] ? ' class="bk"' : "") + '/><text x="' + (cx + 18) + '" y="' + cy + '" font-family="' + MONO + '" font-size="12" font-weight="700" fill="' + INK + '">' + x[0] + " " + (x[1] ? "GO" : "HOLD") + "</text>");
+    });
+    // telemetry trace: weekly contributions, scrolling
+    var wk = f.weeks.length ? f.weeks : [1, 3, 2, 4, 3, 5, 4, 6], wm = Math.max.apply(null, wk.concat([1])), step = 30, seq = [];
+    while (seq.length * step < 420 + wk.length * step) seq = seq.concat(wk);
+    var d = seq.map(function (v, k) { return (k ? "L" : "M") + (k * step) + "," + (556 - v / wm * 76).toFixed(1); }).join(" ");
+    out.push('<text x="500" y="446" font-family="' + MONO + '" font-size="11" letter-spacing="1.5" fill="' + DIM + '">TELEMETRY · CONTRIBUTIONS PER WEEK</text>');
+    out.push('<g clip-path="url(#gc)"><g transform="translate(500 0)"><g' + (p.anim ? ' class="tm" style="animation-duration:' + (wk.length * 0.8).toFixed(1) + 's"' : "") + '><path d="' + d + '" fill="none" stroke="' + GREEN + '" stroke-width="2"/></g></g></g>');
+    out.push("</g>");
+    var css = "@keyframes cd{0%{opacity:1}8.9%{opacity:1}9%{opacity:0}100%{opacity:0}}.cd{animation:cd 11s steps(1) infinite}" +
+      "@keyframes flame{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.25)}}.flame{animation:flame .18s ease-in-out infinite}" +
+      "@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(.6px,-.4px)}75%{transform:translate(-.6px,.4px)}}.shake{animation:shake .25s linear infinite}" +
+      "@keyframes sm{0%{transform:translate(0,0) scale(.6);opacity:.9}100%{transform:translate(-40px,-30px) scale(1.6);opacity:0}}.sm{transform-box:fill-box;transform-origin:center;animation:sm 3s ease-out infinite}" +
+      "@keyframes tm{to{transform:translateX(-" + (wk.length * step) + "px)}}.tm{animation:tm 8s linear infinite}" +
+      "@keyframes bk{50%{opacity:.25}}.bk{animation:bk 1s steps(2) infinite}";
+    return svgOpen(W, H, "Launch control for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
+  var SCENES = { departures: departures, holo: holo, metro: metro, vinyl: vinyl, vitals: vitals, garden: garden,
+    yearcode: yearcode, newspaper: newspaper, passport: passport, constellation: constellation, weather: weather, launch: launch };
 
   /** The chosen showpiece as an SVG string, or null when none is chosen. */
   function build(m, options, palette) {
