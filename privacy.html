@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#f5f3ee">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy Policy · README Glassfolio</title>
+<meta name="description" content="How README Glassfolio handles data: it runs in your browser, reads public GitHub data, keeps tokens in memory only and saves your options in this browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f5f3ee'/%3E%3Crect x='6' y='6' width='9' height='9' rx='1.5' fill='%23a9d3bc'/%3E%3Crect x='17' y='6' width='9' height='9' rx='1.5' fill='%231a6b4b'/%3E%3Crect x='6' y='17' width='9' height='9' rx='1.5' fill='%2356a07c'/%3E%3Crect x='17' y='17' width='9' height='9' rx='1.5' fill='%23cfe5d8'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css?v=dev">
+</head>
+<body>
+<a class="skip" href="#doc">Skip to the text</a>
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html" aria-label="README Glassfolio home">
+      <svg class="mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="1.5" class="m1"/><rect x="11" y="1" width="8" height="8" rx="1.5" class="m4"/><rect x="1" y="11" width="8" height="8" rx="1.5" class="m3"/><rect x="11" y="11" width="8" height="8" rx="1.5" class="m2"/></svg>
+      <span>Glassfolio</span>
+    </a>
+    <a class="btn btn-sm" href="index.html#studio">Open the studio</a>
+  </div>
+</header>
+<main class="page legal" id="doc">
+  <p class="eyebrow">README Glassfolio</p>
+  <h1>Privacy Policy</h1>
+  <p class="draft" role="note"><strong>Draft for review.</strong> This page describes how the software works today. Items marked <span class="tbd">To confirm</span> need details from the project owner before this is final. It is not legal advice.</p>
+  <p class="meta-line">Last updated: <span class="tbd">To confirm: effective date</span></p>
+
+  <h2>The short version</h2>
+  <p>Glassfolio runs entirely in your browser. There is no Glassfolio server, no account, no cookies, no analytics and no advertising. The page talks to one outside service, GitHub, and only to read the data needed for your README or to publish it when you ask.</p>
+
+  <h2>Who runs this site</h2>
+  <p>README Glassfolio is an open-source project published under the MIT licence. <span class="tbd">To confirm: the name of the person or organisation that operates this website, and a contact address for privacy questions.</span></p>
+
+  <h2>Hosting</h2>
+  <p>The website is a set of static files served by GitHub Pages. When you visit, GitHub receives your request like any web server does, and may record technical details such as your IP address. That is handled under GitHub's own privacy statement, not by Glassfolio. <span class="tbd">To confirm: whether the site is served from any other host or custom domain.</span></p>
+
+  <h2>Data the page reads</h2>
+  <p>When you enter a username, your browser requests that account's public information directly from api.github.com: the profile, public repositories, their languages and topics, and recent public activity. These requests go from your browser to GitHub. Glassfolio does not receive or keep a copy.</p>
+  <p>If you add a GitHub token, the page also requests your contribution calendar so it can show a full year. That calendar follows your own GitHub setting for private contributions.</p>
+
+  <h2>Your token</h2>
+  <p>A token is optional. If you paste one, it is kept in the memory of that browser tab and sent only to api.github.com. It is never written to browser storage, never put in a share link, and is gone when you close or reload the tab. The page ships a Content Security Policy that blocks requests to any address other than this site and api.github.com.</p>
+
+  <h2>What your browser keeps</h2>
+  <ul>
+    <li><strong>Your options</strong>, such as design, theme, job title and skills, are saved in your browser's local storage under the name <code>patch-your-profile.v1</code>, so they are still there next time. "Reset all options" in the studio removes them.</li>
+    <li><strong>A version marker</strong> is saved in session storage for the current tab so that, after the site is updated, the page reloads at most once to fetch the new version.</li>
+  </ul>
+  <p>Nothing else is stored, and neither is sent anywhere.</p>
+
+  <h2>Publishing and daily updates</h2>
+  <p>When you press Publish, your browser uses your token to make one commit to your own profile repository on GitHub. Your README and its images then live in that repository, under your control and visible to anyone who can see the repository.</p>
+  <p>If you turn on daily updates, the commit also adds a GitHub Actions workflow and a copy of the generator to your repository. It runs on GitHub under your account, uses the repository's own temporary GitHub token, and talks only to api.github.com. Deleting the workflow file stops it.</p>
+
+  <h2>Share links</h2>
+  <p>"Copy share link" creates an address that contains a username and your option choices, so anyone who opens it sees the same setup. Share links never contain a token.</p>
+
+  <h2>Children</h2>
+  <p><span class="tbd">To confirm: any statement about use by children, based on where the site is offered.</span></p>
+
+  <h2>Changes and contact</h2>
+  <p>If the way the software handles data changes, this page will be updated and the date above changed. <span class="tbd">To confirm: how to contact the operator about privacy.</span></p>
+</main>
+<footer class="foot">
+  <div class="foot-in">
+    <div class="foot-brand">
+      <svg class="mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="1.5" class="m1"/><rect x="11" y="1" width="8" height="8" rx="1.5" class="m4"/><rect x="1" y="11" width="8" height="8" rx="1.5" class="m3"/><rect x="11" y="11" width="8" height="8" rx="1.5" class="m2"/></svg>
+      <span>README Glassfolio</span>
+    </div>
+    <p>Free and open source under the MIT licence. Not affiliated with or endorsed by GitHub.</p>
+    <nav aria-label="Legal and project">
+      <a href="index.html">Home</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="LICENSE">MIT licence</a>
+      <a href="https://github.com/SandeepKomal/README-Glassfolio" rel="noopener">Source code on GitHub</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
