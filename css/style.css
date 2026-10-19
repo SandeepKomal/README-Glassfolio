@@ -448,21 +448,22 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
 .sc-screen img+img{border-radius:0 0 14px 14px;aspect-ratio:16/9;object-fit:cover;object-position:top}
 .sc-slide[data-pos="far"],.sc-slide[data-pos="-2"],.sc-slide[data-pos="2"]{pointer-events:none}
 /* the stand: a short neck on a soft oval base */
-.sc-bar{display:flex;align-items:center;justify-content:center;gap:var(--s3);margin-top:var(--s4)}
+.sc-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--s3);margin-top:var(--s4)}
 .sc-btn{display:inline-grid;place-items:center;width:44px;height:44px;padding:0;border-radius:var(--r-ctl);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
 .sc-btn:hover{background:var(--sunk)}
 .sc-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sc-name{margin:0;min-width:16ch;text-align:center;font-weight:600;font-size:.95rem}
-.sc-pause{min-height:44px;padding:0 14px;border-radius:var(--r-ctl);border:1px solid transparent;background:none;color:var(--ink-2);font-size:.88rem;text-decoration:underline;text-underline-offset:3px}
-.sc-pause:hover{color:var(--ink)}
+.sc-pause{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:.88rem;font-weight:500}
+.sc-pause:hover{background:var(--sunk)}
+.sc-pause svg{width:14px;height:14px;fill:currentColor;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .sc-cap{margin:var(--s2) 0 0;text-align:center;font-size:.85rem;color:var(--ink-3)}
 @media (max-width:700px){
   .sc-stage{height:calc((100vw - 32px) * .6175 + 98px)}
   .sc-slide{width:76%}
   .sc-slide[data-pos="-1"]{transform:translateX(-146%) scale(.74) rotateY(18deg)}
   .sc-slide[data-pos="1"]{transform:translateX(46%) scale(.74) rotateY(-18deg)}
-  .sc-name{min-width:0;flex:1}
-  .sc-pause{padding:0 8px}
+  .sc-name{min-width:0;flex:1 1 calc(100% - 112px)}
+  .sc-pause{order:3;margin:0 auto}
 }
 @media (max-width:600px){.showcase{margin-left:calc(var(--s4) * -1);margin-right:calc(var(--s4) * -1);padding:0 var(--s4)}}
 
