@@ -14,7 +14,7 @@
 <meta property="og:description" content="A complete profile README from your own GitHub data, in eleven designs. Free and runs in your browser.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f5f3ee'/%3E%3Crect x='6' y='6' width='9' height='9' rx='1.5' fill='%23aeb8cc'/%3E%3Crect x='17' y='6' width='9' height='9' rx='1.5' fill='%2322304f'/%3E%3Crect x='6' y='17' width='9' height='9' rx='1.5' fill='%235f7096'/%3E%3Crect x='17' y='17' width='9' height='9' rx='1.5' fill='%23d6dbe6'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f5f3ee'/%3E%3Crect x='6' y='6' width='9' height='9' rx='1.5' fill='%239a5cc6'/%3E%3Crect x='17' y='6' width='9' height='9' rx='1.5' fill='%234f7fcb'/%3E%3Crect x='6' y='17' width='9' height='9' rx='1.5' fill='%233d8a8f'/%3E%3Crect x='17' y='17' width='9' height='9' rx='1.5' fill='%234c9437'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css?v=dev">
 </head>
 <body>
@@ -44,15 +44,11 @@
     <h1 id="heroTitle">Your GitHub profile, designed from your own work.</h1>
     <p class="lede">Type a username and get a complete profile README built from your repositories and activity: banner, stats, heatmap, projects and an animated scene. It runs in your browser and publishes to your profile repository.</p>
 
-    <form class="ask" id="ask">
-      <label class="ask-label" for="url">GitHub username or profile link</label>
-      <div class="ask-row">
-        <input type="text" id="url" placeholder="your-username" autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="askHelp">
-        <button type="submit" id="go" class="btn">Build my README</button>
-      </div>
-      <p class="try" id="askHelp">Free, no account. No username handy? <button type="button" id="sample">See it with sample data</button></p>
-    </form>
-    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    <div class="hero-cta">
+      <a class="btn btn-lg" href="#studio" data-focus="#url">Build my README</a>
+      <a class="text-link" href="#studio" data-sample>See it with sample data</a>
+    </div>
+
 
     <section class="showcase" id="showcase" aria-roledescription="carousel" aria-label="Six of the designs, generated live from a sample profile">
       <div class="sc-stage" id="scStage"></div>
@@ -81,8 +77,8 @@
 
   <section class="story" id="story" aria-labelledby="storyTitle">
     <div class="sec-head" data-reveal>
-      <h2 id="storyTitle">One profile, told six ways.</h2>
-      <p>The same sample profile in six of the eleven designs, each with its own showpiece. Every image here is generated live on this page.</p>
+      <h2 id="storyTitle">One profile, every look.</h2>
+      <p>The same sample profile in the classic look and all eleven designs, each with its own showpiece. Every image here is generated live on this page.</p>
     </div>
     <div class="story-track" id="storyTrack"></div>
   </section>
@@ -90,7 +86,40 @@
   <section class="studio" id="studio" aria-labelledby="studioTitle">
     <div class="sec-head">
       <h2 id="studioTitle">Studio</h2>
-      <p>Choose a design, a colour theme and a showpiece on the left. The preview on the right is exactly what GitHub will show, in light and dark, on desktop and phone.</p>
+      <p>Type your username, choose a design, a colour theme and a showpiece, then publish. The preview is exactly what GitHub will show, in light and dark, on desktop and phone.</p>
+    </div>
+    <div class="studio-bar">
+      <div class="ask-col">
+        <form class="ask" id="ask">
+          <label class="ask-label" for="url">1. Your GitHub username or profile link</label>
+          <div class="ask-row">
+            <input type="text" id="url" placeholder="your-username" autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="askHelp">
+            <button type="submit" id="go" class="btn">Build my README</button>
+          </div>
+          <p class="try" id="askHelp">Free, no account. <button type="button" id="sample">See it with sample data</button></p>
+        </form>
+        <div class="msg" id="msg" role="status" aria-live="polite"></div>
+      </div>
+      <div class="ship">
+        <p class="ask-label">2. Publish your README.md</p>
+        <div class="dhead">
+          <div class="mono path">README.md <span class="stat" id="stat"></span></div>
+          <div class="dactions">
+            <button type="button" id="pub" disabled>Publish to GitHub</button>
+            <button type="button" class="ghost" id="dlzip" disabled>Download zip</button>
+            <button type="button" class="ghost" id="share" disabled>Copy share link</button>
+          </div>
+        </div>
+        <div class="publish" id="publish" hidden>
+          <p>Commit the README, banner and cards to <span class="mono" id="pubRepo"></span> in one go. Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> limited to that repository with <strong>Contents: Read and write</strong>, or a classic token with the <strong>public_repo</strong> scope. It's sent only to GitHub and never stored. If you already added a token under <strong>Exact data</strong>, it's used here too, so leave this box empty; it just needs the write access above.</p>
+          <p class="hint" id="pubWfNote" hidden><strong>Daily updates are on,</strong> so the token must also be allowed to write workflows: <strong>Workflows: Read and write</strong> for a fine-grained token, or the <strong>workflow</strong> scope for a classic one.</p>
+          <div class="pubrow">
+            <input type="password" id="pubToken" autocomplete="off" placeholder="github_pat_…" aria-label="GitHub token for publishing">
+            <button type="button" id="pubGo">Publish</button>
+          </div>
+          <div class="msg" id="pubMsg" role="status" aria-live="polite"></div>
+        </div>
+      </div>
     </div>
     <main class="grid" id="main">
       <aside aria-label="Options">
@@ -219,23 +248,6 @@
       </aside>
 
       <section class="diff" aria-label="Preview">
-        <div class="dhead">
-          <div class="mono path">README.md <span class="stat" id="stat"></span></div>
-          <div class="dactions">
-            <button type="button" id="pub" disabled>Publish to GitHub</button>
-            <button type="button" class="ghost" id="dlzip" disabled>Download zip</button>
-            <button type="button" class="ghost" id="share" disabled>Copy share link</button>
-          </div>
-        </div>
-        <div class="publish" id="publish" hidden>
-          <p>Commit the README, banner and cards to <span class="mono" id="pubRepo"></span> in one go. Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> limited to that repository with <strong>Contents: Read and write</strong>, or a classic token with the <strong>public_repo</strong> scope. It's sent only to GitHub and never stored. If you already added a token under <strong>Exact data</strong>, it's used here too, so leave this box empty; it just needs the write access above.</p>
-          <p class="hint" id="pubWfNote" hidden><strong>Daily updates are on,</strong> so the token must also be allowed to write workflows: <strong>Workflows: Read and write</strong> for a fine-grained token, or the <strong>workflow</strong> scope for a classic one.</p>
-          <div class="pubrow">
-            <input type="password" id="pubToken" autocomplete="off" placeholder="github_pat_…" aria-label="GitHub token for publishing">
-            <button type="button" id="pubGo">Publish</button>
-          </div>
-          <div class="msg" id="pubMsg" role="status" aria-live="polite"></div>
-        </div>
 
         <div class="tabs" role="tablist" aria-label="Preview type">
           <button type="button" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="true" data-tab="profile">Profile</button>
@@ -337,7 +349,7 @@
   <section class="closing" aria-labelledby="closeTitle">
     <h2 class="fill-text" id="closeTitle" data-fill>Your work deserves a better first impression.</h2>
     <p>Free, no account, and published to your own repository.</p>
-    <a class="btn" href="#top">Build my README</a>
+    <a class="btn btn-lg" href="#studio" data-focus="#url">Build my README</a>
   </section>
 
   <section class="band faq" id="faq" aria-labelledby="faqTitle">
