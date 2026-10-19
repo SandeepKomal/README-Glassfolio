@@ -1,116 +1,38 @@
-# GitHub Pages Deployment
+# GitHub Pages deployment
 
-README-Glassfolio is a static site, so it can be deployed directly to GitHub Pages without a frontend build system.
+The website is static files with no build step, so GitHub Pages serves the repository root directly.
 
-## Deployment workflow
+## How it deploys
 
-The repository includes:
+`.github/workflows/pages.yml` runs on every push to `main` (and from **Run workflow**). It:
 
-    .github/workflows/pages.yml
+1. checks out the repository,
+2. stamps a build number into the asset links of `index.html`, `privacy.html`, `terms.html` and `how-to-use.html`, and writes the same number to `version.txt`,
+3. uploads the repository root and deploys it to the `github-pages` environment.
 
-The workflow:
+The build stamp gives every deploy new asset addresses, so browsers load the new scripts and styles instead of cached ones. A page that was itself cached compares its build with `version.txt` and reloads once if they differ.
 
-1. runs on pushes to `main`
-2. can also be started manually with **Run workflow**
-3. checks out the repository
-4. configures GitHub Pages
-5. uploads the repository root as the Pages artifact
-6. deploys that artifact to the `github-pages` environment
+The workflow needs `contents: read`, `pages: write` and `id-token: write`, uses only GitHub's official actions, and has no secrets.
 
-The workflow uses official GitHub Actions for checkout and Pages deployment.
+## Host your own copy
 
-## Required repository setting
+1. Fork the repository.
+2. In **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**.
+3. Push to `main` or run the workflow. The site appears at `https://<owner>.github.io/<repository>/`.
 
-After the workflow is merged, open:
+To use a custom domain, add it under **Settings → Pages** and follow GitHub's custom-domain guide. The project's own site is served at [readme-glassfolio.in](https://readme-glassfolio.in/).
 
-**Repository → Settings → Pages**
+## Keep in mind
 
-Under **Build and deployment**, select:
+- Pages and assets use relative paths, so keep `index.html`, `css/` and `js/` at the repository root.
+- The pages ship a strict Content-Security-Policy. A new network host or browser capability needs the policy, [SECURITY.md](../SECURITY.md) and `test/page.test.js` updated together.
+- Run `npm test` before merging. After a deploy, check the sample profile, a real username, and the publish panel.
 
-**Source → GitHub Actions**
+## Troubleshooting
 
-The Pages environment should be named:
-
-    github-pages
-
-GitHub's Pages deployment model requires the deployment job to have `pages: write` and `id-token: write` permissions and an environment for the deployment. The workflow in this repository already declares these permissions.
-
-## Expected URL
-
-For this repository, the project site is expected at:
-
-    https://sandeepkomal.github.io/README-Glassfolio/
-
-The URL is based on the repository owner and repository name. GitHub may take a short period to publish the first deployment.
-
-## Why no build step is needed
-
-The repository already contains:
-
-    index.html
-    css/style.css
-    js/*.js
-
-There is no frontend bundler or generated `dist/` directory. Pages can therefore publish the repository root directly.
-
-## Deployment verification
-
-After merging the PR:
-
-1. Open the **Actions** tab.
-2. Open the **Deploy README-Glassfolio to GitHub Pages** workflow.
-3. Confirm the run succeeds.
-4. Open the Pages URL from the workflow environment.
-5. Test the sample-data flow first.
-6. Test a real GitHub profile.
-7. Verify the preview, theme controls, downloads, and publishing UI.
-
-## Common deployment problems
-
-### 404 from the Pages URL
-
-Check that:
-
-- the workflow completed successfully
-- **Settings → Pages → Source** is set to **GitHub Actions**
-- the workflow deployed the `github-pages` environment
-
-### CSS or JavaScript files return 404
-
-README-Glassfolio uses repository-relative paths. Keep:
-
-    index.html
-    css/
-    js/
-
-at the repository root.
-
-### The site loads but a feature is blocked by CSP
-
-The site intentionally uses a strict Content-Security-Policy. Do not loosen the policy casually. Review [SECURITY.md](../SECURITY.md) and the existing page-security tests before introducing any new browser capability.
-
-### A future code change breaks Pages
-
-Run the existing test suite before merging:
-
-    npm test
-
-Then manually verify the site after deployment.
-
-## Maintenance
-
-When changing the application:
-
-- keep the root entry point at `index.html`
-- preserve relative asset paths unless the HTML is updated together
-- keep security-sensitive changes covered by tests
-- keep the Pages workflow limited to deployment responsibilities
-- do not add application secrets to the Pages workflow
-
-## Custom domains
-
-A custom domain is not enabled by this workflow. Configure a custom domain separately through repository Pages settings and follow GitHub's custom-domain guidance.
-
-## Documentation assets
-
-Existing screenshots under `docs/` are independent of Pages deployment and should not be deleted or replaced as part of deployment changes.
+| Problem | Check |
+| --- | --- |
+| The site returns 404 | The workflow run succeeded, and **Settings → Pages → Source** is **GitHub Actions**. |
+| CSS or scripts return 404 | `css/` and `js/` are still at the repository root next to `index.html`. |
+| A feature is blocked in the browser console | The Content-Security-Policy blocks it. Allow it deliberately, as described above, or don't use it. |
+| Visitors still see the old version | They are seeing a cached page; it reloads itself once, or a hard refresh (Ctrl+Shift+R) fixes it. |

@@ -204,7 +204,7 @@ async function main() {
   console.log("Wrote " + written.length + (written.length === 1 ? " file" : " files") + " to " + args.out + "/ : " + written.map((f) => f.name).join(", "));
   if (args.publish) {
     if (args.sample) throw new Error("--publish needs a real profile, not --sample");
-    const res = await publish(files, { token: process.env.GITHUB_TOKEN, owner: model.login, message: "Update profile README (Patch your profile)" });
+    const res = await publish(files, { token: process.env.GITHUB_TOKEN, owner: model.login, message: "Update profile README (README Glassfolio)" });
     console.log("Published " + res.files + " files to " + res.url);
     if (res.skipped === "daily") {
       console.error("Daily updates were not added: GitHub refused the workflow from GITHUB_TOKEN. " + res.advice);

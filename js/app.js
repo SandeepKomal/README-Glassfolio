@@ -7,6 +7,7 @@
 
   var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe", wave: "o-wave", summary: "o-summary", proof: "o-proof" };
   var TEXTS = { style: "#style", world: "#world", showpiece: "#showpiece", openTo: "#openTo", resume: "#resume", certs: "#certs", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
+  // the project was first called "Patch your profile"; the key keeps that name so saved choices survive the rename
   var STORE_KEY = "patch-your-profile.v1";
 
   /* ---------- saved settings (this browser only; never the token) ---------- */
@@ -727,8 +728,8 @@
     packageFiles().then(function (files) {
       msg.textContent = "Publishing " + files.length + (files.length === 1 ? " file…" : " files…");
       return window.ReadmePublish.publish(files, {
-        token: token("#pubToken", "#token"), owner: state.model.login, message: daily ? "Update profile README and add daily updates (Patch your profile)" : "Update profile README (Patch your profile)",
-        messageWithoutDaily: "Update profile README (Patch your profile)"
+        token: token("#pubToken", "#token"), owner: state.model.login, message: daily ? "Update profile README and add daily updates (README Glassfolio)" : "Update profile README (README Glassfolio)",
+        messageWithoutDaily: "Update profile README (README Glassfolio)"
       });
     }).then(function (res) {
       $("#pubToken").value = "";
@@ -763,7 +764,7 @@
     fetch("version.txt?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (latest) {
       latest = latest.trim();
       if (!/^[0-9a-f]{7,40}$/.test(latest) || latest === build) return;
-      var key = "patch-your-profile.reloaded-for";
+      var key = "patch-your-profile.reloaded-for";   // same legacy prefix as STORE_KEY
       try { if (sessionStorage.getItem(key) === latest) return; sessionStorage.setItem(key, latest); } catch (e) { return; }
       location.reload();
     }).catch(function () { /* offline: keep what we have */ });
