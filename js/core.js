@@ -530,9 +530,10 @@
     { key: "botanical", label: "Botanical", showpiece: "garden", blurb: "A herbarium: pressed-specimen sheets with tape and sprigs, leaves for contributions, vines that sway." },
     { key: "atlas", label: "Atlas", showpiece: "passport", blurb: "An antique sea chart: parchment, contour lines, a compass rose that turns, and a ship sailing between sections." },
     { key: "museum", label: "Museum", showpiece: "holo", blurb: "A gallery: your name in a gilded frame, brass-trimmed placards, a drifting spotlight and velvet ropes." },
-    { key: "ink", label: "Ink", showpiece: "garden", blurb: "Sumi-e on washi paper: brush strokes, an ensō for each streak, your vermilion seal and falling sakura petals." },
+    { key: "ink", label: "Ink", showpiece: "scroll", blurb: "Sumi-e on washi paper: brush strokes, an ensō for each streak, your vermilion seal and falling sakura petals." },
     { key: "periodic", label: "Periodic", showpiece: "vitals", blurb: "A lab notebook: graph paper, an element tile for every section, electron shells and molecules that vibrate." },
-    { key: "abyss", label: "Abyss", showpiece: "weather", blurb: "The deep sea: light rays and rising bubbles, bioluminescent plankton, sonar rings, jellyfish and swaying kelp." }
+    { key: "abyss", label: "Abyss", showpiece: "weather", blurb: "The deep sea: light rays and rising bubbles, bioluminescent plankton, sonar rings, jellyfish and swaying kelp." },
+    { key: "voxel", label: "Voxel", showpiece: "city", blurb: "An isometric city: every day of contributions is a stack of blocks, busier days rise higher, and a friendly hover-bot patrols the skyline." }
   ];
   var WORLD_KEYS = WORLDS.map(function (w) { return w.key; });
   function worldOf(o) { return WORLD_KEYS.indexOf(o && o.world) !== -1 ? WORLDS[WORLD_KEYS.indexOf(o.world)] : null; }
@@ -545,8 +546,9 @@
   function showpieceKey(o) {
     if (o.showpiece === "none") return "";
     if (SHOWPIECE_KEYS.indexOf(o.showpiece) !== -1) return o.showpiece;
+    // Auto: a world brings its own scene, and the classic look brings Pulse
     var w = worldOf(o);
-    return w ? w.showpiece : "";
+    return w ? w.showpiece : "pulse";
   }
 
   /* ---------- for employers ----------
@@ -661,7 +663,10 @@
     { key: "newspaper", label: "The Daily Commit", blurb: "A front page: your year is the headline, your top repo the lead story, with markets, weather and classifieds." },
     { key: "passport", label: "Passport", blurb: "An open passport with your details and a visa stamp for every language you've shipped in." },
     { key: "constellation", label: "Constellation sky", blurb: "Each language is a constellation, each repo a star that shines brighter with more stars." },
-    { key: "weather", label: "Commit forecast", blurb: "Your chance of commits, the last seven days as weather, and a radar sweep over recent weeks." }
+    { key: "weather", label: "Commit forecast", blurb: "Your chance of commits, the last seven days as weather, and a radar sweep over recent weeks." },
+    { key: "pulse", label: "Pulse", blurb: "Your year as one glowing waveform on glass, with your headline numbers and languages. The classic look's own." },
+    { key: "city", label: "Block city", blurb: "Half a year of contributions as an isometric city, one stack of blocks a day, with a hover-bot on patrol." },
+    { key: "scroll", label: "Ink scroll", blurb: "An ink-wash landscape whose ridges are your year, a short poem from your profile and your seal." }
   ];
   var SHOWPIECE_KEYS = SHOWPIECES.map(function (s) { return s.key; });
   function wantsShowpiece(m, o) { return !!(o.cards && showpieceKey(o)); }

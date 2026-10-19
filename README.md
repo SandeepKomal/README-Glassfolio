@@ -26,8 +26,8 @@ css/style.css     Glass / neon theme for the page
 js/core.js        Engine: parse input, build the model, write the README and banner (no network, no DOM)
 js/cards.js       Draws the stats, streak, heatmap, languages, timeline, project and connect cards as SVG files
 js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe v2.0.0)
-js/worlds.js      Draws the ten worlds: complete designs for every card, the banner, section dividers and footer
-js/showpieces.js  Draws the eleven animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden, year in code, newspaper, passport, constellation sky, commit forecast)
+js/worlds.js      Draws the eleven worlds: complete designs for every card, the banner, section dividers and footer
+js/showpieces.js  Draws the fourteen animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden, year in code, newspaper, passport, constellation sky, commit forecast, pulse, ink scroll, block city)
 js/github.js      Fetches profile, repos and activity from the GitHub API
 js/preview.js     Shows the README as a GitHub profile page would (safe, whitelist-based renderer)
 js/publish.js     Commits the README, banner and cards to <user>/<user> in one commit
@@ -199,9 +199,12 @@ Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) 
 | `botanical` | A herbarium | Pressed-specimen sheets with tape and a swaying sprig, leaves for contributions, leafy wreaths | A vine with swaying leaves and a plate label | Code garden |
 | `atlas` | An antique sea chart | Parchment with contour lines and a double neatline, compass headings, dashed route rules, elevation-tinted heatmap, compass-rose dials | A scale bar, the title in a cartouche, a ship sailing the route | Passport |
 | `museum` | A gallery | Brass-trimmed placards with screws and a breathing spotlight, mosaic heatmap, gilt-framed dials; the banner hangs your name in a gilded frame behind velvet ropes | *ROOM 02*, the title in italic serif, a spotlight sweeping the wall | Holo trading card |
-| `ink` | Sumi-e on washi | Washi fibres, brush-stroke rules, your vermilion seal in the corner, ink-blot heatmap, an ensō for every streak | A brush stroke with the title, a sakura petal drifting across | Code garden |
+| `ink` | Sumi-e on washi | Washi fibres, brush-stroke rules, your vermilion seal in the corner, ink-blot heatmap, an ensō for every streak | A brush stroke with the title, a sakura petal drifting across | Ink scroll |
 | `periodic` | A lab notebook | Graph paper, an element tile for every card title, element-coloured heatmap, electron shells that orbit; the banner makes you an element | The section as an element tile and a molecule chain that vibrates | Vital signs |
 | `abyss` | The deep sea | Water that deepens down each card, swaying light rays and rising bubbles, glowing plankton for contributions, sonar rings that ping | A depth marker and fish swimming past | Commit forecast |
+| `voxel` | An isometric block city | A soft sky with an isometric grid, a contribution heatmap of little cubes, hex-ringed streak gauges, a cube on every heading | Rows of cubes and an original hover-bot flying across; the footer is a skyline of your recent days | Block city |
+
+**One look, everywhere.** Pick in this order: *Design* (classic or a world), then *Theme* (or *Custom* colours), then *Showpiece*. Everything follows the choices above it, so the whole README always matches; change any of it at the end if you like. In a world, Theme *Auto* keeps the world's own colours, and any other theme, or your own two colours, recolours the entire design: banner, every card, the dividers, the footer and the showpiece. Accents are adjusted automatically so they stay readable on each world's surface, in light and dark. Picking a design puts the showpiece back on *Auto* (the design's own scene), and the picker's thumbnails redraw in your current design and colours, so what you see there is what you get.
 
 Transit, Broadsheet, Botanical, Atlas, Museum, Ink, Periodic and Abyss each have a light and a dark print; Airport and Observatory are dark objects (a board, a sky) that look the same in any light. **Motion in every block.** Every image in a world moves, not just the banner and dividers. Each card carries its world's own small motion: an Airport heading's flap tile flips and its status lamp blinks, the busiest heatmap days flicker like board lights; a train runs along each Transit card's stripe; an ink roller sweeps each Broadsheet rule; an Atlas heading's compass needle swings while a ship sails its route; each Ink seal stamps and a petal drifts across; Periodic heading tiles pulse and the hottest cells react; Observatory stars twinkle; Botanical sprigs sway; the Museum spotlight breathes; Abyss rays sway, bubbles rise and plankton glows. In every look, classic included, project arrows nudge, Connect arrows glide, the newest point on the timeline pulses, and language and skill bars catch a moving sheen.
 
@@ -217,7 +220,9 @@ All motion is CSS inside the images, only gentle loops (nothing waits to appear)
 
 From the terminal: `--open-to`, `--resume`, `--certs`, `--summary`, `--proof` and `--impact "api: 40+ users, 99.9% uptime; web: 3x faster"`.
 
-**Showpieces.** One full-width animated scene, right under the banner, drawn from your own repos and activity. Nobody else's profile has the same one, because the data is yours. Pick one in *Look → Showpiece* (or the gallery on the page), or use `--showpiece <name>`. Off by default.
+**Showpieces.** One full-width animated scene, right under the banner, drawn from your own repos and activity. Nobody else's profile has the same one, because the data is yours. Pick one in *Look → Showpiece* (or the gallery on the page), or use `--showpiece <name>`. On *Auto* you get the look's own scene: *Pulse* in the classic look, or the chosen design's showpiece. `--showpiece none` (or *None*) leaves it out.
+
+Every showpiece sits in the same frame as your cards (the glass panel in the classic look, or your design's frame), on the same surface, in the same fonts, and is drawn in your theme's colours, so the scene under the banner always matches the rest of the README.
 
 | Showpiece | Your data becomes | Motion |
 | --- | --- | --- |
@@ -231,6 +236,9 @@ From the terminal: `--open-to`, `--resume`, `--certs`, `--summary`, `--proof` an
 | `newspaper` | *The Daily Commit*: a front page with your year as the headline, your top repo as the lead story, a halftone of your activity, markets (stars, followers, PRs), the commit weather and a classified ad for what you're open to. | The EXTRA! stamp pulses and a breaking-news ticker runs along the bottom |
 | `passport` | An open passport: the photo page with your details and a machine-readable zone, and a visa stamp for every language you've shipped in, with the year you first used it. | A holographic sheen crosses the page and the stamps thump down one by one |
 | `constellation` | Your sky: each top language is a constellation, each repo a star that's bigger with more stars, named after the brightest. | Stars twinkle, the sky drifts, a shooting star crosses now and then |
+| `pulse` | The classic look's own: your year of contributions as one glowing waveform on glass, with your headline numbers, languages and busiest week marked. | A bright point travels the line, a soft scan sweeps across, the peak pings |
+| `scroll` | The Ink design's own: an ink-wash landscape whose far ridges are your months and near hills your recent weeks, a three-line poem from your profile and your three best works along the foot. | The ensō moon turns, mist drifts, birds cross and petals fall |
+| `city` | The Voxel design's own: up to half a year of contributions as an isometric city, one stack of blocks a day, taller when busier, beside your headline numbers. | An original hover-bot patrols the skyline, its eyes blink and its thruster glows; the busiest blocks pulse |
 | `weather` | A commit forecast: your chance of commits on any day, the last seven days as weather (more work, more sun), a forecast discussion and a radar of the last 12 weeks. | The sun turns, clouds drift, the radar sweeps and each echo flares as it passes |
 
 Like every other image, a showpiece gets a light and a dark version with *Day and night*, follows *Subtle motion*, stands still for visitors who prefer reduced motion, is kept fresh by the daily update, and needs nothing but the data the cards already use. It's left out of text-only READMEs.

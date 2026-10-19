@@ -1,5 +1,5 @@
 name: "Glassfolio Profile README"
-description: "Design your whole GitHub profile README: ten worlds, eleven animated showpieces, employer cards and fresh stats. No third-party services."
+description: "Design your whole GitHub profile README: eleven worlds, fourteen animated showpieces, employer cards and fresh stats. No third-party services."
 author: "Sandeep Komal"
 branding:
   icon: "layout"
@@ -11,15 +11,15 @@ inputs:
     required: false
     default: ""
   world:
-    description: "A complete design: airport, transit, broadsheet, observatory, botanical, atlas, museum, ink, periodic or abyss. Leave empty for the classic glass look."
+    description: "A complete design: airport, transit, broadsheet, observatory, botanical, atlas, museum, ink, periodic, abyss or voxel. Leave empty for the classic glass look."
     required: false
     default: ""
   showpiece:
-    description: "An animated scene under the banner (departures, holo, metro, vinyl, vitals, garden, yearcode, newspaper, passport, constellation, weather), or none. Empty uses the world's own."
+    description: "An animated scene under the banner (departures, holo, metro, vinyl, vitals, garden, yearcode, newspaper, passport, constellation, weather, pulse, scroll, city), or none. Empty uses the world's own."
     required: false
     default: ""
   theme:
-    description: "Colours for the classic look: auto, aurora, cyber, sunset, emerald, royal, graphite or paper."
+    description: "Colours: auto, aurora, cyber, sunset, emerald, royal, graphite or paper. In a world, auto keeps its own colours and any other theme recolours all of it, showpiece included."
     required: false
     default: ""
   config:

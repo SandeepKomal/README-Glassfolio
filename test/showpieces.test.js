@@ -60,10 +60,12 @@ test("motion is CSS only, honours reduced motion, and switches off completely", 
   }
 });
 
-test("no showpiece by default; choosing one adds it under the banner, in both halves of a day-and-night set", () => {
+test("the classic look brings Pulse by default; 'none' leaves it out; any pick sits under the banner, in both halves of a day-and-night set", () => {
   const plain = cards.buildFiles(core.SAMPLE, {});
-  assert.ok(!plain.some((f) => /showpiece/.test(f.name)), "nothing changes for anyone who hasn't picked one");
-  assert.doesNotMatch(plain[0].data, /showpiece/);
+  assert.match(plain[0].data, /alt="Pulse for DevopsNimbus/, "Auto in the classic look is Pulse");
+  const none = cards.buildFiles(core.SAMPLE, { showpiece: "none" });
+  assert.ok(!none.some((f) => /showpiece/.test(f.name)));
+  assert.doesNotMatch(none[0].data, /showpiece/);
   for (const key of KEYS) {
     const files = cards.buildFiles(core.SAMPLE, { showpiece: key }), md = files[0].data;
     assert.ok(files.some((f) => f.name === "cards/showpiece.svg") && files.some((f) => f.name === "cards/showpiece-light.svg"), key);
@@ -76,12 +78,28 @@ test("no showpiece by default; choosing one adds it under the banner, in both ha
   assert.ok(!single.some((f) => f.name === "cards/showpiece-light.svg"));
 });
 
-test("the garden follows day and night, and the metro map has a light and a dark print", () => {
-  const night = showpieces.build(core.SAMPLE, { showpiece: "garden", mode: "dark" }), day = showpieces.build(core.SAMPLE, { showpiece: "garden", mode: "light" });
-  assert.match(night, /#081028/); assert.doesNotMatch(night, /#6ec1ff/);
-  assert.match(day, /#6ec1ff/); assert.doesNotMatch(day, /#081028/);
-  assert.match(showpieces.build(core.SAMPLE, { showpiece: "metro", mode: "light" }), /#f6f3ec/);
-  assert.match(showpieces.build(core.SAMPLE, { showpiece: "metro", mode: "dark" }), /#0e1520/);
+test("every showpiece sits in the cards' own frame and on their surface, in every look and theme", () => {
+  // the fixed backdrops the scenes used to paint (board black, monitor black, newsprint, card navy, night and day skies)
+  const OLD = /#0c0c0e|#050607|#0b1430|#1c2b4a|#081028|#6ec1ff|#0f2027|#4facfe|#f4efe2|#ffd84a|#9fd8ff|#ffdf6e/i;
+  const looks = [{ theme: "cyber" }, { theme: "sunset", mode: "light" }, { theme: "custom", accent1: "#00c2a8", accent2: "#ff8800" }, { world: "museum" }, { world: "abyss", theme: "emerald" }, { world: "broadsheet", mode: "light" }];
+  for (const look of looks) {
+    const p = cards.paletteOf(core.SAMPLE, look);
+    for (const key of KEYS) {
+      const svg = cards.showpieceFor(core.SAMPLE, Object.assign({ showpiece: key, animate: false }, look)), label = key + "/" + JSON.stringify(look);
+      wellFormed(svg, label);
+      assert.match(svg, look.world ? /<clipPath id="wf">/ : /<clipPath id="clip">.*url\(#edge\)/, label + ": the cards' frame");
+      assert.doesNotMatch(svg, OLD, label + ": no backdrop of its own");
+      assert.ok(svg.includes(p.ink), label + ": the README's text colour");
+    }
+  }
+});
+
+test("showpieces follow light and dark through the README's own surface", () => {
+  for (const key of ["garden", "metro", "constellation", "weather"]) {
+    const night = cards.showpieceFor(core.SAMPLE, { showpiece: key, mode: "dark" }), day = cards.showpieceFor(core.SAMPLE, { showpiece: key, mode: "light" });
+    assert.ok(night.includes(cards.paletteOf(core.SAMPLE, { mode: "dark" }).ink), key + " dark");
+    assert.ok(day.includes(cards.paletteOf(core.SAMPLE, { mode: "light" }).ink), key + " light");
+  }
 });
 
 test("showpieces are drawn from the profile: repos, stars and activity show up", () => {
@@ -97,11 +115,11 @@ test("showpieces are drawn from the profile: repos, stars and activity show up",
   assert.ok(board.includes("SLO-CALC") && !board.includes("TF-GUARDRAILS"), "a featured pick replaces the most-starred");
 });
 
-test("text-only READMEs and unknown names never get a showpiece", () => {
+test("text-only READMEs never get a showpiece, and an unknown name falls back to Auto", () => {
   assert.ok(!cards.buildFiles(core.SAMPLE, { showpiece: "metro", cards: false }).some((f) => /showpiece/.test(f.name)));
   assert.doesNotMatch(core.buildReadme(core.SAMPLE, { showpiece: "metro", cards: false }), /showpiece/);
   assert.strictEqual(showpieces.build(core.SAMPLE, { showpiece: "nope" }), null);
-  assert.ok(!cards.buildFiles(core.SAMPLE, { showpiece: "nope" }).some((f) => /showpiece/.test(f.name)));
+  assert.strictEqual(core.showpieceKey({ showpiece: "nope" }), "pulse");
 });
 
 test("share links carry the showpiece and ignore anything else", () => {

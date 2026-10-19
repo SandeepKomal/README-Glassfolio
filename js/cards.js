@@ -727,9 +727,23 @@
     return frame(W, H, "Share image for " + m.login, p, body);
   }
 
+  /** A colour moved toward white (on a dark surface) or black (on a light one) until it reads at the given contrast. */
+  function readableOn(c, bg, min) {
+    var dark = core.contrast(bg, "#ffffff") > core.contrast(bg, "#000000"), t = 0, x = c;
+    while (core.contrast(x, bg) < min && t < 0.95) { t += 0.05; x = core.mixHex(c, dark ? "#ffffff" : "#000000", t); }
+    return x;
+  }
+
   /** The palette for a profile: a world's own, or the classic theme's. Transit also stripes its cards in the top language colours. */
   function paletteOf(m, o) {
     var p = core.worldOf(o) ? worlds.palette(o.world, o.mode, core.hash(String(m.login))) : core.paletteFor(m.login, o);
+    // in a world, any theme but Auto (or your own colours) recolours the whole design: its accents, made readable on the world's surface
+    if (p.world && o.theme && o.theme !== "auto") {
+      var src = o.theme === "custom" && core.validHex(o.accent1) && core.validHex(o.accent2) ? { a1: o.accent1, a2: o.accent2 } : core.THEMES[o.theme];
+      if (src) { p.a1 = src.a1; p.a2 = src.a2; p.themed = true; }
+    }
+    // every world's accents read clearly on its surface; ones that already do are left exactly as designed
+    if (p.world) { p.a1 = readableOn(p.a1, p.bg1, 3.4); p.a2 = readableOn(p.a2, p.bg1, 3); }
     p.mark = core.initials(m);
     if (p.world === "transit") p.stripe = m.langs.slice(0, 4).map(function (l) { return LANG_COLORS[l.name] || p.a1; });
     return p;
@@ -755,7 +769,7 @@
     if (core.wantsShowpiece(m, o)) {
       var so = {}; for (var sk in o) so[sk] = o[sk];
       so.showpiece = core.showpieceKey(o);
-      files.push({ name: "cards/showpiece.svg", data: showpieces.build(m, so, p) });
+      files.push({ name: "cards/showpiece.svg", data: showpieces.build(m, so, framed(p)) });
     }
     if (core.wantsHire(m, o)) files.push({ name: "cards/hire.svg", data: hireCard(m, o, p) });
     files.push({ name: "cards/stats.svg", data: statsCard(m, p) });
@@ -825,5 +839,34 @@
     return files;
   }
 
-  return { buildCards: buildCards, buildFiles: buildFiles, buildExtras: buildExtras, wrap: wrap, fmt: fmt };
+  /** One showpiece in the colours the README would use (for previews): the world's, the theme's or your own. */
+  function showpieceFor(m, options) {
+    var o = {}, k;
+    for (k in core.DEFAULTS) o[k] = core.DEFAULTS[k];
+    for (k in (options || {})) if (options[k] !== undefined) o[k] = options[k];
+    var p = paletteOf(m, o);
+    p.anim = o.animate !== false;
+    return showpieces.build(m, o, framed(p));
+  }
+
+  /** The palette, plus the cards' own frame, so a showpiece sits in exactly the frame its cards do. */
+  function framed(p) {
+    var q = {}, k;
+    for (k in p) q[k] = p[k];
+    q.frame = function (W, H, label, body) { return frame(W, H, label, p, body); };
+    return q;
+  }
+
+  /** The banner alone, in the README's design and colours (for previews). */
+  function bannerFor(m, options) {
+    var o = {}, k;
+    for (k in core.DEFAULTS) o[k] = core.DEFAULTS[k];
+    for (k in (options || {})) if (options[k] !== undefined) o[k] = options[k];
+    if (!core.worldOf(o)) return core.buildBanner(m, o);
+    var p = paletteOf(m, o);
+    p.anim = o.animate !== false;
+    return worlds.banner(m, o, p);
+  }
+
+  return { buildCards: buildCards, buildFiles: buildFiles, buildExtras: buildExtras, showpieceFor: showpieceFor, bannerFor: bannerFor, paletteOf: paletteOf, wrap: wrap, fmt: fmt };
 });

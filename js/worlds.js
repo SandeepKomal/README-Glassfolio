@@ -14,6 +14,7 @@
  *   ink          sumi-e on washi: brush strokes, an ensō for each streak, a vermilion seal, falling sakura petals
  *   periodic     a lab notebook: graph paper, element tiles for every section, electron shells, vibrating molecules
  *   abyss        the deep sea: light rays and bubbles, bioluminescent plankton, sonar rings, jellyfish and kelp
+ *   voxel        an isometric city: contribution days as stacked blocks, an original hover-bot flying over them
  *
  * Motion is plain CSS (no scripts), only ambient loops, and everything stands still for reduced motion.
  */
@@ -167,6 +168,85 @@
   }
   function symbolOf(text) { var t = String(text).replace(/[^A-Za-z]/g, ""); return t ? t.charAt(0).toUpperCase() + (t.charAt(1) || "").toLowerCase() : "Xx"; }
   function clipWF(W, H, rx) { return '<clipPath id="wf"><rect width="' + W + '" height="' + H + '" rx="' + rx + '"/></clipPath>'; }
+
+  /* ---------- Voxel pieces: isometric cubes, a contribution city and an original hover-bot ---------- */
+  /** An isometric block: (cx, top) is the top corner, w the half-width, d the height of the sides. Lit from the top left. */
+  function cube(cx, top, w, d, c, hh) {
+    var h = hh || w / 2, x = function (n) { return n.toFixed(1); };
+    return '<path d="M' + x(cx) + "," + x(top) + " L" + x(cx + w) + "," + x(top + h) + " L" + x(cx) + "," + x(top + 2 * h) + " L" + x(cx - w) + "," + x(top + h) + 'Z" fill="' + c + '"/>' +
+      '<path d="M' + x(cx - w) + "," + x(top + h) + " L" + x(cx) + "," + x(top + 2 * h) + " L" + x(cx) + "," + x(top + 2 * h + d) + " L" + x(cx - w) + "," + x(top + h + d) + 'Z" fill="' + mix(c, "#000000", 0.16) + '"/>' +
+      '<path d="M' + x(cx) + "," + x(top + 2 * h) + " L" + x(cx + w) + "," + x(top + h) + " L" + x(cx + w) + "," + x(top + h + d) + " L" + x(cx) + "," + x(top + 2 * h + d) + 'Z" fill="' + mix(c, "#ffffff", 0.72) + '"/>';
+  }
+function vsky(id, p, W, H) {
+    return '<linearGradient id="' + id + '" x1="0.3" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + p.bg1 + '"/><stop offset="0.55" stop-color="' + mix(p.bg1, p.light ? "#bfe6f7" : p.bg2, 0.6) + '"/><stop offset="1" stop-color="' + p.bg2 + '"/></linearGradient>' +
+      '<radialGradient id="' + id + 'm" cx="1" cy="0.3" r="0.7"><stop offset="0" stop-color="' + mix(p.a1, "#ffffff", 0.55) + '" stop-opacity="' + (p.light ? 0.35 : 0.14) + '"/><stop offset="1" stop-color="' + p.a1 + '" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="' + id + 'l" cx="0" cy="1" r="0.8"><stop offset="0" stop-color="' + mix(p.a2, "#a855f7", 0.5) + '" stop-opacity="' + (p.light ? 0.22 : 0.25) + '"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></radialGradient>';
+  }
+  function vskyFill(id, W, H) { return '<rect width="' + W + '" height="' + H + '" fill="url(#' + id + ')"/><rect width="' + W + '" height="' + H + '" fill="url(#' + id + 'm)"/><rect width="' + W + '" height="' + H + '" fill="url(#' + id + 'l)"/>'; }
+  /** A frosted-glass block: pale, see-through faces with a faint rainbow edge. */
+  function glassCube(cx, top, w, d, p, hh) {
+    var h = hh || w / 2, x = function (n) { return n.toFixed(1); }, edge = p.light ? "#ffffff" : mix(p.ink, p.bg1, 0.5);
+    return '<g opacity="' + (p.light ? 0.75 : 0.45) + '"><path d="M' + x(cx) + "," + x(top) + " L" + x(cx + w) + "," + x(top + h) + " L" + x(cx) + "," + x(top + 2 * h) + " L" + x(cx - w) + "," + x(top + h) + 'Z" fill="#ffffff" fill-opacity="0.6" stroke="' + edge + '"/>' +
+      '<path d="M' + x(cx - w) + "," + x(top + h) + " L" + x(cx) + "," + x(top + 2 * h) + " L" + x(cx) + "," + x(top + 2 * h + d) + " L" + x(cx - w) + "," + x(top + h + d) + 'Z" fill="' + mix(p.a1, "#ffffff", 0.7) + '" fill-opacity="0.55" stroke="' + edge + '" stroke-opacity="0.7"/>' +
+      '<path d="M' + x(cx) + "," + x(top + 2 * h) + " L" + x(cx + w) + "," + x(top + h) + " L" + x(cx + w) + "," + x(top + h + d) + " L" + x(cx) + "," + x(top + 2 * h + d) + 'Z" fill="' + mix(mix(p.a2, "#a855f7", 0.4), "#ffffff", 0.72) + '" fill-opacity="0.5" stroke="' + edge + '" stroke-opacity="0.7"/></g>';
+  }
+  /** The last rows × cols days as a block city: one stack per day, taller on busier days, drawn back to front. */
+  function city(m, p, ox, oy, rows, cols, w, h, unit, r) {
+    var daily = m.activity && m.activity.daily ? m.activity.daily.slice(-rows * cols) : [], n = rows * cols;
+    var nz = daily.filter(function (v) { return v > 0; }).sort(function (a, b) { return a - b; });
+    var q = function (t) { return nz.length ? nz[Math.min(nz.length - 1, Math.floor(t * nz.length))] : 1; };
+    var lvl = function (v) { return v <= 0 ? 0 : v <= q(0.25) ? 1 : v <= q(0.5) ? 2 : v <= q(0.75) ? 3 : 4; };
+    var cells = [];
+    for (var c = 0; c < cols; c++) for (var d = 0; d < rows; d++) {
+      var idx = daily.length - n + c * rows + d, v = idx >= 0 && idx < daily.length ? daily[idx] : (daily.length ? 0 : (r() < 0.6 ? 1 + Math.floor(r() * 3) : 0));
+      cells.push({ c: c, d: d, lv: daily.length ? lvl(v) : Math.min(4, v) });
+    }
+    cells.sort(function (a, b) { return (a.c + a.d) - (b.c + b.d) || a.c - b.c; });
+    return cells.map(function (k) {
+      // a stack of whole blocks, one per level, so the city reads as cubes rather than towers
+      var cx = ox + (k.c - k.d) * w, base = oy + (k.c + k.d) * h, ch = Math.min(unit, w * 0.95);
+      if (!k.lv) return cube(cx, base - 3 + h * 0.14, w * 0.86, 3, mix(p.bg1, p.ink, 0.1), h * 0.86);
+      var col = mix(p.bg1, p.a1, 0.45 + k.lv * 0.1375), g = "";
+      for (var j = 0; j < k.lv; j++) g += cube(cx, base - (j + 1) * ch + h * 0.14, w * 0.86, ch, col, h * 0.86);
+      return "<g" + (k.lv === 4 ? anim(p, "vxp", "animation-delay:-" + ((k.c * 5 + k.d) % 20 / 10).toFixed(1) + "s") : "") + ">" + g + "</g>";
+    }).join("");
+  }
+  /** An original hover-bot: a rounded head, a visor with two glowing eyes, an antenna and a thruster with a soft beam. */
+  function BOT_DEFS(p) {
+    var lilac = mix(mix(p.a2, "#a855f7", 0.45), "#ffffff", 0.4);
+    return '<linearGradient id="vbh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + lilac + '"/><stop offset="0.45" stop-color="' + mix(p.a2, "#a855f7", 0.3) + '"/><stop offset="1" stop-color="' + p.a2 + '"/></linearGradient>' +
+      '<linearGradient id="vbv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + mix(p.a2, "#000000", 0.35) + '"/><stop offset="1" stop-color="' + mix(p.a2, "#000000", 0.62) + '"/></linearGradient>' +
+      '<linearGradient id="vbf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + mix(p.a1, "#ffffff", 0.5) + '"/><stop offset="0.5" stop-color="' + mix(p.a2, "#7dd3fc", 0.6) + '" stop-opacity="0.8"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></linearGradient>' +
+      '<linearGradient id="vbm" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="' + mix(p.a2, "#7dd3fc", 0.65) + '" stop-opacity="0.9"/><stop offset="1" stop-color="' + mix(p.a2, "#7dd3fc", 0.8) + '" stop-opacity="0"/></linearGradient>';
+  }
+  /** An original flying robot: a square head with an antenna and two round glowing eyes, a torso with a chest light, little arms and a jet thruster. */
+  function bot(x, y, s, p) {
+    var t = function (n) { return (n * s).toFixed(1); }, eye = mix(p.a2, "#ffffff", 0.82), dark = mix(p.a2, "#000000", 0.45), bolt = mix(p.a2, "#a855f7", 0.55);
+    var rect = function (x0, y0, w, h, r, fill, extra) { return '<rect x="' + t(x0) + '" y="' + t(y0) + '" width="' + t(w) + '" height="' + t(h) + '" rx="' + t(r) + '" fill="' + fill + '"' + (extra || "") + "/>"; };
+    return '<g transform="translate(' + x + " " + y + ')">' +
+      // the comet trail behind, and the thruster flame below
+      '<path d="M' + t(-26) + "," + t(46) + " C" + t(-80) + "," + t(52) + " " + t(-130) + "," + t(80) + " " + t(-200) + "," + t(78) + " C" + t(-130) + "," + t(68) + " " + t(-80) + "," + t(62) + " " + t(-24) + "," + t(62) + 'Z" fill="url(#vbm)" class="vbeam"/>' +
+      '<path d="M' + t(-9) + "," + t(86) + " Q0," + t(122) + " " + t(9) + "," + t(86) + 'Z" fill="url(#vbf)" class="vbeam"/>' +
+      rect(-12, 78, 24, 10, 3, dark) +
+      // arms
+      rect(-36, 46, 10, 26, 5, bolt, ' transform="rotate(18 ' + t(-31) + " " + t(48) + ')"') + rect(26, 46, 10, 26, 5, bolt, ' transform="rotate(-18 ' + t(31) + " " + t(48) + ')"') +
+      // torso, chest light and panel seams
+      rect(-25, 42, 50, 38, 12, "url(#vbh)") +
+      '<circle cx="0" cy="' + t(58) + '" r="' + t(6.5) + '" fill="' + dark + '"/><circle cx="0" cy="' + t(58) + '" r="' + t(4) + '" fill="' + mix(p.a1, "#ffffff", 0.25) + '" class="vtip"/>' +
+      rect(-15, 70, 30, 2.5, 1.2, dark, ' fill-opacity="0.5"') +
+      rect(-7, 36, 14, 8, 3, dark) +
+      // antenna
+      '<line x1="0" y1="' + t(-10) + '" x2="0" y2="' + t(-26) + '" stroke="' + dark + '" stroke-width="' + t(3.5) + '" stroke-linecap="round"/><circle cx="0" cy="' + t(-29) + '" r="' + t(5.5) + '" fill="' + mix(p.a1, "#ffffff", 0.2) + '" class="vtip"/>' +
+      // head, ear bolts, face screen, eyes and mouth
+      rect(-43, 6, 9, 20, 3.5, bolt) + rect(34, 6, 9, 20, 3.5, bolt) +
+      rect(-36, -12, 72, 52, 15, "url(#vbh)") +
+      rect(-28, -4, 56, 36, 10, "url(#vbv)") +
+      '<g class="vblink"><circle cx="' + t(-12) + '" cy="' + t(12) + '" r="' + t(7) + '" fill="' + eye + '"/><circle cx="' + t(12) + '" cy="' + t(12) + '" r="' + t(7) + '" fill="' + eye + '"/>' +
+      '<circle cx="' + t(-9.5) + '" cy="' + t(9.5) + '" r="' + t(2.2) + '" fill="#ffffff"/><circle cx="' + t(14.5) + '" cy="' + t(9.5) + '" r="' + t(2.2) + '" fill="#ffffff"/></g>' +
+      '<path d="M' + t(-7) + "," + t(23) + " q" + t(7) + "," + t(5) + " " + t(14) + ",0" + '" fill="none" stroke="' + eye + '" stroke-width="' + t(2.4) + '" stroke-linecap="round"/></g>';
+  }
+  var BOT_CSS = "@keyframes vblink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}.vblink{transform-box:fill-box;transform-origin:center;animation:vblink 4.5s ease-in-out infinite}" +
+    "@keyframes vbeam{0%,100%{opacity:.85}50%{opacity:.45}}.vbeam{animation:vbeam 1.6s ease-in-out infinite}@keyframes vtip{0%,100%{opacity:1}50%{opacity:.4}}.vtip{animation:vtip 1.2s ease-in-out infinite}";
 
   var NEW = {
     /* ---------- Atlas: an antique sea chart ---------- */
@@ -494,6 +574,70 @@
         }
         return { svg: s + '<text x="600" y="40" text-anchor="middle" font-family="' + SANS + '" font-size="18" font-weight="700" fill="' + p.ink + '">Back to the surface · @' + esc(trunc(m.login, 30)) + "</text>",
           style: "@keyframes kp{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}.kp{animation:kp 4s ease-in-out infinite}" };
+      }
+    },
+
+    /* ---------- Voxel: an isometric city of contribution cubes, with a hover-bot ---------- */
+    voxel: {
+      pal: { light: { bg1: "#f5feff", bg2: "#cad9fb", ink: "#0a2540", a1: "#0a9831", a2: "#0f3fe5", line: "#cfe6f3", light: true },
+        dark: { bg1: "#061226", bg2: "#13204a", ink: "#e8f6ff", a1: "#3ddc6e", a2: "#7b8cff", line: "#1b2f52" } },
+      font: { sans: SANS, mono: MONO, display: SANS }, glow: true,
+      frame: function (W, H, p) {
+        return { back: "<defs>" + clipWF(W, H, 14) + vsky("vsk", p, W, H) +
+            '<pattern id="vgr" width="40" height="20" patternUnits="userSpaceOnUse"><path d="M0 10 L20 0 L40 10 L20 20Z" fill="none" stroke="' + p.ink + '" stroke-opacity="0.045"/></pattern></defs>' +
+            '<g clip-path="url(#wf)">' + vskyFill("vsk", W, H) + '<rect width="' + W + '" height="' + H + '" fill="url(#vgr)"/></g>',
+          over: '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="13.5" fill="none" stroke="' + p.line + '"/>',
+          style: "" };
+      },
+      title: function (p, left, right, edge) {
+        return '<g' + anim(p, "vxb") + ">" + cube(36, 25, 8, 6, p.a1) + "</g>" +
+          '<text x="54" y="40" font-family="' + SANS + '" font-size="15" font-weight="800" fill="' + p.ink + '">' + esc(sentence(left)) + "</text>" +
+          (right ? '<text x="' + edge + '" y="40" text-anchor="end" font-family="' + MONO + '" font-size="10.5" letter-spacing="1.6" fill="' + p.a1 + '">' + esc(right) + "</text>" : "") +
+          '<line x1="28" y1="52" x2="' + edge + '" y2="52" stroke="' + p.a1 + '" stroke-opacity="0.35"/>';
+      },
+      cell: function (p, x, y, size, lv) {
+        var w = size / 2, h = size / 4, cx = x + w, top = y + size * 0.12;
+        if (!lv) return '<path d="M' + cx.toFixed(1) + "," + (top + h * 1.6).toFixed(1) + " l" + w.toFixed(1) + "," + h.toFixed(1) + " l-" + w.toFixed(1) + "," + h.toFixed(1) + " l-" + w.toFixed(1) + ",-" + h.toFixed(1) + 'Z" fill="' + p.ink + '" fill-opacity="0.1"/>';
+        var d = size * (0.12 + lv * 0.1), c = mix(p.bg1, p.a1, 0.35 + lv * 0.16);
+        return "<g" + (lv === 4 ? anim(p, "vxp", "animation-delay:-" + ((x * 3 + y) % 25 / 10).toFixed(1) + "s") : "") + ">" + cube(cx, top + size - 2 * h - d, w, d, c, h) + "</g>";
+      },
+      ring: function (p, cx, cy, r, f, arc) {
+        var hex = [];
+        for (var k = 0; k < 6; k++) { var a = Math.PI / 6 + k * Math.PI / 3; hex.push((Number(cx) + Math.cos(a) * (r + 6)).toFixed(1) + "," + (cy + Math.sin(a) * (r + 6)).toFixed(1)); }
+        return '<polygon points="' + hex.join(" ") + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.18"/><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + p.a1 + '" stroke-opacity="0.15" stroke-width="5"/>' + arc(p.a1, 5, ' stroke-linecap="round"');
+      },
+      cardCss: "@keyframes vxp{0%,100%{opacity:1}50%{opacity:.55}}.vxp{animation:vxp 2.4s ease-in-out infinite}@keyframes vxb{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}.vxb{animation:vxb 2.8s ease-in-out infinite}",
+      banner: function (m, o, p, r, W, H, name, sub, chips) {
+        var out = ['<defs><clipPath id="c"><rect width="' + W + '" height="' + H + '" rx="16"/></clipPath>' + vsky("vsk", p, W, H) + BOT_DEFS(p) + "</defs>",
+          '<g clip-path="url(#c)">' + vskyFill("vsk", W, H)];
+        // frosted glass blocks low on the left, then the last eight weeks as a city, a stack per day
+        out.push('<g' + anim(p, "vfl") + ">" + glassCube(560, 230, 46, 46, p) + glassCube(640, 250, 40, 40, p) + "</g>");
+        out.push(city(m, p, 930, 80, 7, 8, 21, 10.5, 16, r));
+        out.push('<g transform="translate(760 70)"><g' + anim(p, "vfly") + ">" + bot(0, 0, 0.95, p) + "</g></g>");
+        out.push('<text x="70" y="80" font-family="' + MONO + '" font-size="13" letter-spacing="3" fill="' + p.a1 + '">' + esc(("Built block by block · @" + trunc(m.login, 24)).toUpperCase()) + "</text>");
+        out.push('<text x="68" y="148" font-family="' + SANS + '" font-size="' + fit(name, 60, 30, 640, 0.6) + '" font-weight="800" letter-spacing="-1" fill="' + p.ink + '">' + esc(trunc(name, 26)) + "</text>");
+        if (sub.main) out.push('<text x="70" y="188" font-family="' + SANS + '" font-size="20" fill="' + p.ink + '" fill-opacity="0.75">' + esc(trunc(sub.main, 52)) + "</text>");
+        if (chips.length) out.push('<text x="70" y="232" font-family="' + MONO + '" font-size="13" letter-spacing="2" fill="' + p.a2 + '">' + esc(chips.join(" · ").toUpperCase()) + "</text>");
+        out.push('</g><rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="15.5" fill="none" stroke="' + p.line + '"/>');
+        return { svg: out.join(""), style: BOT_CSS + "@keyframes vfly{0%,100%{transform:translate(0,0)}25%{transform:translate(-70px,18px)}50%{transform:translate(-20px,34px)}75%{transform:translate(50px,12px)}}.vfly{animation:vfly 12s ease-in-out infinite}" +
+          "@keyframes vfl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}.vfl{animation:vfl 6s ease-in-out infinite}" +
+          "@keyframes vxp{0%,100%{opacity:1}50%{opacity:.5}}.vxp{animation:vxp 2.4s ease-in-out infinite}" };
+      },
+      divider: function (m, o, p, r, W, H, label, num) {
+        var out = ['<defs><clipPath id="c"><rect width="' + W + '" height="' + H + '" rx="14"/></clipPath>' + vsky("vsk", p, W, H) + BOT_DEFS(p) + '</defs><g clip-path="url(#c)">' + vskyFill("vsk", W, H) + "</g>"];
+        for (var k = 0; k < 9; k++) out.push(cube(80 + k * 22, 44 - (k % 3) * 5, 11, 8 + (k % 3) * 5, k === 8 ? p.a1 : mix(p.a1, p.bg1, 0.25 + (k % 3) * 0.15)));
+        for (k = 0; k < 9; k++) out.push(cube(W - 80 - k * 22, 44 - (k % 3) * 5, 11, 8 + (k % 3) * 5, k === 8 ? p.a2 : mix(p.a2, p.bg1, 0.25 + (k % 3) * 0.15)));
+        out.push('<text x="40" y="30" font-family="' + MONO + '" font-size="11" letter-spacing="2" fill="' + p.a1 + '">LEVEL ' + num + "</text>");
+        out.push('<text x="600" y="56" text-anchor="middle" font-family="' + SANS + '" font-size="26" font-weight="800" fill="' + p.ink + '">' + esc(trunc(label, 24)) + "</text>");
+        out.push('<g transform="translate(-40 20) scale(.42)"><g' + anim(p, "vcross") + ">" + bot(0, 0, 1, p) + "</g></g>");
+        return { svg: out.join(""), style: BOT_CSS + "@keyframes vcross{from{transform:translateX(0)}to{transform:translateX(3100px)}}.vcross{animation:vcross 14s linear infinite}" };
+      },
+      footer: function (m, o, p, r, W, H) {
+        var s = '<defs>' + BOT_DEFS(p) + '</defs>', daily = m.activity && m.activity.daily ? m.activity.daily.slice(-48) : [], mx = Math.max.apply(null, daily.concat([1]));
+        for (var k = 0; k < 48; k++) { var v = daily.length ? daily[k] || 0 : (k * 7 % 5); s += cube(14 + k * 25, 104 - 6 - Math.round((v / (daily.length ? mx : 5)) * 26), 12.5, 6 + Math.round((v / (daily.length ? mx : 5)) * 26), mix(p.a1, p.bg1, v ? 0.1 : 0.6)); }
+        s += '<g transform="translate(1110 4) scale(.5)"><g' + anim(p, "vxb") + ">" + bot(0, 0, 1, p) + "</g></g>";
+        return { svg: s + '<text x="600" y="40" text-anchor="middle" font-family="' + SANS + '" font-size="18" font-weight="700" fill="' + p.ink + '">Built block by block · @' + esc(trunc(m.login, 30)) + "</text>",
+          style: BOT_CSS + "@keyframes vxb{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}.vxb{animation:vxb 2.8s ease-in-out infinite}" };
       }
     }
   };
@@ -826,5 +970,5 @@
     return svgOpen(W, H, "Footer") + css(p, style) + out.join("") + "</svg>";
   }
 
-  return { palette: palette, frame: frame, title: title, cell: cell, ring: ring, cardCss: cardCss, banner: banner, divider: divider, footer: footer, KEYS: Object.keys(DEF) };
+  return { palette: palette, frame: frame, title: title, cell: cell, ring: ring, cardCss: cardCss, banner: banner, divider: divider, footer: footer, KEYS: Object.keys(DEF), voxel: { cube: cube, city: city, bot: bot, glassCube: glassCube, botDefs: BOT_DEFS, botCss: BOT_CSS } };
 });

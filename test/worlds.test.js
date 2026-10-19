@@ -10,7 +10,7 @@ const core = require("../js/core.js");
 const cards = require("../js/cards.js");
 
 const S = core.SAMPLE, WORLDS = core.WORLD_KEYS;
-const SIGNATURE = { airport: "NOW DEPARTING", transit: "stroke-width=\"12\"", broadsheet: "Gazette", observatory: "RA ", botanical: "SPECIMEN NO.", atlas: "A CHART OF @", museum: "COLLECTION OF @", ink: "stroke-dasharray=\"560 640\"", periodic: "ELEMENT OF @", abyss: "DEPTH " };
+const SIGNATURE = { airport: "NOW DEPARTING", transit: "stroke-width=\"12\"", broadsheet: "Gazette", observatory: "RA ", botanical: "SPECIMEN NO.", atlas: "A CHART OF @", museum: "COLLECTION OF @", ink: "stroke-dasharray=\"560 640\"", periodic: "ELEMENT OF @", abyss: "DEPTH ", voxel: "BUILT BLOCK BY BLOCK" };
 
 function wellFormed(svg, label) {
   assert.ok(svg.startsWith("<svg ") && svg.endsWith("</svg>"), label + ": one <svg> root");
@@ -62,7 +62,8 @@ test("each world brings its own showpiece; another pick or 'none' wins", () => {
   core.WORLDS.forEach((w) => assert.strictEqual(core.showpieceKey({ world: w.key }), w.showpiece));
   assert.strictEqual(core.showpieceKey({ world: "airport", showpiece: "vinyl" }), "vinyl");
   assert.strictEqual(core.showpieceKey({ world: "airport", showpiece: "none" }), "");
-  assert.strictEqual(core.showpieceKey({ showpiece: "" }), "", "the classic look has none unless picked");
+  assert.strictEqual(core.showpieceKey({ showpiece: "" }), "pulse", "the classic look brings Pulse");
+  assert.strictEqual(new Set(core.WORLDS.map((w) => w.showpiece)).size, core.WORLDS.length, "every design has a scene of its own");
   assert.ok(!cards.buildFiles(S, { world: "airport", showpiece: "none" }).some((f) => /showpiece/.test(f.name)));
   assert.match(file(cards.buildFiles(S, { world: "airport" }), "cards/showpiece.svg"), /DEPARTURES/, "the board doesn't repeat the banner's name");
   assert.match(file(cards.buildFiles(S, { world: "broadsheet" }), "cards/showpiece.svg"), />Front Page</, "one masthead per page");
@@ -109,7 +110,7 @@ test("share links, the CLI and the daily update carry the world", () => {
     assert.ok(fs.existsSync(path.join(out, "cards/divider-stats.svg")));
     const bad = run(["--world", "lava"]);
     assert.notStrictEqual(bad.status, 0);
-    assert.match(bad.stderr, /--world must be one of: airport, transit, broadsheet, observatory, botanical, atlas, museum, ink, periodic, abyss/);
+    assert.match(bad.stderr, /--world must be one of: airport, transit, broadsheet, observatory, botanical, atlas, museum, ink, periodic, abyss, voxel/);
   } finally { fs.rmSync(out, { recursive: true, force: true }); }
   const auto = require("../js/automation.js"), root = path.join(__dirname, "..");
   const sources = Object.fromEntries(auto.RUNTIME.map((p) => [p, fs.readFileSync(path.join(root, p), "utf8")]));
@@ -117,3 +118,36 @@ test("share links, the CLI and the daily update carry the world", () => {
 });
 
 function file(files, name) { return (files.find((f) => f.name === name) || {}).data; }
+
+test("in a world, Auto keeps the world's colours; any theme or your own colours recolour everything, showpiece included", () => {
+  const own = cards.paletteOf(S, { world: "airport" });
+  assert.strictEqual(own.a1, "#ffd84a");
+  const sunset = cards.paletteOf(S, { world: "airport", theme: "sunset" }), custom = cards.paletteOf(S, { world: "airport", theme: "custom", accent1: "#00c2a8", accent2: "#ff8800" });
+  assert.notStrictEqual(sunset.a1, own.a1); assert.notStrictEqual(custom.a1, own.a1);
+  const files = cards.buildFiles(S, { world: "airport", theme: "sunset", adaptive: false });
+  ["banner.svg", "cards/stats.svg", "cards/divider-stats.svg", "cards/footer.svg", "cards/showpiece.svg"].forEach((n) => {
+    const svg = file(files, n);
+    assert.ok(svg.includes(sunset.a1), n + " wears the theme's accent");
+    assert.ok(!svg.includes("#ffd84a"), n + " drops the world's own amber");
+  });
+  assert.ok(file(cards.buildFiles(S, { world: "airport", adaptive: false }), "cards/showpiece.svg").includes("#ffd84a"), "Auto keeps the world's showpiece colours");
+});
+
+test("recoloured worlds stay readable: every theme and extreme custom colours, on every world, light and dark", () => {
+  const pairs = core.THEME_ORDER.filter((t) => t !== "custom").map((t) => ({ theme: t })).concat(
+    [["#000000", "#ffffff"], ["#ffffff", "#000000"], ["#ffff00", "#00ffff"], ["#101010", "#202020"], ["#f5f5f5", "#e0e0e0"]].map(([a, b]) => ({ theme: "custom", accent1: a, accent2: b })));
+  for (const w of WORLDS) for (const mode of ["dark", "light"]) for (const t of pairs) {
+    const p = cards.paletteOf(S, Object.assign({ world: w, mode }, t));
+    assert.ok(core.contrast(p.a1, p.bg1) >= 3.3, w + "/" + mode + "/" + JSON.stringify(t) + ": accent " + p.a1 + " on " + p.bg1);
+    assert.ok(core.contrast(p.a2, p.bg1) >= 2.9, w + "/" + mode + "/" + JSON.stringify(t) + ": second accent " + p.a2 + " on " + p.bg1);
+  }
+});
+
+test("every showpiece takes the README's colours", () => {
+  const cyber = cards.paletteOf(S, { theme: "cyber" }), sunset = cards.paletteOf(S, { theme: "sunset" });
+  for (const key of core.SHOWPIECE_KEYS) {
+    const a = cards.showpieceFor(S, { showpiece: key, theme: "cyber", animate: false }), b = cards.showpieceFor(S, { showpiece: key, theme: "sunset", animate: false });
+    assert.notStrictEqual(a, b, key + " changes with the theme");
+  }
+  assert.ok(cyber.a1 !== sunset.a1);
+});

@@ -89,7 +89,7 @@
       if (t && t.light) dot.style.border = "1px solid rgba(0,0,0,.15)";
       var name = document.createElement("span"); name.textContent = key === "auto" ? "Auto" : key === "custom" ? "Custom" : t.label;
       sw.appendChild(dot); sw.appendChild(name); label.appendChild(input); label.appendChild(sw); box.appendChild(label);
-      input.addEventListener("change", refresh);
+      input.addEventListener("change", function () { refresh(); repaintThumbs(); });
     });
   }
 
@@ -113,6 +113,22 @@
 
   /** Thumbnails of every showpiece, drawn once from the sample profile: moving for the gallery, still for the picker. */
   var thumbs = {};
+  /** Redraws the design and showpiece thumbnails in the current design and colours, so every preview matches the README. */
+  var paintTimer;
+  function repaintThumbs() {
+    clearTimeout(paintTimer);
+    paintTimer = setTimeout(function () {
+      var look = { world: $("#world").value, theme: theme(), accent1: $("#accent1").value, accent2: $("#accent2").value, animate: false, adaptive: false, role: "Platform Engineer", stack: "Terraform, AWS, Docker", openTo: "Platform roles · Remote" };
+      Array.prototype.forEach.call(document.querySelectorAll("#pieces img[data-key]"), function (img) {
+        var o = {}; for (var k in look) o[k] = look[k]; o.showpiece = img.dataset.key;
+        img.src = dataUri(cardsLib.showpieceFor(core.SAMPLE, o));
+      });
+      Array.prototype.forEach.call(document.querySelectorAll("#worlds img[data-key]"), function (img) {
+        var o = {}; for (var k in look) o[k] = look[k]; o.world = img.dataset.key;
+        img.src = dataUri(cardsLib.bannerFor(core.SAMPLE, o));
+      });
+    }, 160);
+  }
   function thumb(key, moving) {
     var id = key + (moving ? ":m" : ":s");
     if (!thumbs[id]) thumbs[id] = dataUri(window.ReadmeShowpieces.build(core.SAMPLE, { showpiece: key, role: "Platform Engineer", stack: "Terraform, AWS, Docker", animate: moving, openTo: "Platform roles · Remote" }));
@@ -126,13 +142,13 @@
       input.type = "radio"; input.name = "worldpick"; input.value = w.key; input.checked = !w.key;
       input.setAttribute("aria-label", w.label + " design");
       wc.className = "wc";
-      var img = document.createElement("img"); img.alt = ""; img.loading = "lazy"; img.width = 96; img.height = 24;
+      var img = document.createElement("img"); img.alt = ""; img.loading = "lazy"; img.width = 96; img.height = 24; img.dataset.key = w.key;
       var files = cardsLib.buildFiles(core.SAMPLE, { world: w.key, adaptive: false, animate: false, role: "Platform Engineer", stack: "Terraform, AWS, Docker", cards: true });
       img.src = dataUri(files.filter(function (f) { return f.name === "banner.svg"; })[0].data);
       var txt = document.createElement("span"), b = document.createElement("b"); b.textContent = w.label;
       txt.appendChild(b); txt.appendChild(document.createTextNode(w.blurb));
       wc.appendChild(img); wc.appendChild(txt); label.appendChild(input); label.appendChild(wc); box.appendChild(label);
-      input.addEventListener("change", function () { $("#world").value = w.key; syncWorld(); syncShowpiece(); refresh(); });
+      input.addEventListener("change", function () { $("#world").value = w.key; $("#showpiece").value = ""; syncWorld(); syncShowpiece(); repaintThumbs(); refresh(); });
     });
   }
   /** The Worlds gallery on the page: each world's banner, moving, as a button that applies it. */
@@ -149,7 +165,7 @@
       cap.appendChild(name); cap.appendChild(document.createTextNode(w.blurb));
       b.appendChild(img); b.appendChild(cap); grid.appendChild(b);
       b.addEventListener("click", function () {
-        $("#world").value = w.key; syncWorld(); syncShowpiece();
+        $("#world").value = w.key; $("#showpiece").value = ""; syncWorld(); syncShowpiece(); repaintThumbs();
         if (!$("#o-cards").checked) $("#o-cards").checked = true;
         refresh();
         $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -160,8 +176,7 @@
     var key = $("#world").value, w = core.worldOf({ world: key });
     var radio = document.querySelector('input[name="worldpick"][value="' + (w ? key : "") + '"]');
     if (radio) radio.checked = true;
-    $("#themeBox").classList.toggle("off", !!w);
-    $("#worldHint").textContent = w ? w.label + " redesigns everything: banner, cards, section dividers and footer, with its own colours, light and dark. Its showpiece is " + core.SHOWPIECES.filter(function (s) { return s.key === w.showpiece; })[0].label + " unless you pick another." : "The classic glass look, in the theme below. Pick a world to redesign the whole README.";
+    $("#worldHint").textContent = w ? w.label + " redesigns everything: banner, cards, section dividers, footer and showpiece. Theme Auto keeps its own colours; any other theme, or your own colours, recolours all of it." : "The classic glass look, in the theme below. Pick a world to redesign the whole README.";
   }
 
   /** The picker in Look: "None" plus a thumbnail per scene, as one radio group (arrow keys move between them). */
@@ -173,7 +188,7 @@
       input.setAttribute("aria-label", s.key === "none" ? "No showpiece" : s.key ? s.label + " showpiece" : "Automatic: the design's own showpiece");
       pc.className = "pc";
       if (s.key && s.key !== "none") {
-        var img = document.createElement("img"); img.alt = ""; img.loading = "lazy"; img.width = 160; img.height = 100; img.src = thumb(s.key, false);
+        var img = document.createElement("img"); img.alt = ""; img.loading = "lazy"; img.width = 160; img.height = 100; img.src = thumb(s.key, false); img.dataset.key = s.key;
         pc.appendChild(img);
       } else {
         var none = document.createElement("span"); none.className = "none"; none.textContent = s.key ? "\u2205" : "\u2728"; pc.appendChild(none);
@@ -242,8 +257,8 @@
     var key = $("#showpiece").value, s = core.SHOWPIECES.filter(function (x) { return x.key === key; })[0];
     var radio = document.querySelector('input[name="piece"][value="' + (s || key === "none" ? key : "") + '"]');
     if (radio) radio.checked = true;
-    var w = core.worldOf({ world: $("#world").value }), auto = w ? core.SHOWPIECES.filter(function (x) { return x.key === w.showpiece; })[0] : null;
-    if (!s) { $("#showHint").textContent = key === "none" ? "No showpiece." : auto ? "Auto: " + auto.label + ", the " + w.label + " design's own scene. " + auto.blurb : "Auto: none in the classic look. Pick one to add an animated scene under your banner."; return; }
+    var w = core.worldOf({ world: $("#world").value }), ak = core.showpieceKey({ world: $("#world").value }), auto = core.SHOWPIECES.filter(function (x) { return x.key === ak; })[0];
+    if (!s) { $("#showHint").textContent = key === "none" ? "No showpiece." : "Auto: " + auto.label + ", the " + (w ? w.label + " design's" : "classic look's") + " own scene, in your colours. " + auto.blurb; return; }
     $("#showHint").textContent = s ? s.blurb : "One animated scene under your banner, drawn from your own repos and activity.";
   }
 
@@ -611,7 +626,7 @@
   });
 
   $("#reset").addEventListener("click", resetOptions);
-  ["#accent1", "#accent2"].forEach(function (sel) { $(sel).addEventListener("input", function () { syncCustom(); refreshSoon(); }); });
+  ["#accent1", "#accent2"].forEach(function (sel) { $(sel).addEventListener("input", function () { syncCustom(); refreshSoon(); repaintThumbs(); }); });
   $("#featClear").addEventListener("click", function () { state.featured = []; renderFeatured(); refresh(); });
   $("#dlPngs").addEventListener("click", function () {
     var btn = $("#dlPngs"), label = btn.textContent, files = stillFiles().filter(function (f) { return /\.svg$/.test(f.name); }), done = [];
@@ -761,7 +776,7 @@
   var linked = core.fromQuery(location.search);
   applyOptions(linked.opts);                                    // a share link wins over saved settings
   showTab(saved.tab && TABS.indexOf(saved.tab) !== -1 ? saved.tab : "profile");
-  renderOrder(); syncCustom();
+  renderOrder(); syncCustom(); repaintThumbs();
   if (linked.user) {
     $("#url").value = linked.user;
     $("#ask").requestSubmit ? $("#ask").requestSubmit() : $("#go").click();
