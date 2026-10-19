@@ -787,8 +787,8 @@
   /** README attribution line; separate spans let narrow mobile previews wrap cleanly. */
   function footer(o) {
     var base = "Patched together from public GitHub data";
-    if (!o.credit) return '<sub class="readme-credit"><span class="readme-credit-source">' + base + '.</span></sub>';
-    return '<sub class="readme-credit"><span class="readme-credit-source">' + base + '</span><span class="readme-credit-made"> · made with ' + (o.siteUrl ? '<a href="' + esc(o.siteUrl) + '">README Glassfolio</a>' : 'README Glassfolio') + '</span></sub>';
+    if (!o.credit) return '<sub><span>' + base + '.</span></sub>';
+    return '<sub><span>' + base + '</span><span> · made with ' + (o.siteUrl ? '<a href="' + esc(o.siteUrl) + '">README Glassfolio</a>' : 'README Glassfolio') + '</span></sub>';
   }
 
   function buildReadme(m, options) {
