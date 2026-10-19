@@ -22,7 +22,7 @@
 <a class="skip" href="#main">Skip to the tool</a>
 <div class="wrap">
   <h1><span class="minus">Template</span> <span class="plus">Patch</span> your profile</h1>
-  <p class="lede">Turn any GitHub username into a profile README that people actually stop and look at, and that recruiters can read in ten seconds: twelve animated showpieces, themed cards, your impact in numbers, a contribution heatmap and real stats, kept fresh every day. Free, runs in your browser, with no server and no third-party service.</p>
+  <p class="lede">Turn any GitHub username into a profile README that people actually stop and look at, and that recruiters can read in ten seconds: ten complete designs, eleven animated showpieces, your impact in numbers, a contribution heatmap and real stats, kept fresh every day. Free, runs in your browser, with no server and no third-party service.</p>
 
   <form class="ask" id="ask">
     <input type="text" id="url" placeholder="https://github.com/your-username" aria-label="GitHub profile URL or username" autocomplete="off" spellcheck="false">
@@ -35,12 +35,18 @@
     <aside aria-label="Options">
       <details class="grp" open>
         <summary>Look</summary>
+        <label class="f" id="worldLabel">Design <span class="new">new</span></label>
+        <input type="hidden" id="world" value="">
+        <div class="worlds" id="worlds" role="radiogroup" aria-labelledby="worldLabel"></div>
+        <p class="hint" id="worldHint">The classic glass look, in the theme below. Pick a world to redesign the whole README.</p>
+        <div id="themeBox">
         <label class="f" id="themeLabel">Theme</label>
         <div class="themes" id="themes" role="radiogroup" aria-labelledby="themeLabel"></div>
         <div class="custom" id="customRow" hidden>
           <label for="accent1">Accent 1<input type="color" id="accent1" value="#38e8ff"></label>
           <label for="accent2">Accent 2<input type="color" id="accent2" value="#8b5cf6"></label>
           <p class="hint">Any two colours work. Text and accents are adjusted automatically so they always stay readable, in dark and light.</p>
+        </div>
         </div>
         <label class="f" id="pieceLabel">Showpiece <span class="new">new</span></label>
         <input type="hidden" id="showpiece" value="">
@@ -218,9 +224,15 @@
       </div>
     </section>
   </main>
+  <section class="band" id="worldsBand" aria-labelledby="worldsTitle">
+    <h2 id="worldsTitle">Worlds: redesign the whole README</h2>
+    <p class="sub">Ten complete designs. Each one changes everything from the banner to the footer: every card, the fonts, the colours in light and dark, an animated divider between sections, and a showpiece to match. Tap one to try it on your profile.</p>
+    <div class="gallery show" id="worldGrid"></div>
+  </section>
+
   <section class="band" id="showpieces" aria-labelledby="showTitle">
     <h2 id="showTitle">Showpieces: a scene nobody else has</h2>
-    <p class="sub">Twelve animated scenes built from your own data, placed right under your banner. Your repos become flights, stations, trading cards, album tracks, stars, stamps or headlines. Tap one to put it on your profile.</p>
+    <p class="sub">Eleven animated scenes built from your own data, placed right under your banner. Your repos become flights, stations, trading cards, album tracks, stars, stamps or headlines. Tap one to put it on your profile.</p>
     <div class="gallery show" id="showGrid"></div>
   </section>
 
@@ -272,6 +284,7 @@
 <script src="js/core.js?v=dev"></script>
 <script src="js/universe.js?v=dev"></script>
 <script src="js/showpieces.js?v=dev"></script>
+<script src="js/worlds.js?v=dev"></script>
 <script src="js/github.js?v=dev"></script>
 <script src="js/cards.js?v=dev"></script>
 <script src="js/automation.js?v=dev"></script>

@@ -1,0 +1,80 @@
+name: "Glassfolio Profile README"
+description: "Design your whole GitHub profile README: ten worlds, eleven animated showpieces, employer cards and fresh stats. No third-party services."
+author: "Sandeep Komal"
+branding:
+  icon: "layout"
+  color: "purple"
+
+inputs:
+  username:
+    description: "Whose profile to build. Defaults to the repository owner."
+    required: false
+    default: ""
+  world:
+    description: "A complete design: airport, transit, broadsheet, observatory, botanical, atlas, museum, ink, periodic or abyss. Leave empty for the classic glass look."
+    required: false
+    default: ""
+  showpiece:
+    description: "An animated scene under the banner (departures, holo, metro, vinyl, vitals, garden, yearcode, newspaper, passport, constellation, weather), or none. Empty uses the world's own."
+    required: false
+    default: ""
+  theme:
+    description: "Colours for the classic look: auto, aurora, cyber, sunset, emerald, royal, graphite or paper."
+    required: false
+    default: ""
+  config:
+    description: "Path to a JSON file of options (the same names the website uses). Inputs given here win over the file."
+    required: false
+    default: ""
+  out:
+    description: "Folder to write README.md, the banner and cards/ into."
+    required: false
+    default: "."
+  commit:
+    description: "Commit and push the result when something changed (needs `permissions: contents: write`)."
+    required: false
+    default: "true"
+  token:
+    description: "Token for reading GitHub data (raises the rate limit and gives the full-year heatmap)."
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build the README
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        IN_USER: ${{ inputs.username }}
+        IN_WORLD: ${{ inputs.world }}
+        IN_SHOW: ${{ inputs.showpiece }}
+        IN_THEME: ${{ inputs.theme }}
+        IN_CONFIG: ${{ inputs.config }}
+        IN_OUT: ${{ inputs.out }}
+        OWNER: ${{ github.repository_owner }}
+      run: |
+        set -euo pipefail
+        args=("${IN_USER:-$OWNER}" --out "$IN_OUT" --clean)
+        [ -n "$IN_CONFIG" ] && args+=(--config "$IN_CONFIG")
+        [ -n "$IN_WORLD" ] && args+=(--world "$IN_WORLD")
+        [ -n "$IN_SHOW" ] && args+=(--showpiece "$IN_SHOW")
+        [ -n "$IN_THEME" ] && args+=(--theme "$IN_THEME")
+        node "$GITHUB_ACTION_PATH/cli.js" "${args[@]}"
+
+    - name: Commit if anything changed
+      if: ${{ inputs.commit == 'true' }}
+      shell: bash
+      env:
+        IN_OUT: ${{ inputs.out }}
+      run: |
+        set -euo pipefail
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add -A -- "$IN_OUT"
+        if git diff --cached --quiet; then
+          echo "Nothing changed."
+        else
+          git commit -m "Update profile README (Glassfolio)"
+          git push
+        fi

@@ -332,6 +332,20 @@ aside .hint{font-size:.78rem;color:var(--muted);margin:2px 0 8px;line-height:1.4
 .extras figure{margin:0}
 .extras img{width:100%;height:auto;display:block;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 
+/* ---------- design picker: classic, or a world ---------- */
+.worlds{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.worlds label{position:relative;cursor:pointer;display:block}
+.worlds input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.worlds label:first-child{grid-column:1 / -1}
+.worlds .wc{display:grid;grid-template-columns:1fr;gap:6px;padding:6px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:.74rem;transition:border-color .2s,box-shadow .2s,color .2s,transform .2s}
+.worlds .wc img{display:block;width:100%;height:auto;aspect-ratio:4/1;object-fit:cover;border-radius:7px}
+.worlds .wc > span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.worlds .wc b{display:block;color:var(--ink);font-size:.86rem;margin-bottom:2px}
+.worlds .wc:hover{border-color:var(--line-strong);transform:translateY(-1px)}
+.worlds input:checked + .wc{border-color:var(--a1);color:var(--ink);box-shadow:0 0 0 3px rgba(56,232,255,.14),0 0 22px rgba(56,232,255,.18)}
+.worlds input:focus-visible + .wc{outline:2px solid var(--a1);outline-offset:2px}
+#themeBox.off{opacity:.45;pointer-events:none}
+
 /* ---------- showpiece picker: a thumbnail per scene ---------- */
 .pieces{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-height:356px;overflow:auto;padding:2px;margin:0 -2px;scrollbar-width:thin}
 .pieces label{position:relative;cursor:pointer;display:block}

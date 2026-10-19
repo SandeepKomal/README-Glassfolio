@@ -6,7 +6,7 @@
   var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [], impact: {} };
 
   var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe", wave: "o-wave", summary: "o-summary", proof: "o-proof" };
-  var TEXTS = { style: "#style", showpiece: "#showpiece", openTo: "#openTo", resume: "#resume", certs: "#certs", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
+  var TEXTS = { style: "#style", world: "#world", showpiece: "#showpiece", openTo: "#openTo", resume: "#resume", certs: "#certs", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
   var STORE_KEY = "patch-your-profile.v1";
 
   /* ---------- saved settings (this browser only; never the token) ---------- */
@@ -53,7 +53,7 @@
       Object.keys(parsed).forEach(function (k) { state.impact[k] = parsed[k].map(function (x) { return x.value + (x.label ? " " + x.label : ""); }).join(", "); });
       impactKey = "";
     }
-    syncCustom(); syncShowpiece(); syncResume(); renderImpact();
+    syncCustom(); syncWorld(); syncShowpiece(); syncResume(); renderImpact();
   }
 
   function persist() {
@@ -118,19 +118,65 @@
     if (!thumbs[id]) thumbs[id] = dataUri(window.ReadmeShowpieces.build(core.SAMPLE, { showpiece: key, role: "Platform Engineer", stack: "Terraform, AWS, Docker", animate: moving, openTo: "Platform roles · Remote" }));
     return thumbs[id];
   }
+  /** The design picker: the classic look, or a world. Each tile shows that world's banner drawn from the sample profile. */
+  function buildWorlds() {
+    var box = $("#worlds");
+    [{ key: "", label: "Classic", blurb: "Glass cards and a moving wave header, in any theme or your own colours." }].concat(core.WORLDS).forEach(function (w) {
+      var label = document.createElement("label"), input = document.createElement("input"), wc = document.createElement("span");
+      input.type = "radio"; input.name = "worldpick"; input.value = w.key; input.checked = !w.key;
+      input.setAttribute("aria-label", w.label + " design");
+      wc.className = "wc";
+      var img = document.createElement("img"); img.alt = ""; img.loading = "lazy"; img.width = 96; img.height = 24;
+      var files = cardsLib.buildFiles(core.SAMPLE, { world: w.key, adaptive: false, animate: false, role: "Platform Engineer", stack: "Terraform, AWS, Docker", cards: true });
+      img.src = dataUri(files.filter(function (f) { return f.name === "banner.svg"; })[0].data);
+      var txt = document.createElement("span"), b = document.createElement("b"); b.textContent = w.label;
+      txt.appendChild(b); txt.appendChild(document.createTextNode(w.blurb));
+      wc.appendChild(img); wc.appendChild(txt); label.appendChild(input); label.appendChild(wc); box.appendChild(label);
+      input.addEventListener("change", function () { $("#world").value = w.key; syncWorld(); syncShowpiece(); refresh(); });
+    });
+  }
+  /** The Worlds gallery on the page: each world's banner, moving, as a button that applies it. */
+  function buildWorldGallery() {
+    var grid = $("#worldGrid");
+    core.WORLDS.forEach(function (w) {
+      var b = document.createElement("button"); b.type = "button";
+      var img = document.createElement("img");
+      img.alt = w.label + " design preview"; img.loading = "lazy"; img.width = 1200; img.height = 300;
+      var files = cardsLib.buildFiles(core.SAMPLE, { world: w.key, adaptive: false, role: "Platform Engineer", stack: "Terraform, AWS, Docker" });
+      img.src = dataUri(files.filter(function (f) { return f.name === "banner.svg"; })[0].data);
+      var cap = document.createElement("span"); cap.className = "cap";
+      var name = document.createElement("b"); name.textContent = w.label;
+      cap.appendChild(name); cap.appendChild(document.createTextNode(w.blurb));
+      b.appendChild(img); b.appendChild(cap); grid.appendChild(b);
+      b.addEventListener("click", function () {
+        $("#world").value = w.key; syncWorld(); syncShowpiece();
+        if (!$("#o-cards").checked) $("#o-cards").checked = true;
+        refresh();
+        $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }
+  function syncWorld() {
+    var key = $("#world").value, w = core.worldOf({ world: key });
+    var radio = document.querySelector('input[name="worldpick"][value="' + (w ? key : "") + '"]');
+    if (radio) radio.checked = true;
+    $("#themeBox").classList.toggle("off", !!w);
+    $("#worldHint").textContent = w ? w.label + " redesigns everything: banner, cards, section dividers and footer, with its own colours, light and dark. Its showpiece is " + core.SHOWPIECES.filter(function (s) { return s.key === w.showpiece; })[0].label + " unless you pick another." : "The classic glass look, in the theme below. Pick a world to redesign the whole README.";
+  }
+
   /** The picker in Look: "None" plus a thumbnail per scene, as one radio group (arrow keys move between them). */
   function buildPicker() {
     var box = $("#pieces");
-    [{ key: "", label: "None" }].concat(core.SHOWPIECES).forEach(function (s) {
+    [{ key: "", label: "Auto" }, { key: "none", label: "None" }].concat(core.SHOWPIECES).forEach(function (s) {
       var label = document.createElement("label"), input = document.createElement("input"), pc = document.createElement("span");
       input.type = "radio"; input.name = "piece"; input.value = s.key; input.checked = !s.key;
-      input.setAttribute("aria-label", s.key ? s.label + " showpiece" : "No showpiece");
+      input.setAttribute("aria-label", s.key === "none" ? "No showpiece" : s.key ? s.label + " showpiece" : "Automatic: the design's own showpiece");
       pc.className = "pc";
-      if (s.key) {
+      if (s.key && s.key !== "none") {
         var img = document.createElement("img"); img.alt = ""; img.loading = "lazy"; img.width = 160; img.height = 100; img.src = thumb(s.key, false);
         pc.appendChild(img);
       } else {
-        var none = document.createElement("span"); none.className = "none"; none.textContent = "\u2205"; pc.appendChild(none);
+        var none = document.createElement("span"); none.className = "none"; none.textContent = s.key ? "\u2205" : "\u2728"; pc.appendChild(none);
       }
       var name = document.createElement("span"); name.textContent = s.label; pc.appendChild(name);
       label.appendChild(input); label.appendChild(pc); box.appendChild(label);
@@ -194,8 +240,10 @@
   }
   function syncShowpiece() {
     var key = $("#showpiece").value, s = core.SHOWPIECES.filter(function (x) { return x.key === key; })[0];
-    var radio = document.querySelector('input[name="piece"][value="' + (s ? key : "") + '"]');
+    var radio = document.querySelector('input[name="piece"][value="' + (s || key === "none" ? key : "") + '"]');
     if (radio) radio.checked = true;
+    var w = core.worldOf({ world: $("#world").value }), auto = w ? core.SHOWPIECES.filter(function (x) { return x.key === w.showpiece; })[0] : null;
+    if (!s) { $("#showHint").textContent = key === "none" ? "No showpiece." : auto ? "Auto: " + auto.label + ", the " + w.label + " design's own scene. " + auto.blurb : "Auto: none in the classic look. Pick one to add an animated scene under your banner."; return; }
     $("#showHint").textContent = s ? s.blurb : "One animated scene under your banner, drawn from your own repos and activity.";
   }
 
@@ -700,6 +748,8 @@
   /* ---------- start ---------- */
   buildThemePicker();
   buildGallery();
+  buildWorlds();
+  buildWorldGallery();
   buildPicker();
   buildShowpieces();
   $("#resume").addEventListener("input", syncResume);

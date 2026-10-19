@@ -21,6 +21,8 @@ function wellFormed(svg, label) {
   while ((m = re.exec(svg))) {
     assert.doesNotMatch(svg.slice(last, m.index), /[<>]/, label + ": stray angle bracket near " + svg.slice(last, m.index).slice(0, 60));
     last = re.lastIndex;
+    const names = [...m[3].matchAll(/\s([\w:-]+)="/g)].map((x) => x[1]);
+    assert.strictEqual(new Set(names).size, names.length, label + ": <" + m[2] + "> repeats an attribute (" + names.join(" ") + ")");
     if (m[4]) continue;
     if (m[1]) assert.strictEqual(stack.pop(), m[2], label + ": </" + m[2] + "> closes the wrong tag");
     else stack.push(m[2]);
