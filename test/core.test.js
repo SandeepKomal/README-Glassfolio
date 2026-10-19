@@ -713,8 +713,7 @@ test("footer credit links back to the site when it has an address, and can be sw
   const withSite = core.buildReadme(core.SAMPLE, { siteUrl: "https://tool.example/patch" });
   assert.match(withSite, /made with <a href="https:\/\/tool\.example\/patch">README Glassfolio<\/a>/);
   const defaultCredit = core.buildReadme(core.SAMPLE, {});
-  assert.match(defaultCredit, /<span class="readme-credit-source">Patched together from public GitHub data<\/span>/);
-  assert.match(defaultCredit, /<span class="readme-credit-made"> · made with README Glassfolio<\/span><\/sub>/);
+  assert.match(defaultCredit, /<sub><span>Patched together from public GitHub data<\/span><span> · made with README Glassfolio<\/span><\/sub>/);
   const off = core.buildReadme(core.SAMPLE, { credit: false, siteUrl: "https://tool.example/patch" });
   assert.doesNotMatch(off, /made with|tool\.example/);
   assert.match(core.buildReadme(core.SAMPLE, { siteUrl: 'https://x.example/"><script>' }), /&quot;&gt;&lt;script&gt;/);
