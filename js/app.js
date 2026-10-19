@@ -6,7 +6,7 @@
   var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [] };
 
   var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe", wave: "o-wave" };
-  var TEXTS = { style: "#style", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
+  var TEXTS = { style: "#style", showpiece: "#showpiece", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
   var STORE_KEY = "patch-your-profile.v1";
 
   /* ---------- saved settings (this browser only; never the token) ---------- */
@@ -47,7 +47,7 @@
     if (o.accent2) $("#accent2").value = o.accent2;
     if (o.order !== undefined) state.order = core.sectionOrder({ order: o.order });
     if (o.featured !== undefined) state.featured = o.featured ? o.featured.split(",").map(function (x) { return x.trim(); }).filter(Boolean) : [];
-    syncCustom();
+    syncCustom(); syncShowpiece();
   }
 
   function persist() {
@@ -103,6 +103,31 @@
         $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
       });
     });
+  }
+
+  /** The showpiece gallery: each scene drawn from the sample profile, moving, as a thumbnail that picks it. */
+  function buildShowpieces() {
+    var grid = $("#showGrid");
+    core.SHOWPIECES.forEach(function (s) {
+      var b = document.createElement("button"); b.type = "button";
+      var img = document.createElement("img");
+      img.alt = s.label + " showpiece preview"; img.loading = "lazy"; img.width = 960; img.height = 580;
+      img.src = dataUri(window.ReadmeShowpieces.build(core.SAMPLE, { showpiece: s.key, role: "Platform Engineer", stack: "Terraform, AWS, Docker" }));
+      var cap = document.createElement("span"); cap.className = "cap";
+      var name = document.createElement("b"); name.textContent = s.label;
+      cap.appendChild(name); cap.appendChild(document.createTextNode(s.blurb));
+      b.appendChild(img); b.appendChild(cap); grid.appendChild(b);
+      b.addEventListener("click", function () {
+        $("#showpiece").value = s.key; syncShowpiece();
+        if (!$("#o-cards").checked) $("#o-cards").checked = true;
+        refresh();
+        $("#main").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }
+  function syncShowpiece() {
+    var key = $("#showpiece").value, s = core.SHOWPIECES.filter(function (x) { return x.key === key; })[0];
+    $("#showHint").textContent = s ? s.blurb : "One animated scene under your banner, drawn from your own repos and activity.";
   }
 
   function dataUri(svg) { return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); }
@@ -605,6 +630,8 @@
   /* ---------- start ---------- */
   buildThemePicker();
   buildGallery();
+  buildShowpieces();
+  $("#showpiece").addEventListener("change", syncShowpiece);
   wireTabs();
   var saved = store.get();
   if (saved.opts) applyOptions(saved.opts);

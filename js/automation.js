@@ -25,7 +25,7 @@
   var WORKFLOW = ".github/workflows/update-readme.yml";
   var UNIVERSE_WORKFLOW = ".github/workflows/update-universe.yml";
   /** The files the daily job needs from this tool, and nothing else (no preview, zip or page code). */
-  var RUNTIME = ["cli.js", "js/core.js", "js/universe.js", "js/cards.js", "js/github.js", "js/publish.js"];
+  var RUNTIME = ["cli.js", "js/core.js", "js/universe.js", "js/showpieces.js", "js/cards.js", "js/github.js", "js/publish.js"];
 
   /** A stable, spread-out time for each person (UTC), so nobody's job runs at the busy top of the hour. */
   function schedule(login) {
