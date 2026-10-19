@@ -557,3 +557,15 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
 .g-layout>*{min-width:0}
 .guide code{overflow-wrap:anywhere}
 .nav-in>.btn-sm{margin-left:auto}
+
+/* Keep the generated README attribution readable on narrow mobile previews. */
+@media (max-width:600px){
+  .gh-body sub{
+    display:inline-block;
+    max-width:32ch;
+    white-space:normal;
+    text-wrap:balance;
+    font-size:.62em;
+    line-height:1.35;
+  }
+}
