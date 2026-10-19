@@ -75,6 +75,12 @@ test("tables keep alignment and escaped pipes", () => {
   assert.match(out, /<td>a\|b<\/td><td align="right">5<\/td>/);
 });
 
+test("README attribution groups survive HTML sanitization without classes", () => {
+  const out = html('<div align="center">\\n\\n<sub><span>Patched together from public GitHub data</span><span> · made with README Glassfolio</span></sub>\\n\\n</div>');
+  assert.match(out, /<sub><span>Patched together from public GitHub data<\\/span><span> · made with README Glassfolio<\\/span><\\/sub>/);
+  assert.doesNotMatch(out, /class=/);
+});
+
 test("centred blocks nest and contain markdown", () => {
   const out = html('<div align="center">\n\n## Title\n\n**[GitHub](https://github.com/x)** · **[X](https://x.com/y)**\n\n</div>\n\nafter');
   assert.match(out, /^<div align="center"><h2>Title<\/h2><p><strong><a href="https:\/\/github\.com\/x"[^>]*>GitHub<\/a><\/strong> · /);
