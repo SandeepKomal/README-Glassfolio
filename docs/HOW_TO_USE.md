@@ -2,7 +2,7 @@
 
 Turn your GitHub profile into a live, self-updating README in about ten minutes: a moving wave header, stats and streak cards, a contribution heatmap, a 3D contribution universe, your projects and Connect buttons, in light and dark versions that follow each visitor's GitHub theme.
 
-**Website:** [readme-glassfolio.in](https://readme-glassfolio.in/)
+**Website:** [readme-glassfolio.in](https://readme-glassfolio.in/) · **This guide as a page:** [readme-glassfolio.in/how-to-use.html](https://readme-glassfolio.in/how-to-use.html)
 
 You need:
 

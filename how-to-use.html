@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#f5f3ee">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How to use · README Glassfolio</title>
+<meta name="description" content="Step by step: create your profile repository, make a token, build your README in the studio and publish it, with daily updates.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f5f3ee'/%3E%3Crect x='6' y='6' width='9' height='9' rx='1.5' fill='%239a5cc6'/%3E%3Crect x='17' y='6' width='9' height='9' rx='1.5' fill='%234f7fcb'/%3E%3Crect x='6' y='17' width='9' height='9' rx='1.5' fill='%233d8a8f'/%3E%3Crect x='17' y='17' width='9' height='9' rx='1.5' fill='%234c9437'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css?v=dev">
+</head>
+<body>
+<a class="skip" href="#doc">Skip to the guide</a>
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html" aria-label="README Glassfolio home">
+      <svg class="mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="1.5" class="m1"/><rect x="11" y="1" width="8" height="8" rx="1.5" class="m4"/><rect x="1" y="11" width="8" height="8" rx="1.5" class="m3"/><rect x="11" y="11" width="8" height="8" rx="1.5" class="m2"/></svg>
+      <span>Glassfolio</span>
+    </a>
+    <a class="btn btn-sm" href="index.html#studio">Open the studio</a>
+  </div>
+</header>
+<main class="page guide" id="doc">
+  <header class="g-head">
+    <p class="eyebrow">Guide</p>
+    <h1>How to use Glassfolio</h1>
+    <p class="lede">Turn your GitHub profile into a designed, self-updating README in about ten minutes. You'll create one repository, make a token that can write to it, build your README in the studio and publish it.</p>
+    <div class="g-need">
+      <h2>You need</h2>
+      <ul>
+        <li>A GitHub account.</li>
+        <li>A public repository named exactly like your username (step 1).</li>
+        <li>A fine-grained token that can write to that one repository (steps 2 to 8).</li>
+      </ul>
+      <p>Everything runs in your browser. The token is sent only to GitHub and is never stored.</p>
+    </div>
+  </header>
+
+  <div class="g-layout">
+    <nav class="g-toc" aria-label="On this page">
+      <p>On this page</p>
+      <ol>
+        <li><a href="#part-1">Create your profile repository</a></li>
+        <li><a href="#part-2">Create a token</a></li>
+        <li><a href="#part-3">Make your README</a></li>
+        <li><a href="#part-4">Publish</a></li>
+        <li><a href="#part-5">Check your profile</a></li>
+        <li><a href="#later">Change something later</a></li>
+        <li><a href="#trouble">Troubleshooting</a></li>
+      </ol>
+    </nav>
+
+    <div class="g-body">
+  <section class="g-part p1" id="part-1" aria-labelledby="part-1-t">
+    <p class="g-kicker">Part 1</p>
+    <h2 id="part-1-t">Create your profile repository</h2>
+    <article class="g-step" id="step-1">
+      <h3><span class="g-n">1</span>Create <code>your-username/your-username</code></h3>
+        <p>On GitHub, click <strong>+ → New repository</strong>. Name it exactly like your username; GitHub confirms it's the special repository that shows on your profile. Set it to <strong>Public</strong>, switch <strong>Add README</strong> on, then click <strong>Create repository</strong>.</p>
+      <figure class="g-fig"><img src="docs/guide/01-create-profile-repo.png" width="1165" height="892" loading="lazy" decoding="async" alt="GitHub's new repository form: the name matches the username, Public is selected and Add README is on."><figcaption>A public repository named exactly like your username, with a README.</figcaption></figure>
+    </article>
+  </section>
+
+  <section class="g-part p2" id="part-2" aria-labelledby="part-2-t">
+    <p class="g-kicker">Part 2</p>
+    <h2 id="part-2-t">Create a token</h2>
+    <p class="g-intro">Glassfolio needs permission to commit the README, its images and the daily-update workflows to your profile repository. A fine-grained token limited to that one repository is the safest way to give it.</p>
+    <article class="g-step g-side" id="step-2">
+      <div>
+        <h3><span class="g-n">2</span>Open Settings</h3>
+        <p>Click your avatar in the top right and choose <strong>Settings</strong>.</p>
+      </div>
+      <figure class="g-fig narrow"><img src="docs/guide/02-open-settings-menu.png" width="440" height="881" loading="lazy" decoding="async" alt="GitHub's profile menu with Settings near the bottom."><figcaption>The profile menu.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-3">
+      <h3><span class="g-n">3</span>Open Developer settings</h3>
+        <p>Scroll to the bottom of the left menu and click <strong>Developer settings</strong>.</p>
+      <figure class="g-fig"><img src="docs/guide/03-developer-settings.png" width="1392" height="905" loading="lazy" decoding="async" alt="GitHub Settings with Developer settings at the bottom of the left menu."><figcaption>Developer settings is the last item in the menu.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-4">
+      <h3><span class="g-n">4</span>Fine-grained tokens</h3>
+        <p>Open <strong>Personal access tokens → Fine-grained tokens</strong> and click <strong>Generate new token</strong>.</p>
+      <figure class="g-fig"><img src="docs/guide/04-fine-grained-tokens.png" width="1840" height="807" loading="lazy" decoding="async" alt="The fine-grained tokens page with the Generate new token button."><figcaption>Generate a new fine-grained token.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-5">
+      <h3><span class="g-n">5</span>Name it and pick an expiry</h3>
+        <p>Give the token a name you'll recognise, for example <code>profile-readme</code>. Keep <strong>Resource owner</strong> as your own account and choose an expiry. You only need the token when you publish from Glassfolio; the daily updates use GitHub's own temporary token, so an expired token doesn't stop them.</p>
+      <figure class="g-fig"><img src="docs/guide/05-new-token-name-and-expiry.png" width="1825" height="796" loading="lazy" decoding="async" alt="The new token form with a name, the resource owner and an expiry date."><figcaption>Name, owner and expiry.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-6">
+      <h3><span class="g-n">6</span>Only your profile repository</h3>
+        <p>Under <strong>Repository access</strong>, choose <strong>Only select repositories</strong> and tick <strong>your-username/your-username</strong>.</p>
+      <figure class="g-fig"><img src="docs/guide/06-repository-access-only-profile-repo.png" width="1352" height="558" loading="lazy" decoding="async" alt="Repository access set to only select repositories, with the profile repository chosen."><figcaption>Limit the token to the one repository.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-7">
+      <h3><span class="g-n">7</span>Contents and Workflows: Read and write</h3>
+        <p>Under <strong>Permissions</strong>, click <strong>Add permissions</strong> and set:</p>
+        <div class="g-table"><table>
+          <thead><tr><th scope="col">Permission</th><th scope="col">Access</th><th scope="col">Why</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Contents</strong></td><td>Read and write</td><td>Commit the README, banner and cards</td></tr>
+            <tr><td><strong>Workflows</strong></td><td>Read and write</td><td>Add the daily-update workflows in <code>.github/workflows/</code></td></tr>
+            <tr><td>Metadata</td><td>Read-only</td><td>Added by GitHub automatically</td></tr>
+          </tbody>
+        </table></div>
+        <p>Nothing else is needed. Then click <strong>Generate token</strong>.</p>
+        <p class="g-note">Without <strong>Workflows: Read and write</strong>, your README and cards are still published, but the daily updates are left out and Glassfolio tells you exactly what to add. You can edit the token's permissions later; you don't need a new one.</p>
+      <figure class="g-fig"><img src="docs/guide/07-permissions-contents-workflows.png" width="1175" height="672" loading="lazy" decoding="async" alt="Permissions with Contents and Workflows set to read and write and Metadata read-only."><figcaption>Two permissions, both read and write.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-8">
+      <h3><span class="g-n">8</span>Copy the token</h3>
+        <p>Copy the token now: GitHub shows it only once. Keep it private and don't paste it anywhere except Glassfolio.</p>
+      <figure class="g-fig"><img src="docs/guide/08-copy-token.png" width="1017" height="397" loading="lazy" decoding="async" alt="The new token shown once, with a copy button."><figcaption>GitHub shows the token only once.</figcaption></figure>
+    </article>
+  </section>
+
+  <section class="g-part p3" id="part-3" aria-labelledby="part-3-t">
+    <p class="g-kicker">Part 3</p>
+    <h2 id="part-3-t">Make your README</h2>
+    <article class="g-step" id="step-9">
+      <h3><span class="g-n">9</span>Open Glassfolio</h3>
+        <p>Go to <a href="index.html">the home page</a> and press <strong>Build my README</strong>. It takes you to the studio with the cursor in the username box. The studio shows a sample profile until you load yours.</p>
+      <figure class="g-fig"><img src="docs/guide/site-09-open-website.png" width="1440" height="900" loading="lazy" decoding="async" alt="The Glassfolio home page: the headline, the Build my README button and the rotating design showcase."><figcaption>The home page. Build my README takes you to the studio.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-10">
+      <h3><span class="g-n">10</span>Enter your username and build</h3>
+        <p>In <strong>1. Your GitHub username or profile link</strong>, paste your profile link (for example <code>https://github.com/your-username</code>) or just your username, then press <strong>Build my README</strong>. The preview below fills with your own repositories and activity.</p>
+      <figure class="g-fig"><img src="docs/guide/site-10-enter-username.png" width="1132" height="200" loading="lazy" decoding="async" alt="The top of the studio: the username box with Build my README on the left, and the publish buttons on the right."><figcaption>Step 1 of the studio on the left, publishing on the right.</figcaption></figure>
+    </article>
+    <article class="g-step g-side" id="step-11">
+      <div>
+        <h3><span class="g-n">11</span>Exact data (optional)</h3>
+        <p>Open <strong>Exact data: add a token</strong> at the bottom of the options and paste the same token, then press <strong>Build my README</strong> again. With a token, the heatmap and streaks cover the <strong>past year</strong> instead of the last 90 days of public activity, and the same token is used for publishing, so you only paste it once.</p>
+      </div>
+      <figure class="g-fig narrow"><img src="docs/guide/site-11-exact-data.png" width="270" height="314" loading="lazy" decoding="async" alt="The Exact data options group with the GitHub token field."><figcaption>The token field under Exact data.</figcaption></figure>
+    </article>
+    <article class="g-step g-side" id="step-12">
+      <div>
+        <h3><span class="g-n">12</span>Choose the look</h3>
+        <p>Under <strong>Look</strong>, choose in order:</p>
+        <ul>
+          <li><strong>Design</strong>: the classic glass look, or one of eleven designs that restyle the whole README from banner to footer.</li>
+          <li><strong>Theme</strong>: a colour theme, or <strong>Custom</strong> with your own two colours. In a design, Auto keeps the design's own colours; any other theme recolours all of it.</li>
+          <li><strong>Showpiece</strong>: the animated scene under your banner. Auto uses the look's own scene; None leaves it out.</li>
+        </ul>
+        <p>The preview updates as you choose, and the <strong>Light</strong> and <strong>Dark</strong> switches above it show both versions.</p>
+      </div>
+      <figure class="g-fig narrow tall"><img src="docs/guide/site-12-look.png" width="270" height="1190" loading="lazy" decoding="async" alt="The Look options: the design picker with thumbnails, then the theme swatches."><figcaption>Design first, then theme.</figcaption></figure>
+    </article>
+    <article class="g-step g-side" id="step-13">
+      <div>
+        <h3><span class="g-n">13</span>About you</h3>
+        <p>Fill in what you'd like visitors to read first:</p>
+        <ul>
+          <li><strong>Job title</strong>: shown right after your name.</li>
+          <li><strong>Tagline</strong>: a smaller line under it.</li>
+          <li><strong>Skills and tools</strong>: comma separated; the first ones also appear in the header.</li>
+          <li><strong>LinkedIn</strong>: adds a LinkedIn button to Connect.</li>
+        </ul>
+        <p><strong>For employers</strong> is optional too: what you're open to, a résumé link, certifications, a recruiter summary, skills backed by your repositories, and impact numbers for your projects.</p>
+      </div>
+      <figure class="g-fig narrow"><img src="docs/guide/site-13-about-you.png" width="270" height="401" loading="lazy" decoding="async" alt="The About you options: job title, tagline, skills and LinkedIn."><figcaption>About you.</figcaption></figure>
+    </article>
+    <article class="g-step g-side" id="step-14">
+      <div>
+        <h3><span class="g-n">14</span>Projects and daily updates</h3>
+        <p>Under <strong>Order &amp; projects</strong>, move sections up or down and tick up to six repositories to feature, in the order you want them. Tick none to show your most-starred ones.</p>
+        <p>Under <strong>Daily updates</strong>, leave <strong>Keep my stats fresh every day</strong> ticked. It adds the workflows that refresh your profile automatically. It becomes available once your own profile is loaded.</p>
+      </div>
+      <figure class="g-fig narrow"><img src="docs/guide/site-14-projects.png" width="270" height="691" loading="lazy" decoding="async" alt="Order and projects: the section order with up and down buttons, and the featured project checkboxes."><figcaption>Section order and featured projects.</figcaption></figure>
+    </article>
+    <article class="g-step g-side" id="step-15">
+      <div>
+        <h3><span class="g-n">15</span>Sections</h3>
+        <p>Under <strong>Sections</strong>, tick or untick any part of the README: the wave header and footer, visual cards, contribution heatmap, timeline, projects, Connect links, the 3D contribution universe and the footer credit are on by default. <strong>Recently pushed</strong> and the <strong>Language donut chart</strong> are off until you tick them.</p>
+        <p>The <strong>Make it even better</strong> box lists quick wins, such as a job title or repository descriptions. Click a tip to jump to the field that fixes it.</p>
+      </div>
+      <figure class="g-fig narrow"><img src="docs/guide/site-15-sections.png" width="270" height="568" loading="lazy" decoding="async" alt="The Sections options: a list of checkboxes for each part of the README."><figcaption>Switch any section on or off.</figcaption></figure>
+    </article>
+  </section>
+
+  <section class="g-part p4" id="part-4" aria-labelledby="part-4-t">
+    <p class="g-kicker">Part 4</p>
+    <h2 id="part-4-t">Publish</h2>
+    <article class="g-step" id="step-16">
+      <h3><span class="g-n">16</span>Open the publish panel</h3>
+        <p>In <strong>2. Publish your README.md</strong>, press <strong>Publish to GitHub</strong>. The panel says which repository it will commit to and which permissions the token needs.</p>
+      <figure class="g-fig"><img src="docs/guide/site-16-publish-panel.png" width="1132" height="471" loading="lazy" decoding="async" alt="The studio's publish panel: the repository it will commit to, the permissions needed, a token field and the Publish button."><figcaption>The publish panel, shown here for the sample account.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-17">
+      <h3><span class="g-n">17</span>Paste the token and publish</h3>
+        <p>Paste your token and press <strong>Publish</strong>. If you already added it under Exact data (step 11), you can leave this box empty.</p>
+    </article>
+    <article class="g-step" id="step-18">
+      <h3><span class="g-n">18</span>Done</h3>
+        <p>You'll see <strong>Published N files</strong> with the time of your first daily run, and links to your profile and to the Actions tab.</p>
+        <p class="g-note">If it says <strong>Daily updates were NOT added</strong>, the token is missing Workflows: Read and write (step 7). Your README is live anyway; fix the token and publish again to add the daily updates.</p>
+    </article>
+  </section>
+
+  <section class="g-part p5" id="part-5" aria-labelledby="part-5-t">
+    <p class="g-kicker">Part 5</p>
+    <h2 id="part-5-t">Check your profile</h2>
+    <article class="g-step" id="step-19">
+      <h3><span class="g-n">19</span>Your profile repository</h3>
+        <p>Your repository now contains:</p>
+        <ul>
+          <li><code>README.md</code>, <code>banner.svg</code>, <code>banner-light.svg</code> and a <code>cards/</code> folder: the profile and its images, in a dark and a light version.</li>
+          <li><code>.github/workflows/update-readme.yml</code>: rebuilds everything once a day.</li>
+          <li><code>.github/workflows/update-universe.yml</code>: refreshes the 3D universe every 6 hours.</li>
+          <li><code>.readme-patch/</code>: your saved choices (<code>config.json</code>) and the generator the workflows run.</li>
+        </ul>
+      <figure class="g-fig"><img src="docs/guide/18-profile-repo-files.png" width="1792" height="902" loading="lazy" decoding="async" alt="The profile repository after publishing, listing .github/workflows, .readme-patch, cards, README.md and the banner files."><figcaption>The files Glassfolio commits.</figcaption></figure>
+    </article>
+    <article class="g-step" id="step-20">
+      <h3><span class="g-n">20</span>Your profile</h3>
+        <p>Open your profile. Visitors on GitHub's light theme see the light version, and visitors on the dark theme see the dark one.</p>
+      <figure class="g-fig"><img src="docs/guide/19-profile-readme-top.png" width="1747" height="828" loading="lazy" decoding="async" alt="The published profile: the banner and GitHub stats cards."><figcaption>The top of a published profile.</figcaption></figure>
+      <figure class="g-fig"><img src="docs/guide/20-profile-heatmap-universe.png" width="1537" height="821" loading="lazy" decoding="async" alt="Further down the published profile: the contribution heatmap and the 3D contribution universe."><figcaption>The heatmap and the 3D universe.</figcaption></figure>
+    </article>
+    <article class="g-step" id="run-now">
+      <h3>Run the daily update now (optional)</h3>
+        <p>Open your repository's <strong>Actions</strong> tab, choose <strong>Update profile README</strong> and press <strong>Run workflow</strong> to see it work without waiting. A successful run makes an <strong>Update profile stats</strong> commit when your numbers have changed.</p>
+    </article>
+  </section>
+
+  <section class="g-part p1" id="later" aria-labelledby="later-t">
+    <h2 id="later-t">Change something later</h2>
+    <p>Open the studio again, build with your username, change the options and publish again. The daily workflows always use your latest choices. Don't edit <code>README.md</code> or the images by hand: the next daily run rebuilds them from your choices.</p>
+  </section>
+
+  <section class="g-part p3" id="trouble" aria-labelledby="trouble-t">
+    <h2 id="trouble-t">Troubleshooting</h2>
+    <div class="g-table"><table>
+      <thead><tr><th scope="col">What you see</th><th scope="col">What to do</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Daily updates were NOT added</strong></td><td>Give the token Workflows: Read and write (step 7) and publish again. The message names what's missing for your token.</td></tr>
+        <tr><td><strong>The token can't write to this repository</strong></td><td>The token needs Contents: Read and write on <code>your-username/your-username</code>, and the repository must be in its Repository access list (step 6).</td></tr>
+        <tr><td><strong>Create a public repository named …</strong></td><td>Create the profile repository first (step 1). It must be public and named exactly like your username.</td></tr>
+        <tr><td><strong>GitHub's rate limit is used up</strong></td><td>Wait a little, or add your token under Exact data (step 11).</td></tr>
+        <tr><td><strong>The page looks like an older version</strong></td><td>Press Ctrl+Shift+R (Cmd+Shift+R on a Mac). The page also reloads itself once when a newer version has been deployed.</td></tr>
+        <tr><td><strong>The profile still shows old images</strong></td><td>GitHub caches images for a few minutes. Wait, then refresh the profile.</td></tr>
+        <tr><td><strong>The daily workflow stopped</strong></td><td>GitHub pauses scheduled workflows in a public repository after 60 days without activity. Re-enable it in the Actions tab.</td></tr>
+      </tbody>
+    </table></div>
+    <p>To stop the daily updates, delete the two files in <code>.github/workflows/</code> or disable them in the Actions tab. Your README stays as it is.</p>
+    <p class="g-cta"><a class="btn btn-lg" href="index.html#studio">Open the studio</a></p>
+  </section>
+    </div>
+  </div>
+</main>
+<footer class="foot">
+  <div class="foot-in">
+    <div class="foot-brand">
+      <svg class="mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="1.5" class="m1"/><rect x="11" y="1" width="8" height="8" rx="1.5" class="m4"/><rect x="1" y="11" width="8" height="8" rx="1.5" class="m3"/><rect x="11" y="11" width="8" height="8" rx="1.5" class="m2"/></svg>
+      <span>README Glassfolio</span>
+    </div>
+    <p>Free and open source under the MIT licence. Not affiliated with or endorsed by GitHub.</p>
+    <nav aria-label="Legal and project">
+      <a href="index.html">Home</a>
+      <a href="how-to-use.html">How to use</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="LICENSE">MIT licence</a>
+      <a href="https://github.com/SandeepKomal/README-Glassfolio" rel="noopener">Source code on GitHub</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
