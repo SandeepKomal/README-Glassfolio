@@ -128,7 +128,7 @@
       stage.appendChild(fig);
       return { el: fig, label: name + (sp ? " · " + sp.label : "") };
     });
-    sc = { at: 0, playing: !reduce, hold: false, seen: true, timer: null };
+    sc = { at: 0, playing: !reduce, seen: true, timer: null };
     var nameEl = document.getElementById("scName"), pause = document.getElementById("scPause");
     function place() {
       var n = slides.length;
@@ -143,18 +143,26 @@
     function go(i) { sc.at = (i + slides.length) % slides.length; place(); restart(); }
     function restart() {
       clearInterval(sc.timer);
-      if (sc.playing && !sc.hold && sc.seen && !document.hidden) sc.timer = setInterval(function () { go(sc.at + 1); }, 4500);
+      if (sc.playing && sc.seen && !document.hidden) sc.timer = setInterval(function () { go(sc.at + 1); }, 4500);
     }
-    function setPlaying(on) { sc.playing = on; pause.setAttribute("aria-pressed", on ? "false" : "true"); pause.textContent = on ? "Pause" : "Play"; restart(); }
+    // the one switch for the rotation: it says what pressing it will do, with a matching icon
+    var ICON = { pause: "M5 3v10M11 3v10", play: "M5 3l8 5-8 5z" };
+    function setPlaying(on) {
+      sc.playing = on;
+      pause.setAttribute("aria-pressed", on ? "false" : "true");
+      pause.textContent = "";
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"), path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      svg.setAttribute("viewBox", "0 0 16 16"); svg.setAttribute("aria-hidden", "true"); path.setAttribute("d", on ? ICON.pause : ICON.play);
+      svg.appendChild(path); pause.appendChild(svg); pause.appendChild(document.createTextNode(on ? "Pause slideshow" : "Play slideshow"));
+      pause.classList.toggle("is-playing", on);
+      restart();
+    }
     document.getElementById("scPrev").addEventListener("click", function () { go(sc.at - 1); });
     document.getElementById("scNext").addEventListener("click", function () { go(sc.at + 1); });
-    pause.addEventListener("click", function () { setPlaying(!sc.playing); });
+    // pressing Play moves on straight away, so the button visibly does something
+    pause.addEventListener("click", function () { var on = !sc.playing; if (on) go(sc.at + 1); setPlaying(on); });
     var box = document.getElementById("showcase");
-    // stop while someone is looking closely or using the keyboard inside, and while it's off screen or the tab is hidden
-    box.addEventListener("mouseenter", function () { sc.hold = true; restart(); });
-    box.addEventListener("mouseleave", function () { sc.hold = false; restart(); });
-    box.addEventListener("focusin", function () { sc.hold = true; restart(); });
-    box.addEventListener("focusout", function (e) { if (!box.contains(e.relatedTarget)) { sc.hold = false; restart(); } });
+    // it also rests while it's off screen or the tab is hidden, and picks up again when it's back
     document.addEventListener("visibilitychange", restart);
     if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { sc.seen = es[0].isIntersecting; restart(); }).observe(box);
     setPlaying(sc.playing); place();

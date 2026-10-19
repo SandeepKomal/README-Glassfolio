@@ -6,7 +6,7 @@ Turn any GitHub username into a profile README that stands out: a themed banner,
 - **No third-party services.** No badge or stats APIs. Data comes straight from `api.github.com`, and every card is drawn in your browser.
 - **Three ways to use it.** A static web page, a command-line tool, and share links. All share one engine (`js/core.js`).
 
-**New here? Follow the [step-by-step guide with screenshots](docs/HOW_TO_USE.md)** (also as a [PDF](docs/Patch-your-profile-guide.pdf)): create your profile repository and a token, make your README on [readme-glassfolio.in](https://readme-glassfolio.in/), publish, and check the daily updates.
+**New here? Follow the [step-by-step guide with screenshots](docs/HOW_TO_USE.md)** (also [on the website](https://readme-glassfolio.in/how-to-use.html) and as a [PDF](docs/Patch-your-profile-guide.pdf)): create your profile repository and a token, make your README on [readme-glassfolio.in](https://readme-glassfolio.in/), publish, and check the daily updates.
 
 ## Preview
 

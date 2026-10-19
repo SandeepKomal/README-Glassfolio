@@ -448,21 +448,22 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
 .sc-screen img+img{border-radius:0 0 14px 14px;aspect-ratio:16/9;object-fit:cover;object-position:top}
 .sc-slide[data-pos="far"],.sc-slide[data-pos="-2"],.sc-slide[data-pos="2"]{pointer-events:none}
 /* the stand: a short neck on a soft oval base */
-.sc-bar{display:flex;align-items:center;justify-content:center;gap:var(--s3);margin-top:var(--s4)}
+.sc-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--s3);margin-top:var(--s4)}
 .sc-btn{display:inline-grid;place-items:center;width:44px;height:44px;padding:0;border-radius:var(--r-ctl);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
 .sc-btn:hover{background:var(--sunk)}
 .sc-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sc-name{margin:0;min-width:16ch;text-align:center;font-weight:600;font-size:.95rem}
-.sc-pause{min-height:44px;padding:0 14px;border-radius:var(--r-ctl);border:1px solid transparent;background:none;color:var(--ink-2);font-size:.88rem;text-decoration:underline;text-underline-offset:3px}
-.sc-pause:hover{color:var(--ink)}
+.sc-pause{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:.88rem;font-weight:500}
+.sc-pause:hover{background:var(--sunk)}
+.sc-pause svg{width:14px;height:14px;fill:currentColor;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .sc-cap{margin:var(--s2) 0 0;text-align:center;font-size:.85rem;color:var(--ink-3)}
 @media (max-width:700px){
   .sc-stage{height:calc((100vw - 32px) * .6175 + 98px)}
   .sc-slide{width:76%}
   .sc-slide[data-pos="-1"]{transform:translateX(-146%) scale(.74) rotateY(18deg)}
   .sc-slide[data-pos="1"]{transform:translateX(46%) scale(.74) rotateY(-18deg)}
-  .sc-name{min-width:0;flex:1}
-  .sc-pause{padding:0 8px}
+  .sc-name{min-width:0;flex:1 1 calc(100% - 112px)}
+  .sc-pause{order:3;margin:0 auto}
 }
 @media (max-width:600px){.showcase{margin-left:calc(var(--s4) * -1);margin-right:calc(var(--s4) * -1);padding:0 var(--s4)}}
 
@@ -502,3 +503,57 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
 .sc-chin{height:24px;border-radius:0 0 16px 16px;background:linear-gradient(180deg,#e6e6e9,#d3d3d8);box-shadow:0 30px 40px -30px rgba(30,30,40,.45)}
 .sc-neck{width:15%;height:40px;margin:0 auto;clip-path:polygon(10% 0,90% 0,100% 100%,0 100%);background:linear-gradient(90deg,#c9c9ce,#e4e4e8 50%,#c6c6cb)}
 .sc-base{width:32%;height:7px;margin:0 auto;border-radius:4px;background:linear-gradient(180deg,#dcdce0,#bfbfc5);box-shadow:0 10px 14px -8px rgba(30,30,40,.4)}
+
+/* ---------- the How to use guide ---------- */
+.guide{padding-top:var(--s8)}
+.g-head{max-width:820px}
+.g-need{margin:var(--s6) 0 0;padding:var(--s5);border:1px solid var(--line);border-radius:var(--r-media);background:var(--surface)}
+.g-need h2{font-size:1.05rem;letter-spacing:0;margin:0 0 var(--s2);color:var(--ink)}
+.g-need ul{margin:0 0 var(--s3);padding-left:1.2em;color:var(--ink-2)}
+.g-need p{margin:0;color:var(--ink-2);font-size:.95rem}
+.g-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:var(--s7);margin-top:var(--s8);align-items:start}
+.g-toc{position:sticky;top:80px;font-size:.92rem}
+.g-toc p{margin:0 0 var(--s2);font-weight:600;color:var(--ink)}
+.g-toc ol{margin:0;padding-left:1.2em;display:grid;gap:var(--s2);color:var(--ink-3)}
+.g-toc a{color:var(--ink-2);text-decoration:none}
+.g-toc a:hover{color:var(--accent);text-decoration:underline}
+.g-part{padding:0 0 var(--s7);margin:0 0 var(--s7);border-bottom:1px solid var(--line)}
+.g-part:last-child{border-bottom:0}
+.g-part.p1{--sec:var(--c1);--sec-deep:var(--d1)}.g-part.p2{--sec:var(--c2);--sec-deep:var(--d2)}.g-part.p3{--sec:var(--c3);--sec-deep:var(--d3)}.g-part.p4{--sec:var(--c4);--sec-deep:var(--d4)}.g-part.p5{--sec:var(--c5);--sec-deep:var(--d5)}
+.g-kicker{margin:0 0 var(--s1);font-weight:600;font-size:.9rem;color:var(--sec-deep)}
+.g-part>h2{color:var(--sec);margin:0 0 var(--s4)}
+.g-intro{color:var(--ink-2);max-width:var(--read);margin:0 0 var(--s5)}
+.g-part>p{color:var(--ink-2);max-width:var(--read)}
+.g-step{padding:var(--s5) 0;border-top:1px solid var(--line)}
+.g-step h3{display:flex;align-items:baseline;gap:var(--s3);font-size:1.2rem;margin:0 0 var(--s3)}
+.g-n{flex:none;font-size:1rem;font-weight:700;color:var(--sec-deep);min-width:1.6em}
+.g-step p,.g-step li{color:var(--ink-2);max-width:var(--read)}
+.g-step p{margin:0 0 var(--s3)}
+.g-step ul{margin:0 0 var(--s3);padding-left:1.2em}
+.g-step li{margin:0 0 var(--s1)}
+.g-step strong,.g-part strong{color:var(--ink)}
+.guide code{font-size:.88em;background:var(--sunk);padding:1px 5px;border-radius:4px;color:var(--ink)}
+.g-note{padding:var(--s3) var(--s4);border-radius:var(--r-ctl);background:var(--accent-tint);color:var(--ink)!important}
+.g-fig{margin:var(--s4) 0 0}
+.g-fig img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+.g-fig figcaption{margin-top:var(--s2);font-size:.85rem;color:var(--ink-3)}
+.g-fig.narrow{max-width:300px}
+/* steps whose screenshot is a narrow panel: text on the left, the panel beside it */
+.g-side{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:var(--s6);align-items:start}
+.g-side .g-fig{margin:0}
+.g-fig.tall img{max-height:760px;object-fit:cover;object-position:top}
+.g-table{overflow-x:auto;margin:0 0 var(--s3)}
+.g-table table{border-collapse:collapse;width:100%;font-size:.95rem}
+.g-table th,.g-table td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+.g-table th{color:var(--ink);font-weight:600;border-bottom-color:var(--line-strong)}
+.g-cta{margin-top:var(--s6)}
+@media (max-width:900px){
+  .g-layout{grid-template-columns:1fr;gap:var(--s5)}
+  .g-toc{position:static;padding:var(--s4) var(--s5);border:1px solid var(--line);border-radius:var(--r-media);background:var(--surface)}
+  .g-side{grid-template-columns:1fr;gap:var(--s3)}
+  .g-side .g-fig{margin-top:var(--s2)}
+}
+@media (pointer:coarse){.g-toc a{display:inline-block;padding:6px 0}}
+.g-layout>*{min-width:0}
+.guide code{overflow-wrap:anywhere}
+.nav-in>.btn-sm{margin-left:auto}
