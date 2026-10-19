@@ -769,7 +769,7 @@
     if (core.wantsShowpiece(m, o)) {
       var so = {}; for (var sk in o) so[sk] = o[sk];
       so.showpiece = core.showpieceKey(o);
-      files.push({ name: "cards/showpiece.svg", data: showpieces.build(m, so, p) });
+      files.push({ name: "cards/showpiece.svg", data: showpieces.build(m, so, framed(p)) });
     }
     if (core.wantsHire(m, o)) files.push({ name: "cards/hire.svg", data: hireCard(m, o, p) });
     files.push({ name: "cards/stats.svg", data: statsCard(m, p) });
@@ -846,7 +846,15 @@
     for (k in (options || {})) if (options[k] !== undefined) o[k] = options[k];
     var p = paletteOf(m, o);
     p.anim = o.animate !== false;
-    return showpieces.build(m, o, p);
+    return showpieces.build(m, o, framed(p));
+  }
+
+  /** The palette, plus the cards' own frame, so a showpiece sits in exactly the frame its cards do. */
+  function framed(p) {
+    var q = {}, k;
+    for (k in p) q[k] = p[k];
+    q.frame = function (W, H, label, body) { return frame(W, H, label, p, body); };
+    return q;
   }
 
   /** The banner alone, in the README's design and colours (for previews). */
