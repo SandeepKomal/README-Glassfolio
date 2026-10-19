@@ -199,7 +199,7 @@ Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) 
 | `botanical` | A herbarium | Pressed-specimen sheets with tape and a swaying sprig, leaves for contributions, leafy wreaths | A vine with swaying leaves and a plate label | Code garden |
 | `atlas` | An antique sea chart | Parchment with contour lines and a double neatline, compass headings, dashed route rules, elevation-tinted heatmap, compass-rose dials | A scale bar, the title in a cartouche, a ship sailing the route | Passport |
 | `museum` | A gallery | Brass-trimmed placards with screws and a breathing spotlight, mosaic heatmap, gilt-framed dials; the banner hangs your name in a gilded frame behind velvet ropes | *ROOM 02*, the title in italic serif, a spotlight sweeping the wall | Holo trading card |
-| `ink` | Sumi-e on washi | Washi fibres, brush-stroke rules, your vermilion seal in the corner, ink-blot heatmap, an ensō for every streak | A brush stroke with the title, a sakura petal drifting across | Code garden |
+| `ink` | Sumi-e on washi | Washi fibres, brush-stroke rules, your vermilion seal in the corner, ink-blot heatmap, an ensō for every streak | A brush stroke with the title, a sakura petal drifting across | Ink scroll |
 | `periodic` | A lab notebook | Graph paper, an element tile for every card title, element-coloured heatmap, electron shells that orbit; the banner makes you an element | The section as an element tile and a molecule chain that vibrates | Vital signs |
 | `abyss` | The deep sea | Water that deepens down each card, swaying light rays and rising bubbles, glowing plankton for contributions, sonar rings that ping | A depth marker and fish swimming past | Commit forecast |
 
@@ -219,7 +219,9 @@ All motion is CSS inside the images, only gentle loops (nothing waits to appear)
 
 From the terminal: `--open-to`, `--resume`, `--certs`, `--summary`, `--proof` and `--impact "api: 40+ users, 99.9% uptime; web: 3x faster"`.
 
-**Showpieces.** One full-width animated scene, right under the banner, drawn from your own repos and activity. Nobody else's profile has the same one, because the data is yours. Pick one in *Look → Showpiece* (or the gallery on the page), or use `--showpiece <name>`. Off by default.
+**Showpieces.** One full-width animated scene, right under the banner, drawn from your own repos and activity. Nobody else's profile has the same one, because the data is yours. Pick one in *Look → Showpiece* (or the gallery on the page), or use `--showpiece <name>`. On *Auto* you get the look's own scene: *Pulse* in the classic look, or the chosen design's showpiece. `--showpiece none` (or *None*) leaves it out.
+
+Every showpiece sits in the same frame as your cards (the glass panel in the classic look, or your design's frame), on the same surface, in the same fonts, and is drawn in your theme's colours, so the scene under the banner always matches the rest of the README.
 
 | Showpiece | Your data becomes | Motion |
 | --- | --- | --- |
@@ -233,6 +235,8 @@ From the terminal: `--open-to`, `--resume`, `--certs`, `--summary`, `--proof` an
 | `newspaper` | *The Daily Commit*: a front page with your year as the headline, your top repo as the lead story, a halftone of your activity, markets (stars, followers, PRs), the commit weather and a classified ad for what you're open to. | The EXTRA! stamp pulses and a breaking-news ticker runs along the bottom |
 | `passport` | An open passport: the photo page with your details and a machine-readable zone, and a visa stamp for every language you've shipped in, with the year you first used it. | A holographic sheen crosses the page and the stamps thump down one by one |
 | `constellation` | Your sky: each top language is a constellation, each repo a star that's bigger with more stars, named after the brightest. | Stars twinkle, the sky drifts, a shooting star crosses now and then |
+| `pulse` | The classic look's own: your year of contributions as one glowing waveform on glass, with your headline numbers, languages and busiest week marked. | A bright point travels the line, a soft scan sweeps across, the peak pings |
+| `scroll` | The Ink design's own: an ink-wash landscape whose far ridges are your months and near hills your recent weeks, a three-line poem from your profile and your three best works along the foot. | The ensō moon turns, mist drifts, birds cross and petals fall |
 | `weather` | A commit forecast: your chance of commits on any day, the last seven days as weather (more work, more sun), a forecast discussion and a radar of the last 12 weeks. | The sun turns, clouds drift, the radar sweeps and each echo flares as it passes |
 
 Like every other image, a showpiece gets a light and a dark version with *Day and night*, follows *Subtle motion*, stands still for visitors who prefer reduced motion, is kept fresh by the daily update, and needs nothing but the data the cards already use. It's left out of text-only READMEs.

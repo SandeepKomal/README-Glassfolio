@@ -113,7 +113,7 @@ function parseArgs(argv) {
       case "--no-wave": o.opts.wave = false; break;
       case "--no-universe": o.opts.universe = false; break;
       case "--universe-style": o.opts.universeStyle = next(); break;
-      case "--showpiece": o.opts.showpiece = next(); if (o.opts.showpiece === "none") o.opts.showpiece = ""; break;
+      case "--showpiece": o.opts.showpiece = next(); break;
       case "--universe-only": o.universeOnly = true; o.opts.universe = true; break;
       case "--no-animation": o.opts.animate = false; break;
       case "--no-heatmap": o.opts.heatmap = false; break;

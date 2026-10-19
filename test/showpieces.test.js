@@ -60,10 +60,12 @@ test("motion is CSS only, honours reduced motion, and switches off completely", 
   }
 });
 
-test("no showpiece by default; choosing one adds it under the banner, in both halves of a day-and-night set", () => {
+test("the classic look brings Pulse by default; 'none' leaves it out; any pick sits under the banner, in both halves of a day-and-night set", () => {
   const plain = cards.buildFiles(core.SAMPLE, {});
-  assert.ok(!plain.some((f) => /showpiece/.test(f.name)), "nothing changes for anyone who hasn't picked one");
-  assert.doesNotMatch(plain[0].data, /showpiece/);
+  assert.match(plain[0].data, /alt="Pulse for DevopsNimbus/, "Auto in the classic look is Pulse");
+  const none = cards.buildFiles(core.SAMPLE, { showpiece: "none" });
+  assert.ok(!none.some((f) => /showpiece/.test(f.name)));
+  assert.doesNotMatch(none[0].data, /showpiece/);
   for (const key of KEYS) {
     const files = cards.buildFiles(core.SAMPLE, { showpiece: key }), md = files[0].data;
     assert.ok(files.some((f) => f.name === "cards/showpiece.svg") && files.some((f) => f.name === "cards/showpiece-light.svg"), key);
@@ -113,11 +115,11 @@ test("showpieces are drawn from the profile: repos, stars and activity show up",
   assert.ok(board.includes("SLO-CALC") && !board.includes("TF-GUARDRAILS"), "a featured pick replaces the most-starred");
 });
 
-test("text-only READMEs and unknown names never get a showpiece", () => {
+test("text-only READMEs never get a showpiece, and an unknown name falls back to Auto", () => {
   assert.ok(!cards.buildFiles(core.SAMPLE, { showpiece: "metro", cards: false }).some((f) => /showpiece/.test(f.name)));
   assert.doesNotMatch(core.buildReadme(core.SAMPLE, { showpiece: "metro", cards: false }), /showpiece/);
   assert.strictEqual(showpieces.build(core.SAMPLE, { showpiece: "nope" }), null);
-  assert.ok(!cards.buildFiles(core.SAMPLE, { showpiece: "nope" }).some((f) => /showpiece/.test(f.name)));
+  assert.strictEqual(core.showpieceKey({ showpiece: "nope" }), "pulse");
 });
 
 test("share links carry the showpiece and ignore anything else", () => {

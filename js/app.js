@@ -257,8 +257,8 @@
     var key = $("#showpiece").value, s = core.SHOWPIECES.filter(function (x) { return x.key === key; })[0];
     var radio = document.querySelector('input[name="piece"][value="' + (s || key === "none" ? key : "") + '"]');
     if (radio) radio.checked = true;
-    var w = core.worldOf({ world: $("#world").value }), auto = w ? core.SHOWPIECES.filter(function (x) { return x.key === w.showpiece; })[0] : null;
-    if (!s) { $("#showHint").textContent = key === "none" ? "No showpiece." : auto ? "Auto: " + auto.label + ", the " + w.label + " design's own scene. " + auto.blurb : "Auto: none in the classic look. Pick one to add an animated scene under your banner."; return; }
+    var w = core.worldOf({ world: $("#world").value }), ak = core.showpieceKey({ world: $("#world").value }), auto = core.SHOWPIECES.filter(function (x) { return x.key === ak; })[0];
+    if (!s) { $("#showHint").textContent = key === "none" ? "No showpiece." : "Auto: " + auto.label + ", the " + (w ? w.label + " design's" : "classic look's") + " own scene, in your colours. " + auto.blurb; return; }
     $("#showHint").textContent = s ? s.blurb : "One animated scene under your banner, drawn from your own repos and activity.";
   }
 

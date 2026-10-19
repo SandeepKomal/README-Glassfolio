@@ -12,6 +12,8 @@
  *   passport    an open passport: the photo page with a machine-readable zone, and one visa stamp per language
  *   constellation  languages as constellations, repos as stars sized by their stars, with a shooting star
  *   weather     a commit forecast: chance of commits, the last seven days as weather, a radar of recent weeks
+ *   pulse       the classic look's own: the year's contributions as one glowing waveform, with the headline numbers
+ *   scroll      the Ink world's own: an ink-wash landscape whose ridges are the year, a poem from the profile and a seal
  *
  * Like the cards, motion is plain CSS inside the SVG (no scripts), only ambient loops, and visitors who prefer reduced
  * motion (or anyone with Subtle motion off) get the same scene standing still.
@@ -998,8 +1000,162 @@
     return svgOpen(W, H, "Commit forecast for " + m.login) + motion(p, css) + out.join("") + "</svg>";
   }
 
+  /** A smooth path through points (Catmull-Rom as cubic Béziers). */
+  function smooth(pts) {
+    if (!pts.length) return "";
+    var d = "M" + pts[0][0].toFixed(1) + "," + pts[0][1].toFixed(1);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      d += " C" + (p1[0] + (p2[0] - p0[0]) / 6).toFixed(1) + "," + (p1[1] + (p2[1] - p0[1]) / 6).toFixed(1) + " " +
+        (p2[0] - (p3[0] - p1[0]) / 6).toFixed(1) + "," + (p2[1] - (p3[1] - p1[1]) / 6).toFixed(1) + " " + p2[0].toFixed(1) + "," + p2[1].toFixed(1);
+    }
+    return d;
+  }
+
+  /* ================= L. pulse (the classic look's own scene) ================= */
+  function pulse(m, o, p) {
+    var f = facts(m, o), S = kit(p), W = 960, H = 520, out = [];
+    var series = f.weeks.length >= 4 ? f.weeks.slice(-52) : f.months.length >= 2 ? f.months.map(function (x) { return x.v; }) : [];
+    var x0 = 40, x1 = W - 40, base = 452, top = 286, mx = Math.max.apply(null, series.concat([1]));
+    var pts = series.map(function (v, i) { return [x0 + (series.length === 1 ? 0 : i / (series.length - 1)) * (x1 - x0), base - 8 - v / mx * (base - top)]; });
+    var line = smooth(pts);
+    out.push("<defs>" +
+      '<linearGradient id="ln" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + S.a1 + '"/><stop offset="1" stop-color="' + S.a2 + '"/></linearGradient>' +
+      '<linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + S.a1 + '" stop-opacity="0.32"/><stop offset="1" stop-color="' + S.a2 + '" stop-opacity="0"/></linearGradient>' +
+      '<linearGradient id="scan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + S.ink + '" stop-opacity="0"/><stop offset="0.5" stop-color="' + S.ink + '" stop-opacity="0.07"/><stop offset="1" stop-color="' + S.ink + '" stop-opacity="0"/></linearGradient>' +
+      '<filter id="gw" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>');
+
+    // header: a live dot, the handle, the name and the role
+    out.push('<circle cx="46" cy="50" r="4.5" fill="' + S.a1 + '" filter="url(#gw)"' + (p.anim ? ' class="lf-plv"' : "") + "/>");
+    out.push('<text x="60" y="55" font-family="' + MONO + '" font-size="13" font-weight="600" letter-spacing="3" fill="' + S.a1 + '">PULSE · @' + esc(trunc(m.login, 26).toUpperCase()) + "</text>");
+    var name = trunc(m.name, 26);
+    out.push('<text x="40" y="112" font-family="' + SANS + '" font-size="' + fit(name, 44, 26, 520, 0.58) + '" font-weight="800" letter-spacing="-1" fill="' + S.ink + '">' + esc(name) + "</text>");
+    if (f.role) out.push('<text x="40" y="142" font-family="' + SANS + '" font-size="16" fill="' + S.muted + '">' + esc(trunc(f.role, 60)) + "</text>");
+    // languages as pills
+    var lx = 40;
+    m.langs.slice(0, 4).forEach(function (l) {
+      var label = trunc(l.name, 14) + " " + l.pct + "%", w = Math.round(label.length * 7.4 + 34);
+      out.push('<g><rect x="' + lx + '" y="166" width="' + w + '" height="28" rx="14" fill="' + S.ink + '" fill-opacity="0.06" stroke="' + S.line + '"/>' +
+        '<circle cx="' + (lx + 16) + '" cy="180" r="5" fill="' + langColor(l.name, S.a1) + '"/>' +
+        '<text x="' + (lx + 28) + '" y="185" font-family="' + SANS + '" font-size="13" font-weight="600" fill="' + S.ink + '">' + esc(label) + "</text></g>");
+      lx += w + 10;
+    });
+    // headline numbers, right-aligned
+    var nums = [];
+    if (f.total !== null) nums.push([commas(f.total), f.windowDays >= 360 ? "contributions this year" : "contributions"]);
+    if (f.streak !== null) nums.push([String(f.streak), f.streak === 1 ? "day streak" : "day streak"]);
+    nums.push([fmt(m.stars), "stars earned"]);
+    nums.slice(0, 3).forEach(function (n, i) {
+      var y = 76 + i * 64;
+      out.push('<text x="' + (W - 40) + '" y="' + y + '" text-anchor="end" font-family="' + SANS + '" font-size="36" font-weight="800" letter-spacing="-1" fill="' + (i ? S.ink : S.a1) + '">' + esc(n[0]) + "</text>");
+      out.push('<text x="' + (W - 40) + '" y="' + (y + 20) + '" text-anchor="end" font-family="' + SANS + '" font-size="12" letter-spacing="1.4" fill="' + S.muted + '">' + esc(n[1].toUpperCase()) + "</text>");
+    });
+
+    // the waveform: weekly contributions as one glowing line over a soft fill, with a gridline every quarter of the peak
+    [0.25, 0.5, 0.75, 1].forEach(function (k) { out.push('<rect x="' + x0 + '" y="' + (base - 8 - k * (base - top)).toFixed(1) + '" width="' + (x1 - x0) + '" height="1" fill="' + S.line + '" fill-opacity="0.5"/>'); });
+    out.push('<rect x="' + x0 + '" y="' + base + '" width="' + (x1 - x0) + '" height="1" fill="' + S.line + '"/>');
+    if (pts.length >= 2) {
+      out.push('<path d="' + line + " L" + x1 + "," + base + " L" + x0 + "," + base + 'Z" fill="url(#ar)"/>');
+      out.push('<path d="' + line + '" fill="none" stroke="url(#ln)" stroke-width="3" stroke-linecap="round" filter="url(#gw)"/>');
+      // the busiest week, marked
+      var pk = 0;
+      series.forEach(function (v, i) { if (v > series[pk]) pk = i; });
+      var px = pts[pk][0], py = pts[pk][1], right = px > W - 200;
+      out.push('<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="7" fill="none" stroke="' + S.a2 + '" stroke-width="2" stroke-opacity="0.5"' + (p.anim ? ' class="lf-ppk" style="transform-origin:' + px.toFixed(1) + "px " + py.toFixed(1) + 'px"' : "") + "/>");
+      out.push('<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="5" fill="' + S.a2 + '"/>');
+      out.push('<text x="' + (px + (right ? -12 : 12)).toFixed(1) + '" y="' + (py - 10).toFixed(1) + '" text-anchor="' + (right ? "end" : "start") + '" font-family="' + SANS + '" font-size="12" font-weight="700" fill="' + S.a2 + '">PEAK · ' + commas(series[pk]) + (f.weeks.length >= 4 ? " IN A WEEK" : " IN A MONTH") + "</text>");
+      // a bright point travels the line, and a soft scan sweeps across
+      out.push('<circle r="5" fill="' + S.ink + '" filter="url(#gw)" style="offset-path:path(\'' + line + "');offset-distance:62%\"" + (p.anim ? ' class="lf-prn"' : "") + "/>");
+      out.push('<rect x="-160" y="' + (top - 20) + '" width="160" height="' + (base - top + 20) + '" fill="url(#scan)"' + (p.anim ? ' class="lf-psc"' : "") + "/>");
+    } else {
+      out.push('<text x="' + W / 2 + '" y="' + (base - 60) + '" text-anchor="middle" font-family="' + SANS + '" font-size="18" fill="' + S.muted + '">The pulse starts with the first commit.</text>');
+    }
+    // months along the base
+    if (f.months.length >= 2) f.months.forEach(function (mo, i, arr) {
+      if (arr.length > 8 && i % 2) return;
+      out.push('<text x="' + (x0 + i / (arr.length - 1) * (x1 - x0)).toFixed(1) + '" y="' + (base + 24) + '" text-anchor="' + (i === 0 ? "start" : i === arr.length - 1 ? "end" : "middle") + '" font-family="' + MONO + '" font-size="11" letter-spacing="1.2" fill="' + S.dim + '">' + mo.label.toUpperCase() + "</text>");
+    });
+    var css = "@keyframes plv{0%,100%{opacity:1}50%{opacity:.25}}.lf-plv{animation:plv 1.6s ease-in-out infinite}" +
+      "@keyframes prn{from{offset-distance:0%}to{offset-distance:100%}}.lf-prn{animation:prn 9s linear infinite}" +
+      "@keyframes psc{from{transform:translateX(0)}to{transform:translateX(" + (W + 160) + "px)}}.lf-psc{animation:psc 6s ease-in-out infinite}" +
+      "@keyframes ppk{0%{transform:scale(1);opacity:.9}100%{transform:scale(2.8);opacity:0}}.lf-ppk{animation:ppk 2.2s ease-out infinite}";
+    return svgOpen(W, H, "Pulse for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
+  /* ================= M. ink scroll (the Ink world's own scene) ================= */
+  function scroll(m, o, p) {
+    var f = facts(m, o), S = kit(p), r = rng(core.hash(m.login + "scroll")), W = 960, H = 560, out = [];
+    var SEAL = S.a1, SEAL_TEXT = S.onA1;
+    // the mountains are the year: far ridges from the months, the near ridge from the weeks
+    // each value is a peak, with a saddle between neighbours, so the ridge reads as mountains rather than hills
+    function ridgeLine(values, base, height, seed, xs) {
+      var rr = rng(seed), mx = Math.max.apply(null, values.concat([1])), n = values.length, span = (W + 40 - xs * 2) / Math.max(1, n), pts = [[-20, base - height * 0.1]];
+      values.forEach(function (v, i) {
+        var x = xs + (i + 0.5) * span, h = (0.22 + 0.78 * v / mx) * height;
+        pts.push([x - span * (0.3 + rr() * 0.12), base - h * (0.3 + rr() * 0.15)]);
+        pts.push([x + (rr() - 0.5) * span * 0.2, base - h]);
+      });
+      pts.push([W + 20, base - height * 0.12]);
+      return smooth(pts);
+    }
+    function ridge(values, base, height, seed, xs) { return ridgeLine(values, base, height, seed, xs) + " L" + (W + 20) + "," + H + " L-20," + H + "Z"; }
+    var months = f.months.length >= 3 ? f.months.map(function (x) { return x.v; }) : [3, 5, 4, 7, 6, 8, 5, 6];
+    // the near ridge: the last half-year in seven broad hills
+    var wk = f.weeks.length >= 7 ? f.weeks.slice(-28) : months.concat(months), weeks = [];
+    for (var g = 0; g < 7; g++) weeks.push(wk.slice(Math.floor(g * wk.length / 7), Math.floor((g + 1) * wk.length / 7)).reduce(function (t, v) { return t + v; }, 0));
+    out.push("<defs>" +
+      '<linearGradient id="wash" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + S.ink + '" stop-opacity="0.16"/><stop offset="1" stop-color="' + S.ink + '" stop-opacity="0"/></linearGradient>' +
+      '<filter id="bl" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="9"/></filter></defs>');
+    // the moon: an ensō in the second accent, drawn as one brush stroke that leaves a gap
+    out.push('<g' + (p.anim ? ' class="en" style="transform-origin:760px 150px"' : "") + '><circle cx="760" cy="150" r="70" fill="none" stroke="' + S.a2 + '" stroke-width="9" stroke-linecap="round" stroke-dasharray="380 60" stroke-opacity="0.85" transform="rotate(-70 760 150)"/></g>');
+    out.push('<path d="' + ridge(months.slice().reverse(), 360, 190, core.hash(m.login + "far"), 0) + '" fill="url(#wash)"/>');
+    out.push('<path d="' + ridge(months, 420, 170, core.hash(m.login + "mid"), -60) + '" fill="' + S.ink + '" fill-opacity="0.13"/>');
+    out.push('<path d="' + ridgeLine(months, 420, 170, core.hash(m.login + "mid"), -60) + '" fill="none" stroke="' + S.ink + '" stroke-opacity="0.35" stroke-width="1.6"/>');
+    // drifting mist between the ridges
+    [[260, 392, 260], [700, 420, 300]].forEach(function (mi, i) {
+      out.push("<g" + (p.anim ? ' class="ms" style="animation-duration:' + (22 + i * 9) + "s;animation-delay:-" + i * 6 + 's"' : "") + '><ellipse cx="' + mi[0] + '" cy="' + mi[1] + '" rx="' + mi[2] + '" ry="18" fill="' + (S.dark ? mix(S.bg, S.ink, 0.3) : S.bg) + '" fill-opacity="' + (S.dark ? 0.35 : 0.7) + '" filter="url(#bl)"/></g>');
+    });
+    out.push('<path d="' + ridge(weeks, 498, 90, core.hash(m.login + "near"), -30) + '" fill="' + S.ink + '" fill-opacity="0.22"/>');
+    out.push('<path d="' + ridgeLine(weeks, 498, 90, core.hash(m.login + "near"), -30) + '" fill="none" stroke="' + S.ink + '" stroke-opacity="0.6" stroke-width="2.4" stroke-linecap="round"/>');
+    // birds crossing
+    for (var b = 0; b < 3; b++) {
+      var bx = 120 + b * 46, by = 210 + (b % 2) * 18;
+      out.push("<g" + (p.anim ? ' class="bd" style="animation-delay:-' + (b * 1.4).toFixed(1) + 's"' : "") + '><path d="M' + bx + "," + by + " q7,-7 14,0 q7,-7 14,0" + '" fill="none" stroke="' + S.ink + '" stroke-opacity="0.6" stroke-width="2" stroke-linecap="round"/></g>');
+    }
+    // the poem, top left, and the seal
+    var top = f.projects[0], lang = m.langs[0] ? m.langs[0].name : "quiet";
+    var poem = [
+      (f.total !== null ? commas(f.total) + " brushstrokes" : m.all.length + " scrolls") + " this year,",
+      lang + " ink runs through " + m.publicRepos + (m.publicRepos === 1 ? " scroll" : " scrolls"),
+      f.streak ? f.streak + (f.streak === 1 ? " day" : " days") + ", one unbroken line." : "the brush rests, then returns."
+    ];
+    out.push('<text x="44" y="70" font-family="' + SERIF + '" font-size="30" font-weight="700" fill="' + S.ink + '">' + esc(trunc(m.name, 28)) + "</text>");
+    poem.forEach(function (l, i) { out.push('<text x="46" y="' + (110 + i * 26) + '" font-family="' + SERIF + '" font-size="17" font-style="italic" fill="' + S.muted + '">' + esc(trunc(l, 52)) + "</text>"); });
+    if (o.world !== "ink") out.push('<g transform="rotate(-4 900 64)"><rect x="868" y="36" width="58" height="58" rx="6" fill="' + SEAL + '"/><rect x="873" y="41" width="48" height="48" rx="3" fill="none" stroke="' + SEAL_TEXT + '" stroke-opacity="0.7" stroke-width="1.5"/>' +
+      '<text x="897" y="74" text-anchor="middle" font-family="' + SERIF + '" font-size="20" font-weight="700" fill="' + SEAL_TEXT + '">' + esc(core.initials(m)) + "</text></g>");
+    // the three best works, written along the foot like inscriptions
+    var works = f.projects.slice(0, 3);
+    works.forEach(function (w, i) {
+      var x = 44 + i * 300;
+      if (i) out.push('<rect x="' + (x - 22) + '" y="512" width="1" height="30" fill="' + S.ink + '" fill-opacity="0.3"/>');
+      out.push('<text x="' + x + '" y="524" font-family="' + SERIF + '" font-size="16" font-weight="700" fill="' + S.ink + '">' + esc(trunc(w.name, 24)) + "</text>");
+      out.push('<text x="' + x + '" y="542" font-family="' + SANS + '" font-size="12" fill="' + S.muted + '">★ ' + esc(fmt(w.stars)) + (w.lang ? " · " + esc(trunc(w.lang, 16)) : "") + "</text>");
+    });
+    if (!works.length) out.push('<text x="44" y="530" font-family="' + SERIF + '" font-size="16" font-style="italic" fill="' + S.muted + '">An empty scroll, waiting for its first stroke.</text>');
+    // petals in the first accent
+    for (var k = 0; k < 7; k++) {
+      var cx = Math.round(80 + r() * 800), cy = Math.round(30 + r() * 120);
+      out.push("<g" + (p.anim ? ' class="pt" style="animation-duration:' + (9 + r() * 6).toFixed(1) + "s;animation-delay:-" + (r() * 10).toFixed(1) + 's"' : "") + '><ellipse cx="' + cx + '" cy="' + cy + '" rx="5" ry="3" fill="' + S.a1 + '" fill-opacity="0.75" transform="rotate(' + Math.round(r() * 180) + " " + cx + " " + cy + ')"/></g>');
+    }
+    var css = "@keyframes en{to{transform:rotate(360deg)}}.en{animation:en 60s linear infinite}" +
+      "@keyframes ms{0%,100%{transform:translateX(-40px)}50%{transform:translateX(40px)}}.ms{animation:ms 24s ease-in-out infinite}" +
+      "@keyframes bd{from{transform:translate(-200px,20px)}to{transform:translate(1000px,-40px)}}.bd{animation:bd 26s linear infinite}" +
+      "@keyframes pt{0%{transform:translate(0,0) rotate(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translate(140px,360px) rotate(240deg);opacity:0}}.pt{animation:pt 12s linear infinite}";
+    return svgOpen(W, H, "Ink scroll for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
   var SCENES = { departures: departures, holo: holo, metro: metro, vinyl: vinyl, vitals: vitals, garden: garden,
-    yearcode: yearcode, newspaper: newspaper, passport: passport, constellation: constellation, weather: weather };
+    yearcode: yearcode, newspaper: newspaper, passport: passport, constellation: constellation, weather: weather, pulse: pulse, scroll: scroll };
 
   /** The chosen showpiece as an SVG string, or null when none is chosen. */
   function build(m, options, palette) {

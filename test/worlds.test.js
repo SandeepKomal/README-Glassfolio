@@ -62,7 +62,8 @@ test("each world brings its own showpiece; another pick or 'none' wins", () => {
   core.WORLDS.forEach((w) => assert.strictEqual(core.showpieceKey({ world: w.key }), w.showpiece));
   assert.strictEqual(core.showpieceKey({ world: "airport", showpiece: "vinyl" }), "vinyl");
   assert.strictEqual(core.showpieceKey({ world: "airport", showpiece: "none" }), "");
-  assert.strictEqual(core.showpieceKey({ showpiece: "" }), "", "the classic look has none unless picked");
+  assert.strictEqual(core.showpieceKey({ showpiece: "" }), "pulse", "the classic look brings Pulse");
+  assert.strictEqual(new Set(core.WORLDS.map((w) => w.showpiece)).size, core.WORLDS.length, "every design has a scene of its own");
   assert.ok(!cards.buildFiles(S, { world: "airport", showpiece: "none" }).some((f) => /showpiece/.test(f.name)));
   assert.match(file(cards.buildFiles(S, { world: "airport" }), "cards/showpiece.svg"), /DEPARTURES/, "the board doesn't repeat the banner's name");
   assert.match(file(cards.buildFiles(S, { world: "broadsheet" }), "cards/showpiece.svg"), />Front Page</, "one masthead per page");
