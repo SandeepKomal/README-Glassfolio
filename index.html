@@ -14,7 +14,7 @@
 <meta property="og:description" content="A complete profile README from your own GitHub data, in eleven designs. Free and runs in your browser.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f5f3ee'/%3E%3Crect x='6' y='6' width='9' height='9' rx='1.5' fill='%23a9d3bc'/%3E%3Crect x='17' y='6' width='9' height='9' rx='1.5' fill='%231a6b4b'/%3E%3Crect x='6' y='17' width='9' height='9' rx='1.5' fill='%2356a07c'/%3E%3Crect x='17' y='17' width='9' height='9' rx='1.5' fill='%23cfe5d8'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f5f3ee'/%3E%3Crect x='6' y='6' width='9' height='9' rx='1.5' fill='%23aeb8cc'/%3E%3Crect x='17' y='6' width='9' height='9' rx='1.5' fill='%2322304f'/%3E%3Crect x='6' y='17' width='9' height='9' rx='1.5' fill='%235f7096'/%3E%3Crect x='17' y='17' width='9' height='9' rx='1.5' fill='%23d6dbe6'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css?v=dev">
 </head>
 <body>
@@ -54,11 +54,16 @@
     </form>
     <div class="msg" id="msg" role="status" aria-live="polite"></div>
 
-    <figure class="shot">
-      <img id="heroBanner" width="1200" height="300" alt="A profile banner in the Voxel design: the sample profile's name above a city of green blocks, one stack per day of contributions, with a small hover robot.">
-      <img id="heroPiece" width="960" height="560" alt="The Block city showpiece for the sample profile: recent weeks of contributions as stacked blocks, beside totals for contributions, best day, streak and repositories.">
-      <figcaption>Generated on this page from a sample profile, in the Voxel design. Yours is built from your own repositories.</figcaption>
-    </figure>
+    <section class="showcase" id="showcase" aria-roledescription="carousel" aria-label="Six of the designs, generated live from a sample profile">
+      <div class="sc-stage" id="scStage"></div>
+      <div class="sc-bar">
+        <button type="button" class="sc-btn" id="scPrev" aria-label="Previous design"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></button>
+        <p class="sc-name" id="scName" aria-live="polite"></p>
+        <button type="button" class="sc-btn" id="scNext" aria-label="Next design"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>
+        <button type="button" class="sc-pause" id="scPause" aria-pressed="false">Pause</button>
+      </div>
+      <p class="sc-cap">Generated on this page from a sample profile. Yours is built from your own repositories.</p>
+    </section>
   </section>
 
   <section class="numbers" aria-label="What's included">

@@ -2,7 +2,8 @@
  * site.js: the page's own touches, separate from the generator.
  *   - the top bar gains a hairline once the page scrolls
  *   - sections rise gently into view, and the numbers count up when they arrive
- *   - the hero image lifts into place as you scroll toward it
+ *   - the showcase: six designs on stands, the front one changing every few seconds (pausable, never for reduced motion)
+ *   - the showcase lifts into place as you scroll toward it
  *   - the story: one sample profile shown through several designs, changing as you scroll past a pinned stage
  * Visitors who prefer reduced motion get every piece shown plainly, with nothing moving.
  */
@@ -10,7 +11,7 @@
   "use strict";
   var core = window.ReadmeCore, cardsLib = window.ReadmeCards;
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var nav = document.querySelector(".nav"), shot = document.querySelector(".shot");
+  var nav = document.querySelector(".nav"), shot = document.querySelector(".sc-stage");
   function dataUri(svg) { return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
 
@@ -27,11 +28,12 @@
   }
 
   /* ---------- the story ---------- */
-  var STORY = ["", "airport", "broadsheet", "observatory", "ink", "voxel"];
+  // six designs here and six others in the hero's showcase, so the page shows twelve looks
+  var STORY = ["transit", "botanical", "atlas", "periodic", "observatory", "ink"];
   var track = document.getElementById("storyTrack"), story = null;
   if (track && core && cardsLib) {
     var looks = STORY.map(function (key) {
-      var w = core.worldOf({ world: key }), mode = key === "" || key === "voxel" || key === "ink" ? "light" : "dark", o = { world: key, mode: mode, theme: key ? "" : "emerald" };
+      var w = core.worldOf({ world: key }), mode = key === "observatory" ? "dark" : "light", o = { world: key, mode: mode, theme: key ? "" : "emerald" };
       var piece = core.showpieceKey(o), sp = core.SHOWPIECES.filter(function (s) { return s.key === piece; })[0];
       o.showpiece = piece;
       return { name: w ? w.label : "Classic", blurb: w ? w.blurb : "Glass cards on a moving wave, in any theme or your own colours.", piece: sp ? sp.label : "", o: o };
@@ -73,7 +75,7 @@
   }
 
   /* ---------- statements: words fill from ink to the brand ramp, one after another, as the line scrolls past ---------- */
-  var RAMP = ["#1a6b4b", "#1f7a6c", "#2a6f8f"], INK = [28, 28, 30];
+  var RAMP = ["#22304f", "#3d5580", "#8a6239"], INK = [28, 28, 30];
   function rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.slice(i, i + 2), 16); }); }
   function along(t) { var seg = t * (RAMP.length - 1), i = Math.min(RAMP.length - 2, Math.floor(seg)), a = rgb(RAMP[i]), b = rgb(RAMP[i + 1]), k = seg - i; return a.map(function (v, j) { return v + (b[j] - v) * k; }); }
   var fills = Array.prototype.map.call(document.querySelectorAll("[data-fill]"), function (box) {
@@ -95,7 +97,56 @@
     });
   }
 
-  /* ---------- the hero image lifts into place ---------- */
+  /* ---------- the showcase: designs on stands, rotating to the front ---------- */
+  var SHOW = [{ world: "", theme: "royal", mode: "dark", name: "Classic, Royal theme" }, { world: "airport", mode: "dark" }, { world: "voxel", mode: "light" },
+    { world: "museum", mode: "light" }, { world: "broadsheet", mode: "light" }, { world: "abyss", mode: "dark" }];
+  var stage = document.getElementById("scStage"), sc = null;
+  if (stage && core && cardsLib) {
+    var slides = SHOW.map(function (look, i) {
+      var w = core.worldOf(look), piece = core.showpieceKey(look), sp = core.SHOWPIECES.filter(function (x) { return x.key === piece; })[0];
+      var o = { world: look.world, theme: look.theme || "", mode: look.mode, showpiece: piece }, name = look.name || (w ? w.label : "Classic");
+      var fig = el("figure", "sc-slide"), screen = el("div", "sc-screen"), a = el("img"), b = el("img");
+      a.src = dataUri(cardsLib.bannerFor(core.SAMPLE, o)); a.alt = name + " design: banner"; a.width = 1200; a.height = 300; a.decoding = "async";
+      b.src = dataUri(cardsLib.showpieceFor(core.SAMPLE, o)); b.alt = name + " design: the " + (sp ? sp.label : "") + " showpiece"; b.decoding = "async";
+      screen.appendChild(a); screen.appendChild(b); fig.appendChild(screen);
+      fig.appendChild(el("div", "sc-neck")); fig.appendChild(el("div", "sc-base"));
+      fig.addEventListener("click", function () { if (sc.at !== i) { go(i); } });
+      stage.appendChild(fig);
+      return { el: fig, label: name + (sp ? " · " + sp.label : "") };
+    });
+    sc = { at: 0, playing: !reduce, hold: false, seen: true, timer: null };
+    var nameEl = document.getElementById("scName"), pause = document.getElementById("scPause");
+    function place() {
+      var n = slides.length;
+      slides.forEach(function (s, i) {
+        var rel = ((i - sc.at) % n + n + Math.floor(n / 2)) % n - Math.floor(n / 2);
+        s.el.dataset.pos = Math.abs(rel) > 2 ? "far" : String(rel);
+        s.el.setAttribute("aria-hidden", rel === 0 ? "false" : "true");
+        s.el.setAttribute("aria-roledescription", "slide"); s.el.setAttribute("aria-label", (i + 1) + " of " + n + ": " + s.label);
+      });
+      nameEl.textContent = slides[sc.at].label;
+    }
+    function go(i) { sc.at = (i + slides.length) % slides.length; place(); restart(); }
+    function restart() {
+      clearInterval(sc.timer);
+      if (sc.playing && !sc.hold && sc.seen && !document.hidden) sc.timer = setInterval(function () { go(sc.at + 1); }, 4500);
+    }
+    function setPlaying(on) { sc.playing = on; pause.setAttribute("aria-pressed", on ? "false" : "true"); pause.textContent = on ? "Pause" : "Play"; restart(); }
+    document.getElementById("scPrev").addEventListener("click", function () { go(sc.at - 1); });
+    document.getElementById("scNext").addEventListener("click", function () { go(sc.at + 1); });
+    pause.addEventListener("click", function () { setPlaying(!sc.playing); });
+    var box = document.getElementById("showcase");
+    // stop while someone is looking closely or using the keyboard inside, and while it's off screen or the tab is hidden
+    box.addEventListener("mouseenter", function () { sc.hold = true; restart(); });
+    box.addEventListener("mouseleave", function () { sc.hold = false; restart(); });
+    box.addEventListener("focusin", function () { sc.hold = true; restart(); });
+    box.addEventListener("focusout", function (e) { if (!box.contains(e.relatedTarget)) { sc.hold = false; restart(); } });
+    document.addEventListener("visibilitychange", restart);
+    if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { sc.seen = es[0].isIntersecting; restart(); }).observe(box);
+    setPlaying(sc.playing); place();
+  }
+
+  /* ---------- the showcase lifts into place ---------- */
   function updateShot() {
     if (!shot || reduce) return;
     var r = shot.getBoundingClientRect(), vh = window.innerHeight;
@@ -125,5 +176,5 @@
       io.unobserve(e.target);
     });
   }, { rootMargin: "0px 0px -6% 0px", threshold: 0.06 });
-  Array.prototype.forEach.call(document.querySelectorAll("[data-reveal], .shot"), function (n) { io.observe(n); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-reveal]"), function (n) { io.observe(n); });
 })();
