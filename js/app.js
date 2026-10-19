@@ -578,6 +578,12 @@
       var b = document.createElement("button"); b.type = "button"; b.className = "ghost"; b.textContent = a.label;
       b.addEventListener("click", a.run); m.appendChild(b);
     });
+    // the message line sits under the form; when it's scrolled out of view, echo it briefly at the bottom of the screen
+    var r = m.getBoundingClientRect(), t = $("#toast");
+    if (t && text && (r.bottom < 0 || r.top > window.innerHeight)) {
+      t.textContent = text; t.classList.toggle("err", !!isErr); t.classList.add("on");
+      clearTimeout(say.timer); say.timer = setTimeout(function () { t.classList.remove("on"); }, 3600);
+    }
   }
 
   function showSkeleton() {

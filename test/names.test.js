@@ -33,8 +33,10 @@ function collect(re, group) {
   return found;
 }
 
+// the project's own repository is the one real address the site links to (its "Source code on GitHub" link)
+const PROJECT_REPO = "SandeepKomal/README-Glassfolio";
 test("every github.com/<name> in the project is the sample identity, a placeholder or a GitHub page", () => {
-  collect(/github\.com\/([A-Za-z0-9_-]+)/g, 1).forEach(({ file, value }) =>
+  collect(new RegExp("github\\.com\\/(?!" + PROJECT_REPO.replace(/[/-]/g, "\\$&") + "\\b)([A-Za-z0-9_-]+)", "g"), 1).forEach(({ file, value }) =>
     assert.ok(PLACEHOLDER_USERS.has(value) || GITHUB_PAGES.has(value), file + " mentions github.com/" + value + ", which isn't the sample identity or a known placeholder"));
 });
 
@@ -59,5 +61,6 @@ test("the examples in the README and the page use the sample identity", () => {
   const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8"), page = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   assert.match(readme, new RegExp("node cli\\.js https://github\\.com/" + SAMPLE_USER));
   assert.match(readme, new RegExp("\\?user=" + SAMPLE_USER));
-  assert.doesNotMatch(page, /github\.com\/(?!settings|your-username)/, "the page names no account in its text");
+  // the only account the page links to is the project's own repository
+  assert.doesNotMatch(page.replace(/https:\/\/github\.com\/SandeepKomal\/README-Glassfolio"/g, ""), /github\.com\/(?!settings|your-username)/, "the page names no other account in its text");
 });
