@@ -558,23 +558,22 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
 .guide code{overflow-wrap:anywhere}
 .nav-in>.btn-sm{margin-left:auto}
 
-/* Keep the README attribution phrases visually grouped on narrow previews. */
+/* Stack the source and generator credit into balanced lines on narrow previews. */
 @media (max-width:600px){
-  .gh-body sub.readme-credit{
+  .gh-body sub{
     display:inline-block;
     max-width:100%;
     text-align:center;
-    white-space:normal;
-    font-size:.62em;
-    line-height:1.3;
   }
-  .gh-body sub.readme-credit .readme-credit-source,
-  .gh-body sub.readme-credit .readme-credit-made{
+  .gh-body sub > span{
     display:block;
     max-width:100%;
+    text-align:center;
     text-wrap:balance;
+    font-size:.82em;
+    line-height:1.3;
   }
-  .gh-body sub.readme-credit .readme-credit-made{margin-top:.12em}
+  .gh-body sub > span + span{margin-top:.12em}
 }
 
 /* ---------- privacy policy callout: scoped to the privacy section only ---------- */
