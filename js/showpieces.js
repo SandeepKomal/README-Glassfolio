@@ -66,6 +66,13 @@
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
   }
+  /** A theme colour made readable on a scene's surface, so every scene can wear the README's own accents. */
+  function on(bg, c, min) {
+    var dark = core.contrast(bg, "#ffffff") > core.contrast(bg, "#000000"), t = 0, x = c;
+    while (core.contrast(x, bg) < min && t < 0.95) { t += 0.05; x = core.mixHex(c, dark ? "#ffffff" : "#000000", t); }
+    return x;
+  }
+  function mix(a, b, t) { return core.mixHex(a, b, t); }
   function langColor(lang, fallback) { return core.LANG_COLORS[lang] || fallback; }
   function svgOpen(W, H, label) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(label) + '">';
@@ -124,7 +131,7 @@
   /* ================= A. departures board ================= */
   function departures(m, o, p) {
     var f = facts(m, o), r = rng(core.hash(m.login + "flap")), W = 960;
-    var AMBER = "#ffd84a", INK = "#e8e8ea", MUTED = "#8a8a8f";
+    var AMBER = on("#0c0c0e", p.a1, 6), INK = "#e8e8ea", MUTED = "#8a8a8f";
     var rows = f.projects.slice(0, 5);
     var rowY = 212, step = 46, statsY = rowY + Math.max(1, rows.length) * step + 30, tickerH = 44, H = statsY + 96 + tickerH;
     var out = [], flips = 0;
@@ -335,6 +342,7 @@
     var f = facts(m, o), W = 960, H = 560, L = p.light;
     var BG = L ? "#f6f3ec" : "#0e1520", INK = L ? "#1d1d1f" : "#e9edf3", MUTED = L ? "#6b6555" : "#8b96a8", ZONE = L ? "#ece6d8" : "#141e2d";
     var STATION = L ? "#ffffff" : "#0e1520";
+    if (p.world) { BG = p.bg1; INK = p.ink; MUTED = mix(p.ink, p.bg1, 0.45); ZONE = mix(p.ink, p.bg1, 0.93); STATION = p.bg1; }
     // one line per top language, its four most recent repos as stations; a profile with no languages gets one "Code" line
     var lines = m.langs.slice(0, 4).map(function (l) {
       return { name: l.name, pct: l.pct, color: langColor(l.name, p.a1), repos: m.all.filter(function (r) { return r.lang === l.name && r.created; }) };
@@ -351,7 +359,7 @@
     var sub = "Network map " + (f.firstYear ? f.firstYear + " – " + f.lastYear + " · " : "") + lines.length + (lines.length === 1 ? " line" : " lines") + " · " + stations + (stations === 1 ? " station" : " stations") +
       (f.total !== null ? " · " + commas(f.total) + " journeys this year" : "");
     out.push('<text x="40" y="76" font-family="' + SANS + '" font-size="13" fill="' + MUTED + '">' + esc(sub) + "</text>");
-    out.push('<g transform="translate(910 48)"><circle r="22" fill="#e3242b"/><rect x="-29" y="-6.5" width="58" height="13" fill="#1d3a8f"/><text y="3.5" text-anchor="middle" font-family="' + SANS + '" font-size="8" font-weight="900" letter-spacing="1" fill="#ffffff">METRO</text></g>');
+    out.push('<g transform="translate(910 48)"><circle r="22" fill="' + on(BG, p.a2, 3) + '"/><rect x="-29" y="-6.5" width="58" height="13" fill="' + mix(p.a1, "#000000", 0.35) + '"/><text y="3.5" text-anchor="middle" font-family="' + SANS + '" font-size="8" font-weight="900" letter-spacing="1" fill="#ffffff">METRO</text></g>');
 
     var hubX = W - 160, top = 168, bottom = 446, yHub = (top + bottom) / 2;
     if (!lines.length) {
@@ -427,14 +435,14 @@
   /* ================= D. now playing (vinyl) ================= */
   function vinyl(m, o, p) {
     var f = facts(m, o), W = 960, H = 580, L = p.light;
-    var INK = L ? "#1d1630" : "#ffffff", MUTED = L ? "#6b5a7e" : "#b9a9c9", DIM = L ? "#9a8bab" : "#7d6c8e", PINK = L ? "#c2185b" : "#ff7ab6";
+    var INK = L ? "#1d1630" : "#ffffff", MUTED = L ? "#6b5a7e" : "#b9a9c9", DIM = L ? "#9a8bab" : "#7d6c8e", PINK = on(L ? "#f1ecf8" : "#120c18", p.a1, 4.5);
     var vol = Math.max(1, (f.lastYear || 0) - (Number(m.since) || f.lastYear || 0) + 1);
     var big = f.total !== null ? commas(f.total) : commas(m.stars);
     var out = [];
     out.push("<defs>" +
-      '<radialGradient id="bg" cx="0.2" cy="0.3" r="0.9"><stop offset="0" stop-color="' + (L ? "#fbe9f3" : "#3a1f4d") + '"/><stop offset="1" stop-color="' + (L ? "#f1ecf8" : "#120c18") + '"/></radialGradient>' +
-      '<linearGradient id="cov" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7ab6"/><stop offset="0.5" stop-color="' + p.a2 + '"/><stop offset="1" stop-color="' + p.a1 + '"/></linearGradient>' +
-      '<radialGradient id="lab"><stop offset="0" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff7ab6"/></radialGradient>' +
+      '<radialGradient id="bg" cx="0.2" cy="0.3" r="0.9"><stop offset="0" stop-color="' + (L ? mix(p.a2, "#ffffff", 0.86) : mix(p.a2, "#120c18", 0.7)) + '"/><stop offset="1" stop-color="' + (L ? "#f1ecf8" : "#120c18") + '"/></radialGradient>' +
+      '<linearGradient id="cov" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + mix(p.a2, "#ffffff", 0.3) + '"/><stop offset="0.5" stop-color="' + p.a2 + '"/><stop offset="1" stop-color="' + p.a1 + '"/></linearGradient>' +
+      '<radialGradient id="lab"><stop offset="0" stop-color="' + mix(p.a1, "#ffffff", 0.5) + '"/><stop offset="1" stop-color="' + p.a2 + '"/></radialGradient>' +
       '<linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0.3" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.16"/><stop offset="0.7" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
       '<filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000" flood-opacity="' + (L ? 0.22 : 0.5) + '"/></filter></defs>');
     out.push('<rect width="' + W + '" height="' + H + '" rx="18" fill="url(#bg)"/>');
@@ -499,7 +507,7 @@
   /* ================= E. vital signs ================= */
   function vitals(m, o, p) {
     var f = facts(m, o), W = 960, H = 600, out = [];
-    var GREEN = "#3ef07c", CYAN = "#2fd6ff", YELLOW = "#ffd23f", WHITE = "#e8edf0", GREY = "#6b7680";
+    var GREEN = on("#050607", p.a1, 7), CYAN = on("#050607", p.a2, 7), YELLOW = on("#050607", mix(p.a1, p.a2, 0.5), 7), WHITE = "#e8edf0", GREY = "#6b7680";
     out.push("<defs>" +
       '<filter id="g" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
       '<linearGradient id="sw" x1="0" x2="1"><stop offset="0" stop-color="#050607" stop-opacity="0"/><stop offset="1" stop-color="#050607"/></linearGradient>' +
@@ -596,7 +604,7 @@
       }
       out.push('<circle cx="850" cy="90" r="70" fill="url(#glow)"/><circle cx="850" cy="90" r="30" fill="#fff8d6"/>');
     }
-    var title = day ? "#0f2e47" : "#ffffff", sub = day ? "#2f5675" : "#a9bedb";
+    var title = day ? "#0f2e47" : "#ffffff", sub = on(day ? "#bfe6ff" : "#1b3358", mix(p.a1, day ? "#2f5675" : "#a9bedb", 0.55), 4.5);
     out.push('<text x="40" y="62" font-family="' + SERIF + '" font-size="34" font-weight="700" fill="' + title + '">' + esc(trunc(firstName(m), 20)) + "’s code garden</text>");
     var plants = f.projects.slice().sort(function (a, b) { return b.stars - a.stars; }).slice(0, 6);
     var line = (f.total !== null ? commas(f.total) + " seeds planted" : commas(m.all.length) + " seeds planted") +
@@ -640,7 +648,7 @@
     out.push('<text x="40" y="112" font-family="' + SANS + '" font-size="12" font-style="italic" fill="' + sub + '">The grass along the bottom is your contribution graph: taller blades, busier weeks.</text>');
     // fireflies at night, drifting pollen by day
     for (var j = 0; j < 10; j++) {
-      out.push('<circle cx="' + Math.round(80 + r() * 800) + '" cy="' + Math.round(300 + r() * 170) + '" r="' + (day ? 2 : 2.6) + '" fill="' + (day ? "#ffffff" : "#fff59a") + '"' +
+      out.push('<circle cx="' + Math.round(80 + r() * 800) + '" cy="' + Math.round(300 + r() * 170) + '" r="' + (day ? 2 : 2.6) + '" fill="' + (day ? mix(p.a1, "#ffffff", 0.6) : mix(p.a1, "#fff59a", 0.5)) + '"' +
         (p.anim ? ' class="ff" style="animation-duration:' + (4 + r() * 4).toFixed(1) + "s;animation-delay:-" + (r() * 4).toFixed(1) + 's"' : ' opacity="0.7"') + "/>");
     }
     out.push("</g>");
@@ -665,25 +673,27 @@
       var wi = f.weekdays.indexOf(Math.max.apply(null, f.weekdays));
       persona = { t: "The " + DAYS[wi] + " Titan", d: "Does their best work on " + DAYS[wi] + "s." };
     }
+    function lite(c) { var x = c, t = 0; while (core.contrast(x, "#1a0b2a") < 7.5 && t < 0.95) { t += 0.05; x = mix(c, "#ffffff", t); } return x; }
+    var TC = [lite(p.a1), lite(p.a2), lite(mix(p.a1, "#ffd23f", 0.45)), lite(mix(p.a2, "#ff5fa2", 0.4)), lite(mix(p.a1, p.a2, 0.5)), "#ffe7b3"];
     var tiles = [
-      { k: "Contributions", v: f.total !== null ? commas(f.total) : commas(m.all.length), s: f.total !== null ? (f.windowDays >= 360 ? "in the past year" : "in " + f.windowDays + " days") : "public repos", c: "#c6f432" },
-      { k: "Top language", v: top ? top.name : "—", s: top ? top.pct + "% of your repos" : "no languages yet", c: "#ff5fa2" },
-      { k: "Busiest month", v: f.peak && f.peak.v ? f.peak.label : "—", s: f.peak && f.peak.v ? commas(f.peak.v) + " contributions" : "quiet so far", c: "#2fe0ff" },
-      { k: "Longest streak", v: f.longest !== null ? String(f.longest) : "—", s: f.longest === 1 ? "day in a row" : "days in a row", c: "#ff9a3c" },
-      { k: "Best day", v: f.best ? f.best.label : "—", s: f.best ? f.best.v + " contributions on a " + f.best.day : "still to come", c: "#b79bff" },
+      { k: "Contributions", v: f.total !== null ? commas(f.total) : commas(m.all.length), s: f.total !== null ? (f.windowDays >= 360 ? "in the past year" : "in " + f.windowDays + " days") : "public repos", c: TC[0] },
+      { k: "Top language", v: top ? top.name : "—", s: top ? top.pct + "% of your repos" : "no languages yet", c: TC[1] },
+      { k: "Busiest month", v: f.peak && f.peak.v ? f.peak.label : "—", s: f.peak && f.peak.v ? commas(f.peak.v) + " contributions" : "quiet so far", c: TC[2] },
+      { k: "Longest streak", v: f.longest !== null ? String(f.longest) : "—", s: f.longest === 1 ? "day in a row" : "days in a row", c: TC[3] },
+      { k: "Best day", v: f.best ? f.best.label : "—", s: f.best ? f.best.v + " contributions on a " + f.best.day : "still to come", c: TC[4] },
       { k: "Your coding personality", v: persona.t, s: persona.d, c: "#ffe7b3" }
     ];
     out.push("<defs>" +
-      '<linearGradient id="yb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a0b4f"/><stop offset="0.55" stop-color="#5b1067"/><stop offset="1" stop-color="#b3264f"/></linearGradient>' +
+      '<linearGradient id="yb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + mix(p.a2, "#05010d", 0.78) + '"/><stop offset="0.55" stop-color="' + mix(mix(p.a1, p.a2, 0.5), "#05010d", 0.6) + '"/><stop offset="1" stop-color="' + mix(p.a1, "#05010d", 0.45) + '"/></linearGradient>' +
       '<filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>' +
       '<filter id="ts" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/></filter>' +
       '<clipPath id="yc"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath></defs>');
     out.push('<g clip-path="url(#yc)"><rect width="' + W + '" height="' + H + '" fill="url(#yb)"/>');
-    [[150, 120, "#ff5fa2"], [820, 90, "#2fe0ff"], [700, 560, "#c6f432"], [120, 560, "#ff9a3c"]].forEach(function (b, i) {
+    [[150, 120, TC[1]], [820, 90, TC[0]], [700, 560, TC[2]], [120, 560, TC[3]]].forEach(function (b, i) {
       out.push("<g" + (p.anim ? ' class="bl" style="animation-duration:' + (14 + i * 3) + "s;animation-delay:-" + i * 2 + 's"' : "") + '><circle cx="' + b[0] + '" cy="' + b[1] + '" r="150" fill="' + b[2] + '" opacity="0.35" filter="url(#blur)"/></g>');
     });
     // confetti
-    var CONF = ["#c6f432", "#ff5fa2", "#2fe0ff", "#ffe7b3", "#ff9a3c"];
+    var CONF = [TC[0], TC[1], TC[2], TC[5], TC[3]];
     for (var c = 0; c < 26; c++) {
       var cx = Math.round(r() * W), cy = Math.round(r() * H), rot = Math.round(r() * 180);
       out.push("<g" + (p.anim ? ' class="cf" style="animation-duration:' + (6 + r() * 6).toFixed(1) + "s;animation-delay:-" + (r() * 10).toFixed(1) + 's"' : "") + '><rect x="' + cx + '" y="' + cy + '" width="8" height="4" rx="1" fill="' + CONF[c % 5] + '" opacity="0.8" transform="rotate(' + rot + " " + cx + " " + cy + ')"/></g>');
@@ -710,7 +720,7 @@
 
   /* ================= H. the daily commit (newspaper) ================= */
   function newspaper(m, o, p) {
-    var f = facts(m, o), W = 960, H = 660, out = [], INK = "#1a1712", PAPER = "#f3eee2", FADE = "#5c554a";
+    var f = facts(m, o), W = 960, H = 660, out = [], INK = "#1a1712", PAPER = "#f3eee2", FADE = "#5c554a", RED = on("#f3eee2", p.a1, 4.8);
     var top = f.projects[0], vol = Math.max(1, (f.endYear || 0) - (Number(m.since) || f.endYear || 0) + 1);
     var d = f.newest ? new Date(f.newest + "T00:00:00Z") : null;
     var dateline = d && !isNaN(d) ? DAYS[d.getUTCDay()].toUpperCase() + ", " + MONTHS[d.getUTCMonth()].toUpperCase() + " " + d.getUTCDate() + ", " + d.getUTCFullYear() : "LATE EDITION";
@@ -748,7 +758,7 @@
     brief.slice(0, 4).forEach(function (b, k) { out.push('<text x="40" y="' + (528 + k * 21) + '" font-family="' + SERIF + '" font-size="13.5" fill="' + INK + '">▪ ' + esc(trunc(b, 44)) + "</text>"); });
     out.push('<rect x="356" y="252" width="1" height="340" fill="' + INK + '" fill-opacity="0.4"/><rect x="666" y="252" width="1" height="340" fill="' + INK + '" fill-opacity="0.4"/>');
     // column 2: the lead story
-    out.push('<text x="374" y="276" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">LEAD STORY</text>');
+    out.push('<text x="374" y="276" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="' + RED + '">LEAD STORY</text>');
     out.push('<text x="374" y="304" font-family="' + SERIF + '" font-size="' + (top ? fit(top.name, 26, 15, 276, 0.56) : 24) + '" font-weight="700" fill="' + INK + '">' + esc(top ? trunc(top.name, 30) : "A blank page") + "</text>");
     var story = top ? (top.desc ? top.desc.replace(/\.$/, "") + ". " : "") + (top.lang ? "Written in " + top.lang + ", it " : "It ") + "has " + commas(top.stars) + (top.stars === 1 ? " star" : " stars") + " and " + commas(top.forks) + (top.forks === 1 ? " fork" : " forks") + " to its name" + (top.pushed ? ", with the latest change in " + MONTHS[Number(top.pushed.slice(5, 7)) - 1] + " " + top.pushed.slice(0, 4) : "") + ". " +
       (f.projects[1] ? "Also on the desk: " + f.projects[1].name + (f.projects[2] ? " and " + f.projects[2].name : "") + "." : "") : "No public repositories yet. Reporters are standing by for the first push.";
@@ -757,12 +767,12 @@
     var im = top ? core.impactFor(o, top) : [];
     if (im.length) {
       var iy = 332 + lines.length * 20 + 14;
-      out.push('<text x="374" y="' + iy + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">BY THE NUMBERS</text>');
+      out.push('<text x="374" y="' + iy + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="' + RED + '">BY THE NUMBERS</text>');
       im.forEach(function (x, k) { out.push('<text x="' + (374 + k * 96) + '" y="' + (iy + 30) + '" font-family="' + SERIF + '" font-size="22" font-weight="700" fill="' + INK + '">' + esc(trunc(x.value, 8)) + '</text><text x="' + (374 + k * 96) + '" y="' + (iy + 46) + '" font-family="' + SERIF + '" font-size="11" fill="' + FADE + '">' + esc(trunc(x.label, 14)) + "</text>"); });
     }
     // column 3: markets, weather, classifieds
     var y3 = 276;
-    out.push('<text x="684" y="' + y3 + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">MARKETS</text>');
+    out.push('<text x="684" y="' + y3 + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="' + RED + '">MARKETS</text>');
     [["Stars", m.stars], ["Followers", m.followers], ["Repos", m.publicRepos], ["PRs", f.prs]].forEach(function (row, k) {
       if (row[1] === null || row[1] === undefined) return;
       var yy = y3 + 26 + k * 24;
@@ -771,16 +781,16 @@
     y3 += 136;
     out.push('<rect x="684" y="' + (y3 - 18) + '" width="236" height="1" fill="' + INK + '" fill-opacity="0.4"/>');
     var chance = f.windowDays ? Math.round(f.active / f.windowDays * 100) : 0;
-    out.push('<text x="684" y="' + (y3 + 4) + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">WEATHER</text>');
+    out.push('<text x="684" y="' + (y3 + 4) + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="' + RED + '">WEATHER</text>');
     out.push('<text x="684" y="' + (y3 + 34) + '" font-family="' + SERIF + '" font-size="26" font-weight="700" fill="' + INK + '">' + chance + "%</text>");
     out.push('<text x="740" y="' + (y3 + 32) + '" font-family="' + SERIF + '" font-size="13.5" fill="' + INK + '">chance of commits</text>');
     y3 += 70;
     out.push('<rect x="684" y="' + (y3 - 18) + '" width="236" height="1" fill="' + INK + '" fill-opacity="0.4"/>');
-    out.push('<text x="684" y="' + (y3 + 4) + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="#a1261b">CLASSIFIEDS</text>');
+    out.push('<text x="684" y="' + (y3 + 4) + '" font-family="' + SERIF + '" font-size="12" font-weight="700" letter-spacing="1.6" fill="' + RED + '">CLASSIFIEDS</text>');
     var ad = core.oneLine(o.openTo) ? "AVAILABLE: " + core.oneLine(o.openTo) + ". Serious offers only. Contact @" + m.login + "." : "COLLABORATORS WANTED for " + (top ? top.name : "new projects") + ". Apply within: @" + m.login + ".";
     wrap(ad, 34, 4).forEach(function (l, k) { out.push('<text x="684" y="' + (y3 + 28 + k * 18) + '" font-family="' + SERIF + '" font-size="13" fill="' + INK + '">' + esc(l) + "</text>"); });
     // the EXTRA stamp and the ticker
-    out.push("<g" + (p.anim ? ' class="ex" style="transform-origin:860px 72px"' : "") + '><g transform="rotate(-12 860 72)"><rect x="806" y="48" width="108" height="46" rx="6" fill="' + PAPER + '" stroke="#c4271b" stroke-width="3"/><text x="860" y="81" text-anchor="middle" font-family="' + SERIF + '" font-size="26" font-weight="700" fill="#c4271b">EXTRA!</text></g></g>');
+    out.push("<g" + (p.anim ? ' class="ex" style="transform-origin:860px 72px"' : "") + '><g transform="rotate(-12 860 72)"><rect x="806" y="48" width="108" height="46" rx="6" fill="' + PAPER + '" stroke="' + RED + '" stroke-width="3"/><text x="860" y="81" text-anchor="middle" font-family="' + SERIF + '" font-size="26" font-weight="700" fill="' + RED + '">EXTRA!</text></g></g>');
     var tick = ("BREAKING ▸ " + [top ? top.name + " passes " + commas(top.stars) + " stars" : "", f.streak ? "streak hits " + f.streak + " days" : "", m.langs[0] ? m.langs[0].name + " remains the language of choice" : "", "follow @" + m.login + " for the next edition"].filter(Boolean).join(" ▸ ") + "   ").toUpperCase();
     while (tick.length < 110) tick += tick;
     var tl = Math.round(tick.length * 8.4), ty = H - 40;
@@ -804,8 +814,8 @@
       '<linearGradient id="holo" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0.3" stop-color="#ff3cbe" stop-opacity="0"/><stop offset="0.45" stop-color="#3cf0ff" stop-opacity="0.35"/><stop offset="0.55" stop-color="#fff050" stop-opacity="0.3"/><stop offset="0.7" stop-color="#78ff8c" stop-opacity="0"/></linearGradient>' +
       '<clipPath id="lp"><rect x="60" y="50" width="420" height="500" rx="10"/></clipPath>' +
       '<filter id="sh" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000" flood-opacity="' + (L ? 0.2 : 0.5) + '"/></filter></defs>');
-    out.push('<rect width="' + W + '" height="' + H + '" rx="18" fill="' + (L ? "#e6ebf3" : "#0b1a33") + '"/>');
-    out.push('<rect x="52" y="42" width="856" height="516" rx="16" fill="#18294a" filter="url(#sh)"/>');
+    out.push('<rect width="' + W + '" height="' + H + '" rx="18" fill="' + (L ? mix(p.a2, "#ffffff", 0.88) : mix(p.a2, "#000000", 0.8)) + '"/>');
+    out.push('<rect x="52" y="42" width="856" height="516" rx="16" fill="' + mix(p.a2, "#000000", 0.62) + '" filter="url(#sh)"/>');
     out.push('<rect x="60" y="50" width="420" height="500" rx="10" fill="' + PAGE + '"/><rect x="480" y="50" width="420" height="500" rx="10" fill="' + PAGE + '"/>');
     out.push('<rect x="60" y="50" width="840" height="500" fill="url(#gu)"/><rect x="478" y="50" width="4" height="500" fill="#000" fill-opacity="0.12"/>');
     // the photo page
@@ -858,7 +868,7 @@
   function constellation(m, o, p) {
     var f = facts(m, o), r = rng(core.hash(m.login + "sky")), W = 960, H = 580, out = [];
     out.push("<defs>" +
-      '<radialGradient id="sky" cx="0.5" cy="0.35" r="0.85"><stop offset="0" stop-color="' + (p.light ? "#24366e" : "#0d1640") + '"/><stop offset="1" stop-color="' + (p.light ? "#0e1a3d" : "#02040c") + '"/></radialGradient>' +
+      '<radialGradient id="sky" cx="0.5" cy="0.35" r="0.85"><stop offset="0" stop-color="' + (p.light ? mix(p.a2, "#0e1a3d", 0.62) : mix(p.a2, "#02040c", 0.8)) + '"/><stop offset="1" stop-color="' + (p.light ? "#0e1a3d" : "#02040c") + '"/></radialGradient>' +
       '<radialGradient id="star"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#ffffff" stop-opacity="0.7"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>' +
       '<linearGradient id="shoot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#ffffff"/></linearGradient>' +
       '<clipPath id="cc"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath></defs>');
@@ -909,6 +919,7 @@
   function weather(m, o, p) {
     var f = facts(m, o), W = 960, H = 560, out = [], L = p.light;
     var INK = L ? "#0d2a45" : "#ffffff", SOFT = L ? "#2f5b80" : "#b7cde0";
+    var RG = on("#05140f", p.a1, 5);
     var chance = f.windowDays ? Math.round(f.active / f.windowDays * 100) : 0;
     var last7 = f.daily.slice(-7), q = f.daily.filter(function (v) { return v > 0; }).sort(function (a, b) { return a - b; }), mid = q.length ? q[Math.floor(q.length / 2)] : 1;
     function kind(v) { return !v ? "moon" : v < mid ? "cloud" : v < mid * 2 ? "part" : "sun"; }
@@ -918,7 +929,7 @@
       '<linearGradient id="sk" x1="0" y1="0" x2="0.4" y2="1">' + (L ? '<stop offset="0" stop-color="#4facfe"/><stop offset="1" stop-color="#b8ecff"/>' : '<stop offset="0" stop-color="#0f2027"/><stop offset="0.5" stop-color="#203a43"/><stop offset="1" stop-color="#2c5364"/>') + "</linearGradient>" +
       '<radialGradient id="sun"><stop offset="0" stop-color="#fff6b0"/><stop offset="0.6" stop-color="#ffd23f"/><stop offset="1" stop-color="#ffb000"/></radialGradient>' +
       '<radialGradient id="rd"><stop offset="0" stop-color="#0d3b2a"/><stop offset="1" stop-color="#05140f"/></radialGradient>' +
-      '<linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ef07c" stop-opacity="0"/><stop offset="1" stop-color="#3ef07c" stop-opacity="0.55"/></linearGradient>' +
+      '<linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + RG + '" stop-opacity="0"/><stop offset="1" stop-color="' + RG + '" stop-opacity="0.55"/></linearGradient>' +
       '<clipPath id="wc"><rect width="' + W + '" height="' + H + '" rx="18"/></clipPath><clipPath id="rc"><circle cx="760" cy="392" r="122"/></clipPath></defs>');
     out.push('<g clip-path="url(#wc)"><rect width="' + W + '" height="' + H + '" fill="url(#sk)"/>');
     function icon(k, x, y, s, cls) {
@@ -958,17 +969,17 @@
     });
     // radar: the last 12 weeks as echoes on a sweep
     out.push('<circle cx="760" cy="392" r="122" fill="url(#rd)"/>');
-    [40, 80, 120].forEach(function (rr) { out.push('<circle cx="760" cy="392" r="' + rr + '" fill="none" stroke="#3ef07c" stroke-opacity="0.25"/>'); });
-    out.push('<path d="M638 392H882M760 270V514" stroke="#3ef07c" stroke-opacity="0.2"/>');
+    [40, 80, 120].forEach(function (rr) { out.push('<circle cx="760" cy="392" r="' + rr + '" fill="none" stroke="' + RG + '" stroke-opacity="0.25"/>'); });
+    out.push('<path d="M638 392H882M760 270V514" stroke="' + RG + '" stroke-opacity="0.2"/>');
     var weeks = f.weeks.slice(-12), wmax = Math.max.apply(null, weeks.concat([1]));
     weeks.forEach(function (v, k) {
       if (!v) return;
       var ang = (k / 12) * Math.PI * 2 - Math.PI / 2, rad = 30 + (k % 3) * 30, x = 760 + Math.cos(ang) * rad, y = 392 + Math.sin(ang) * rad, t = v / wmax;
       var turn = (((ang % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2);
-      out.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (6 + t * 12).toFixed(1) + '" fill="' + (t > 0.66 ? "#ff5a5a" : t > 0.33 ? "#ffd23f" : "#3ef07c") + '" fill-opacity="0.55"' +
+      out.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (6 + t * 12).toFixed(1) + '" fill="' + (t > 0.66 ? "#ff5a5a" : t > 0.33 ? "#ffd23f" : RG) + '" fill-opacity="0.55"' +
         (p.anim ? ' class="bp" style="transform-origin:' + x.toFixed(1) + "px " + y.toFixed(1) + "px;animation-delay:" + (turn * 4).toFixed(2) + 's"' : "") + "/>");
     });
-    out.push('<g clip-path="url(#rc)"><g' + (p.anim ? ' class="sweep" style="transform-origin:760px 392px"' : "") + '><path d="M760 392 L882 392 A122 122 0 0 0 846 306 Z" fill="url(#sw)"/><line x1="760" y1="392" x2="882" y2="392" stroke="#3ef07c" stroke-width="2"/></g></g>');
+    out.push('<g clip-path="url(#rc)"><g' + (p.anim ? ' class="sweep" style="transform-origin:760px 392px"' : "") + '><path d="M760 392 L882 392 A122 122 0 0 0 846 306 Z" fill="url(#sw)"/><line x1="760" y1="392" x2="882" y2="392" stroke="' + RG + '" stroke-width="2"/></g></g>');
     out.push('<text x="760" y="540" text-anchor="middle" font-family="' + SANS + '" font-size="11" font-weight="700" letter-spacing="1.6" fill="' + SOFT + '">RADAR · LAST 12 WEEKS</text>');
     out.push("</g>");
     if (L) out.push('<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="17.5" fill="none" stroke="#d1d9e0"/>');

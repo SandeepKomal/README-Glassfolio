@@ -344,7 +344,6 @@ aside .hint{font-size:.78rem;color:var(--muted);margin:2px 0 8px;line-height:1.4
 .worlds .wc:hover{border-color:var(--line-strong);transform:translateY(-1px)}
 .worlds input:checked + .wc{border-color:var(--a1);color:var(--ink);box-shadow:0 0 0 3px rgba(56,232,255,.14),0 0 22px rgba(56,232,255,.18)}
 .worlds input:focus-visible + .wc{outline:2px solid var(--a1);outline-offset:2px}
-#themeBox.off{opacity:.45;pointer-events:none}
 
 /* ---------- showpiece picker: a thumbnail per scene ---------- */
 .pieces{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-height:356px;overflow:auto;padding:2px;margin:0 -2px;scrollbar-width:thin}
