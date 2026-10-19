@@ -10,7 +10,7 @@ const core = require("../js/core.js");
 const cards = require("../js/cards.js");
 
 const S = core.SAMPLE, WORLDS = core.WORLD_KEYS;
-const SIGNATURE = { airport: "NOW DEPARTING", transit: "stroke-width=\"12\"", broadsheet: "Gazette", observatory: "RA ", botanical: "SPECIMEN NO.", atlas: "A CHART OF @", museum: "COLLECTION OF @", ink: "stroke-dasharray=\"560 640\"", periodic: "ELEMENT OF @", abyss: "DEPTH " };
+const SIGNATURE = { airport: "NOW DEPARTING", transit: "stroke-width=\"12\"", broadsheet: "Gazette", observatory: "RA ", botanical: "SPECIMEN NO.", atlas: "A CHART OF @", museum: "COLLECTION OF @", ink: "stroke-dasharray=\"560 640\"", periodic: "ELEMENT OF @", abyss: "DEPTH ", voxel: "BUILT BLOCK BY BLOCK" };
 
 function wellFormed(svg, label) {
   assert.ok(svg.startsWith("<svg ") && svg.endsWith("</svg>"), label + ": one <svg> root");
@@ -110,7 +110,7 @@ test("share links, the CLI and the daily update carry the world", () => {
     assert.ok(fs.existsSync(path.join(out, "cards/divider-stats.svg")));
     const bad = run(["--world", "lava"]);
     assert.notStrictEqual(bad.status, 0);
-    assert.match(bad.stderr, /--world must be one of: airport, transit, broadsheet, observatory, botanical, atlas, museum, ink, periodic, abyss/);
+    assert.match(bad.stderr, /--world must be one of: airport, transit, broadsheet, observatory, botanical, atlas, museum, ink, periodic, abyss, voxel/);
   } finally { fs.rmSync(out, { recursive: true, force: true }); }
   const auto = require("../js/automation.js"), root = path.join(__dirname, "..");
   const sources = Object.fromEntries(auto.RUNTIME.map((p) => [p, fs.readFileSync(path.join(root, p), "utf8")]));

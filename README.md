@@ -26,8 +26,8 @@ css/style.css     Glass / neon theme for the page
 js/core.js        Engine: parse input, build the model, write the README and banner (no network, no DOM)
 js/cards.js       Draws the stats, streak, heatmap, languages, timeline, project and connect cards as SVG files
 js/universe.js    Draws the optional 3D contribution universe (ported from Git3D Universe v2.0.0)
-js/worlds.js      Draws the ten worlds: complete designs for every card, the banner, section dividers and footer
-js/showpieces.js  Draws the eleven animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden, year in code, newspaper, passport, constellation sky, commit forecast)
+js/worlds.js      Draws the eleven worlds: complete designs for every card, the banner, section dividers and footer
+js/showpieces.js  Draws the fourteen animated showpieces (departures board, holo card, metro map, now playing, vital signs, code garden, year in code, newspaper, passport, constellation sky, commit forecast, pulse, ink scroll, block city)
 js/github.js      Fetches profile, repos and activity from the GitHub API
 js/preview.js     Shows the README as a GitHub profile page would (safe, whitelist-based renderer)
 js/publish.js     Commits the README, banner and cards to <user>/<user> in one commit
@@ -202,6 +202,7 @@ Unzip and upload everything (`README.md`, `banner.svg` and the `cards/` folder) 
 | `ink` | Sumi-e on washi | Washi fibres, brush-stroke rules, your vermilion seal in the corner, ink-blot heatmap, an ensō for every streak | A brush stroke with the title, a sakura petal drifting across | Ink scroll |
 | `periodic` | A lab notebook | Graph paper, an element tile for every card title, element-coloured heatmap, electron shells that orbit; the banner makes you an element | The section as an element tile and a molecule chain that vibrates | Vital signs |
 | `abyss` | The deep sea | Water that deepens down each card, swaying light rays and rising bubbles, glowing plankton for contributions, sonar rings that ping | A depth marker and fish swimming past | Commit forecast |
+| `voxel` | An isometric block city | A soft sky with an isometric grid, a contribution heatmap of little cubes, hex-ringed streak gauges, a cube on every heading | Rows of cubes and an original hover-bot flying across; the footer is a skyline of your recent days | Block city |
 
 **One look, everywhere.** Pick in this order: *Design* (classic or a world), then *Theme* (or *Custom* colours), then *Showpiece*. Everything follows the choices above it, so the whole README always matches; change any of it at the end if you like. In a world, Theme *Auto* keeps the world's own colours, and any other theme, or your own two colours, recolours the entire design: banner, every card, the dividers, the footer and the showpiece. Accents are adjusted automatically so they stay readable on each world's surface, in light and dark. Picking a design puts the showpiece back on *Auto* (the design's own scene), and the picker's thumbnails redraw in your current design and colours, so what you see there is what you get.
 
@@ -237,6 +238,7 @@ Every showpiece sits in the same frame as your cards (the glass panel in the cla
 | `constellation` | Your sky: each top language is a constellation, each repo a star that's bigger with more stars, named after the brightest. | Stars twinkle, the sky drifts, a shooting star crosses now and then |
 | `pulse` | The classic look's own: your year of contributions as one glowing waveform on glass, with your headline numbers, languages and busiest week marked. | A bright point travels the line, a soft scan sweeps across, the peak pings |
 | `scroll` | The Ink design's own: an ink-wash landscape whose far ridges are your months and near hills your recent weeks, a three-line poem from your profile and your three best works along the foot. | The ensō moon turns, mist drifts, birds cross and petals fall |
+| `city` | The Voxel design's own: up to half a year of contributions as an isometric city, one stack of blocks a day, taller when busier, beside your headline numbers. | An original hover-bot patrols the skyline, its eyes blink and its thruster glows; the busiest blocks pulse |
 | `weather` | A commit forecast: your chance of commits on any day, the last seven days as weather (more work, more sun), a forecast discussion and a radar of the last 12 weeks. | The sun turns, clouds drift, the radar sweeps and each echo flares as it passes |
 
 Like every other image, a showpiece gets a light and a dark version with *Day and night*, follows *Subtle motion*, stands still for visitors who prefer reduced motion, is kept fresh by the daily update, and needs nothing but the data the cards already use. It's left out of text-only READMEs.

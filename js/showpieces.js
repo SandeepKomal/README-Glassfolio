@@ -21,10 +21,10 @@
  */
 (function (root, factory) {
   var node = typeof module === "object" && module.exports;
-  var api = factory(node ? require("./core.js") : root.ReadmeCore);
+  var api = factory(node ? require("./core.js") : root.ReadmeCore, node ? require("./worlds.js") : root.ReadmeWorlds);
   if (node) module.exports = api;
   else root.ReadmeShowpieces = api;
-})(typeof self !== "undefined" ? self : this, function (core) {
+})(typeof self !== "undefined" ? self : this, function (core, worlds) {
   "use strict";
 
   var SANS = "system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -1154,8 +1154,41 @@
     return svgOpen(W, H, "Ink scroll for " + m.login) + motion(p, css) + out.join("") + "</svg>";
   }
 
+
+  /* ================= N. block city (the Voxel world's own scene) ================= */
+  function blockcity(m, o, p) {
+    var f = facts(m, o), S = kit(p), V = worlds.voxel, r = rng(core.hash(m.login + "city")), W = 960, H = 560, out = [];
+    // the city and the bot take the README's colours: blocks in the first accent, the bot in the second
+    var q = { bg1: S.bg, ink: S.ink, a1: S.a1, a2: S.a2, anim: p.anim };
+    out.push("<defs>" + V.botDefs(q) + '<radialGradient id="hz" cx="0.75" cy="0.15" r="0.7"><stop offset="0" stop-color="' + S.a2 + '" stop-opacity="0.22"/><stop offset="1" stop-color="' + S.a2 + '" stop-opacity="0"/></radialGradient></defs>');
+    out.push('<rect width="' + W + '" height="' + H + '" fill="url(#hz)"/>');
+    // up to the last 26 weeks of data: a stack per day, rows are weekdays, sized to fill the right of the scene
+    var cols = f.daily.length ? Math.max(2, Math.min(26, Math.ceil(f.daily.length / 7))) : 13, bw = Math.min(26, 620 / (7 + cols)), bh = bw / 2;
+    var ox = 310 + 7 * bw + (620 - (7 + cols) * bw) / 2, oy = 330 - (7 + cols) * bh / 2;
+    out.push(V.city(m, q, ox, oy, 7, cols, bw, bh, bw * 0.9, r));
+    out.push('<g transform="translate(' + Math.round(ox + 30) + ' 60)"><g' + (p.anim ? ' class="vpat"' : "") + ">" + V.bot(0, 0, 0.8, q) + "</g></g>");
+    out.push('<text x="40" y="58" font-family="' + MONO + '" font-size="13" letter-spacing="3" fill="' + S.a1 + '">BLOCK CITY · @' + esc(trunc(m.login, 24).toUpperCase()) + "</text>");
+    out.push('<text x="40" y="104" font-family="' + SANS + '" font-size="34" font-weight="800" letter-spacing="-0.5" fill="' + S.ink + '">' + esc(trunc(firstName(m), 16)) + "’s skyline</text>");
+    out.push('<text x="40" y="132" font-family="' + SANS + '" font-size="14" fill="' + S.muted + '">Half a year of contributions: one stack a day, taller when busier.</text>');
+    var tiles = [];
+    if (f.total !== null) tiles.push([commas(f.total), "blocks laid"]);
+    if (f.best) tiles.push([String(f.best.v), "tallest day · " + f.best.label]);
+    if (f.streak !== null) tiles.push([String(f.streak), f.streak === 1 ? "day building" : "days building"]);
+    tiles.push([String(m.publicRepos), "districts (repos)"]);
+    tiles.slice(0, 4).forEach(function (t, i) {
+      var y = 176 + i * 78;
+      out.push('<rect x="40" y="' + y + '" width="230" height="64" rx="12" fill="' + S.panel + '" fill-opacity="0.85" stroke="' + S.line + '"/>');
+      out.push(V.cube(66, y + 20, 11, 12, i ? mix(S.a1, S.bg, 0.25) : S.a1));
+      out.push('<text x="90" y="' + (y + 32) + '" font-family="' + SANS + '" font-size="24" font-weight="800" fill="' + S.ink + '">' + esc(t[0]) + "</text>");
+      out.push('<text x="90" y="' + (y + 50) + '" font-family="' + SANS + '" font-size="11.5" fill="' + S.muted + '">' + esc(trunc(t[1], 30)) + "</text>");
+    });
+    var css = V.botCss + "@keyframes vpat{0%,100%{transform:translate(0,0)}25%{transform:translate(-150px,70px)}50%{transform:translate(60px,140px)}75%{transform:translate(160px,40px)}}.vpat{animation:vpat 16s ease-in-out infinite}" +
+      "@keyframes vxp{0%,100%{opacity:1}50%{opacity:.5}}.vxp{animation:vxp 2.4s ease-in-out infinite}";
+    return svgOpen(W, H, "Block city for " + m.login) + motion(p, css) + out.join("") + "</svg>";
+  }
+
   var SCENES = { departures: departures, holo: holo, metro: metro, vinyl: vinyl, vitals: vitals, garden: garden,
-    yearcode: yearcode, newspaper: newspaper, passport: passport, constellation: constellation, weather: weather, pulse: pulse, scroll: scroll };
+    yearcode: yearcode, newspaper: newspaper, passport: passport, constellation: constellation, weather: weather, pulse: pulse, scroll: scroll, city: blockcity };
 
   /** The chosen showpiece as an SVG string, or null when none is chosen. */
   function build(m, options, palette) {

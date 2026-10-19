@@ -13,7 +13,7 @@ const HELP = `Usage: node cli.js <github-url|username> [options]
 Options:
   --style <showcase|changelog>         Layout (default: showcase)
   --world <name>        A complete design for the whole README: airport, transit, broadsheet, observatory, botanical,
-                        atlas, museum, ink, periodic, abyss
+                        atlas, museum, ink, periodic, abyss, voxel
                         (banner, every card, animated section dividers, footer and a matching showpiece). Leave out for the classic look.
   --theme <name>        auto (default), aurora, cyber, sunset, emerald, royal, graphite, paper (the classic look's colours)
   --colors <a,b>        Your own two accent colours, like --colors #ff8800,#00c2a8 (switches to the custom theme)
@@ -35,7 +35,8 @@ Options:
   --no-universe         Leave out the 3D contribution universe (on by default, from Git3D Universe)
   --no-wave             Use the orbit banner and a plain footer instead of the wave header and footer (on by default)
   --showpiece <name>    One animated scene under the banner: departures, holo, metro, vinyl, vitals, garden,
-                        yearcode, newspaper, passport, constellation, weather (or none, the default)
+                        yearcode, newspaper, passport, constellation, weather, pulse, scroll, city, or none.
+                        Left out: the look's own scene (Pulse in the classic look, or the design's showpiece)
   --universe-style <neon|theme>  The universe's colours: Git3D Universe's own cosmic palettes (neon, the default) or the theme's
   --universe-only       Rebuild only cards/universe.svg (and its light twin); used by the 3D universe workflow
   --no-adaptive         One card set only. By default there are dark and light sets, and GitHub shows the one matching the viewer

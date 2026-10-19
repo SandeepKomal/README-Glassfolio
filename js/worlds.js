@@ -14,6 +14,7 @@
  *   ink          sumi-e on washi: brush strokes, an ensō for each streak, a vermilion seal, falling sakura petals
  *   periodic     a lab notebook: graph paper, element tiles for every section, electron shells, vibrating molecules
  *   abyss        the deep sea: light rays and bubbles, bioluminescent plankton, sonar rings, jellyfish and kelp
+ *   voxel        an isometric city: contribution days as stacked blocks, an original hover-bot flying over them
  *
  * Motion is plain CSS (no scripts), only ambient loops, and everything stands still for reduced motion.
  */
@@ -167,6 +168,51 @@
   }
   function symbolOf(text) { var t = String(text).replace(/[^A-Za-z]/g, ""); return t ? t.charAt(0).toUpperCase() + (t.charAt(1) || "").toLowerCase() : "Xx"; }
   function clipWF(W, H, rx) { return '<clipPath id="wf"><rect width="' + W + '" height="' + H + '" rx="' + rx + '"/></clipPath>'; }
+
+  /* ---------- Voxel pieces: isometric cubes, a contribution city and an original hover-bot ---------- */
+  /** An isometric block: (cx, top) is the top corner, w the half-width, d the height of the sides. Lit from the top left. */
+  function cube(cx, top, w, d, c, hh) {
+    var h = hh || w / 2, x = function (n) { return n.toFixed(1); };
+    return '<path d="M' + x(cx) + "," + x(top) + " L" + x(cx + w) + "," + x(top + h) + " L" + x(cx) + "," + x(top + 2 * h) + " L" + x(cx - w) + "," + x(top + h) + 'Z" fill="' + mix(c, "#ffffff", 0.32) + '"/>' +
+      '<path d="M' + x(cx - w) + "," + x(top + h) + " L" + x(cx) + "," + x(top + 2 * h) + " L" + x(cx) + "," + x(top + 2 * h + d) + " L" + x(cx - w) + "," + x(top + h + d) + 'Z" fill="' + c + '"/>' +
+      '<path d="M' + x(cx) + "," + x(top + 2 * h) + " L" + x(cx + w) + "," + x(top + h) + " L" + x(cx + w) + "," + x(top + h + d) + " L" + x(cx) + "," + x(top + 2 * h + d) + 'Z" fill="' + mix(c, "#000000", 0.2) + '"/>';
+  }
+  /** The last rows × cols days as a block city: one stack per day, taller on busier days, drawn back to front. */
+  function city(m, p, ox, oy, rows, cols, w, h, unit, r) {
+    var daily = m.activity && m.activity.daily ? m.activity.daily.slice(-rows * cols) : [], n = rows * cols;
+    var nz = daily.filter(function (v) { return v > 0; }).sort(function (a, b) { return a - b; });
+    var q = function (t) { return nz.length ? nz[Math.min(nz.length - 1, Math.floor(t * nz.length))] : 1; };
+    var lvl = function (v) { return v <= 0 ? 0 : v <= q(0.25) ? 1 : v <= q(0.5) ? 2 : v <= q(0.75) ? 3 : 4; };
+    var cells = [];
+    for (var c = 0; c < cols; c++) for (var d = 0; d < rows; d++) {
+      var idx = daily.length - n + c * rows + d, v = idx >= 0 && idx < daily.length ? daily[idx] : (daily.length ? 0 : (r() < 0.6 ? 1 + Math.floor(r() * 3) : 0));
+      cells.push({ c: c, d: d, lv: daily.length ? lvl(v) : Math.min(4, v) });
+    }
+    cells.sort(function (a, b) { return (a.c + a.d) - (b.c + b.d) || a.c - b.c; });
+    return cells.map(function (k) {
+      var cx = ox + (k.c - k.d) * w, base = oy + (k.c + k.d) * h, ht = k.lv ? 6 + k.lv * unit : 3;
+      var col = k.lv ? mix(p.bg1, p.a1, 0.3 + k.lv * 0.175) : mix(p.bg1, p.ink, 0.12);
+      return "<g" + (k.lv === 4 ? anim(p, "vxp", "animation-delay:-" + ((k.c * 5 + k.d) % 20 / 10).toFixed(1) + "s") : "") + ">" + cube(cx, base - ht + h * 0.14, w * 0.86, ht, col, h * 0.86) + "</g>";
+    }).join("");
+  }
+  /** An original hover-bot: a rounded head, a visor with two glowing eyes, an antenna and a thruster with a soft beam. */
+  function BOT_DEFS(p) {
+    return '<linearGradient id="vbh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + mix(p.a2, "#ffffff", 0.35) + '"/><stop offset="1" stop-color="' + mix(p.a2, "#000000", 0.2) + '"/></linearGradient>' +
+      '<linearGradient id="vbm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + mix(p.a2, "#ffffff", 0.6) + '" stop-opacity="0.9"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></linearGradient>';
+  }
+  function bot(x, y, s, p) {
+    var t = function (n) { return (n * s).toFixed(1); }, eye = mix(p.a1, "#ffffff", 0.25);
+    return '<g transform="translate(' + x + " " + y + ')">' +
+      '<path d="M' + t(-12) + "," + t(62) + " L" + t(12) + "," + t(62) + " L" + t(26) + "," + t(130) + " L" + t(-26) + "," + t(130) + 'Z" fill="url(#vbm)" class="vbeam"/>' +
+      '<line x1="0" y1="' + t(-6) + '" x2="0" y2="' + t(-20) + '" stroke="' + mix(p.a2, "#000000", 0.15) + '" stroke-width="' + t(3) + '" stroke-linecap="round"/><circle cx="0" cy="' + t(-23) + '" r="' + t(5) + '" fill="' + p.a1 + '" class="vtip"/>' +
+      '<circle cx="' + t(-38) + '" cy="' + t(22) + '" r="' + t(9) + '" fill="' + mix(p.a2, "#000000", 0.25) + '"/><circle cx="' + t(38) + '" cy="' + t(22) + '" r="' + t(9) + '" fill="' + mix(p.a2, "#000000", 0.25) + '"/>' +
+      '<rect x="' + t(-36) + '" y="' + t(-8) + '" width="' + t(72) + '" height="' + t(60) + '" rx="' + t(22) + '" fill="url(#vbh)"/>' +
+      '<rect x="' + t(-27) + '" y="' + t(4) + '" width="' + t(54) + '" height="' + t(30) + '" rx="' + t(12) + '" fill="' + mix(p.a2, "#000000", 0.65) + '"/>' +
+      '<g class="vblink"><rect x="' + t(-15) + '" y="' + t(11) + '" width="' + t(9) + '" height="' + t(15) + '" rx="' + t(4.5) + '" fill="' + eye + '"/><rect x="' + t(6) + '" y="' + t(11) + '" width="' + t(9) + '" height="' + t(15) + '" rx="' + t(4.5) + '" fill="' + eye + '"/></g>' +
+      '<ellipse cx="0" cy="' + t(56) + '" rx="' + t(14) + '" ry="' + t(5) + '" fill="' + mix(p.a2, "#000000", 0.35) + '"/><ellipse cx="0" cy="' + t(58) + '" rx="' + t(8) + '" ry="' + t(3) + '" fill="' + mix(p.a1, "#ffffff", 0.5) + '" class="vtip"/></g>';
+  }
+  var BOT_CSS = "@keyframes vblink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}.vblink{transform-box:fill-box;transform-origin:center;animation:vblink 4.5s ease-in-out infinite}" +
+    "@keyframes vbeam{0%,100%{opacity:.85}50%{opacity:.45}}.vbeam{animation:vbeam 1.6s ease-in-out infinite}@keyframes vtip{0%,100%{opacity:1}50%{opacity:.4}}.vtip{animation:vtip 1.2s ease-in-out infinite}";
 
   var NEW = {
     /* ---------- Atlas: an antique sea chart ---------- */
@@ -494,6 +540,69 @@
         }
         return { svg: s + '<text x="600" y="40" text-anchor="middle" font-family="' + SANS + '" font-size="18" font-weight="700" fill="' + p.ink + '">Back to the surface · @' + esc(trunc(m.login, 30)) + "</text>",
           style: "@keyframes kp{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}.kp{animation:kp 4s ease-in-out infinite}" };
+      }
+    },
+
+    /* ---------- Voxel: an isometric city of contribution cubes, with a hover-bot ---------- */
+    voxel: {
+      pal: { light: { bg1: "#eef7ff", bg2: "#d9ecff", ink: "#0b2a3a", a1: "#1f9d55", a2: "#4f5bff", line: "#c9def0", light: true },
+        dark: { bg1: "#06131f", bg2: "#0c2338", ink: "#e6f6ff", a1: "#3ddc84", a2: "#8b95ff", line: "#183449" } },
+      font: { sans: SANS, mono: MONO, display: SANS }, glow: true,
+      frame: function (W, H, p) {
+        return { back: "<defs>" + clipWF(W, H, 14) + '<linearGradient id="vsk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + p.bg1 + '"/><stop offset="1" stop-color="' + p.bg2 + '"/></linearGradient>' +
+            '<pattern id="vgr" width="40" height="20" patternUnits="userSpaceOnUse"><path d="M0 10 L20 0 L40 10 L20 20Z" fill="none" stroke="' + p.ink + '" stroke-opacity="0.045"/></pattern></defs>' +
+            '<g clip-path="url(#wf)"><rect width="' + W + '" height="' + H + '" fill="url(#vsk)"/><rect width="' + W + '" height="' + H + '" fill="url(#vgr)"/></g>',
+          over: '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="13.5" fill="none" stroke="' + p.line + '"/>',
+          style: "" };
+      },
+      title: function (p, left, right, edge) {
+        return '<g' + anim(p, "vxb") + ">" + cube(36, 25, 8, 6, p.a1) + "</g>" +
+          '<text x="54" y="40" font-family="' + SANS + '" font-size="15" font-weight="800" fill="' + p.ink + '">' + esc(sentence(left)) + "</text>" +
+          (right ? '<text x="' + edge + '" y="40" text-anchor="end" font-family="' + MONO + '" font-size="10.5" letter-spacing="1.6" fill="' + p.a1 + '">' + esc(right) + "</text>" : "") +
+          '<line x1="28" y1="52" x2="' + edge + '" y2="52" stroke="' + p.a1 + '" stroke-opacity="0.35"/>';
+      },
+      cell: function (p, x, y, size, lv) {
+        var w = size / 2, h = size / 4, cx = x + w, top = y + size * 0.12;
+        if (!lv) return '<path d="M' + cx.toFixed(1) + "," + (top + h * 1.6).toFixed(1) + " l" + w.toFixed(1) + "," + h.toFixed(1) + " l-" + w.toFixed(1) + "," + h.toFixed(1) + " l-" + w.toFixed(1) + ",-" + h.toFixed(1) + 'Z" fill="' + p.ink + '" fill-opacity="0.1"/>';
+        var d = size * (0.12 + lv * 0.1), c = mix(p.bg1, p.a1, 0.35 + lv * 0.16);
+        return "<g" + (lv === 4 ? anim(p, "vxp", "animation-delay:-" + ((x * 3 + y) % 25 / 10).toFixed(1) + "s") : "") + ">" + cube(cx, top + size - 2 * h - d, w, d, c, h) + "</g>";
+      },
+      ring: function (p, cx, cy, r, f, arc) {
+        var hex = [];
+        for (var k = 0; k < 6; k++) { var a = Math.PI / 6 + k * Math.PI / 3; hex.push((Number(cx) + Math.cos(a) * (r + 6)).toFixed(1) + "," + (cy + Math.sin(a) * (r + 6)).toFixed(1)); }
+        return '<polygon points="' + hex.join(" ") + '" fill="none" stroke="' + p.ink + '" stroke-opacity="0.18"/><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + p.a1 + '" stroke-opacity="0.15" stroke-width="5"/>' + arc(p.a1, 5, ' stroke-linecap="round"');
+      },
+      cardCss: "@keyframes vxp{0%,100%{opacity:1}50%{opacity:.55}}.vxp{animation:vxp 2.4s ease-in-out infinite}@keyframes vxb{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}.vxb{animation:vxb 2.8s ease-in-out infinite}",
+      banner: function (m, o, p, r, W, H, name, sub, chips) {
+        var out = ['<defs><clipPath id="c"><rect width="' + W + '" height="' + H + '" rx="16"/></clipPath><linearGradient id="vsk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + p.bg1 + '"/><stop offset="1" stop-color="' + p.bg2 + '"/></linearGradient>' +
+          '<radialGradient id="vhz" cx="0.8" cy="0.2" r="0.6"><stop offset="0" stop-color="' + p.a2 + '" stop-opacity="' + (p.light ? 0.22 : 0.28) + '"/><stop offset="1" stop-color="' + p.a2 + '" stop-opacity="0"/></radialGradient>' + BOT_DEFS(p) + "</defs>",
+          '<g clip-path="url(#c)"><rect width="' + W + '" height="' + H + '" fill="url(#vsk)"/><rect width="' + W + '" height="' + H + '" fill="url(#vhz)"/>'];
+        // the last eight weeks, a stack per day, rising as tall as the day was busy
+        out.push(city(m, p, 900, 92, 7, 8, 20, 10, 16, r));
+        out.push('<g transform="translate(960 40)"><g' + anim(p, "vfly") + ">" + bot(0, 0, 1, p) + "</g></g>");
+        out.push('<text x="70" y="80" font-family="' + MONO + '" font-size="13" letter-spacing="3" fill="' + p.a1 + '">' + esc(("Built block by block · @" + trunc(m.login, 24)).toUpperCase()) + "</text>");
+        out.push('<text x="68" y="148" font-family="' + SANS + '" font-size="' + fit(name, 60, 30, 640, 0.6) + '" font-weight="800" letter-spacing="-1" fill="' + p.ink + '">' + esc(trunc(name, 26)) + "</text>");
+        if (sub.main) out.push('<text x="70" y="188" font-family="' + SANS + '" font-size="20" fill="' + p.ink + '" fill-opacity="0.75">' + esc(trunc(sub.main, 52)) + "</text>");
+        if (chips.length) out.push('<text x="70" y="232" font-family="' + MONO + '" font-size="13" letter-spacing="2" fill="' + p.a2 + '">' + esc(chips.join(" · ").toUpperCase()) + "</text>");
+        out.push('</g><rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" rx="15.5" fill="none" stroke="' + p.line + '"/>');
+        return { svg: out.join(""), style: BOT_CSS + "@keyframes vfly{0%,100%{transform:translate(0,0)}25%{transform:translate(-70px,18px)}50%{transform:translate(-20px,34px)}75%{transform:translate(50px,12px)}}.vfly{animation:vfly 12s ease-in-out infinite}" +
+          "@keyframes vxp{0%,100%{opacity:1}50%{opacity:.5}}.vxp{animation:vxp 2.4s ease-in-out infinite}" };
+      },
+      divider: function (m, o, p, r, W, H, label, num) {
+        var out = ['<defs><linearGradient id="vsk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + p.bg1 + '"/><stop offset="1" stop-color="' + p.bg2 + '"/></linearGradient>' + BOT_DEFS(p) + '</defs><rect width="' + W + '" height="' + H + '" rx="14" fill="url(#vsk)"/>'];
+        for (var k = 0; k < 9; k++) out.push(cube(80 + k * 22, 44 - (k % 3) * 5, 11, 8 + (k % 3) * 5, k === 8 ? p.a1 : mix(p.a1, p.bg1, 0.25 + (k % 3) * 0.15)));
+        for (k = 0; k < 9; k++) out.push(cube(W - 80 - k * 22, 44 - (k % 3) * 5, 11, 8 + (k % 3) * 5, k === 8 ? p.a2 : mix(p.a2, p.bg1, 0.25 + (k % 3) * 0.15)));
+        out.push('<text x="40" y="30" font-family="' + MONO + '" font-size="11" letter-spacing="2" fill="' + p.a1 + '">LEVEL ' + num + "</text>");
+        out.push('<text x="600" y="56" text-anchor="middle" font-family="' + SANS + '" font-size="26" font-weight="800" fill="' + p.ink + '">' + esc(trunc(label, 24)) + "</text>");
+        out.push('<g transform="translate(-60 14) scale(.42)"><g' + anim(p, "vcross") + ">" + bot(0, 0, 1, p) + "</g></g>");
+        return { svg: out.join(""), style: BOT_CSS + "@keyframes vcross{from{transform:translateX(0)}to{transform:translateX(3100px)}}.vcross{animation:vcross 14s linear infinite}" };
+      },
+      footer: function (m, o, p, r, W, H) {
+        var s = '<defs>' + BOT_DEFS(p) + '</defs>', daily = m.activity && m.activity.daily ? m.activity.daily.slice(-48) : [], mx = Math.max.apply(null, daily.concat([1]));
+        for (var k = 0; k < 48; k++) { var v = daily.length ? daily[k] || 0 : (k * 7 % 5); s += cube(14 + k * 25, 104 - 6 - Math.round((v / (daily.length ? mx : 5)) * 26), 12.5, 6 + Math.round((v / (daily.length ? mx : 5)) * 26), mix(p.a1, p.bg1, v ? 0.1 : 0.6)); }
+        s += '<g transform="translate(1110 4) scale(.5)"><g' + anim(p, "vxb") + ">" + bot(0, 0, 1, p) + "</g></g>";
+        return { svg: s + '<text x="600" y="40" text-anchor="middle" font-family="' + SANS + '" font-size="18" font-weight="700" fill="' + p.ink + '">Built block by block · @' + esc(trunc(m.login, 30)) + "</text>",
+          style: BOT_CSS + "@keyframes vxb{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}.vxb{animation:vxb 2.8s ease-in-out infinite}" };
       }
     }
   };
@@ -826,5 +935,5 @@
     return svgOpen(W, H, "Footer") + css(p, style) + out.join("") + "</svg>";
   }
 
-  return { palette: palette, frame: frame, title: title, cell: cell, ring: ring, cardCss: cardCss, banner: banner, divider: divider, footer: footer, KEYS: Object.keys(DEF) };
+  return { palette: palette, frame: frame, title: title, cell: cell, ring: ring, cardCss: cardCss, banner: banner, divider: divider, footer: footer, KEYS: Object.keys(DEF), voxel: { cube: cube, city: city, bot: bot, botDefs: BOT_DEFS, botCss: BOT_CSS } };
 });
