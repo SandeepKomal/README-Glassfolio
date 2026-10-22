@@ -48,18 +48,20 @@
   }
 
   /* ---------- inline: HTML tags and Markdown ---------- */
+  function unescapeMd(s) { return s.replace(/\\([\\[\]])/g, "$1"); }
   function inlineMd(src) {
     var out = [], rest = String(src);
-    var re = /`([^`]+)`|\*\*(.+?)\*\*|\[([^\]]+)\]\(([^)\s]+)\)/;
+    // a backslash-escaped \[ or \] is a literal bracket, never the start or end of a link
+    var re = /`([^`]+)`|\*\*(.+?)\*\*|(?<!\\)\[((?:\\.|[^\]\\])+)\]\(([^)\s]+)\)/;
     while (rest) {
       var m = re.exec(rest);
-      if (!m) { out.push(text(decode(rest))); break; }
-      if (m.index) out.push(text(decode(rest.slice(0, m.index))));
+      if (!m) { out.push(text(unescapeMd(decode(rest)))); break; }
+      if (m.index) out.push(text(unescapeMd(decode(rest.slice(0, m.index)))));
       if (m[1] !== undefined) out.push(el("code", {}, [text(decode(m[1]))]));
       else if (m[2] !== undefined) out.push(el("strong", {}, inlineMd(m[2])));
       else {
         var href = cleanAttr("a", "href", m[4]);
-        out.push(href ? el("a", { href: href }, inlineMd(m[3])) : text(decode(m[3])));
+        out.push(href ? el("a", { href: href }, inlineMd(m[3])) : text(unescapeMd(decode(m[3]))));
       }
       rest = rest.slice(m.index + m[0].length);
     }

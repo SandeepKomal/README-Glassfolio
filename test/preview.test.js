@@ -199,3 +199,9 @@ test("parsing is fast enough to run on every keystroke", () => {
   const ms = Number(process.hrtime.bigint() - t) / 1e6 / 200;
   assert.ok(ms < 5, "took " + ms.toFixed(2) + " ms per preview");
 });
+
+test("escaped brackets show as brackets and never make a link", () => {
+  const out = html("\\[click\\](https://example.dev) and [site](https://example.dev)");
+  assert.match(out, /\[click\]\(https:\/\/example\.dev\) and <a href="https:\/\/example\.dev"/);
+  assert.strictEqual((out.match(/<a /g) || []).length, 1);
+});
