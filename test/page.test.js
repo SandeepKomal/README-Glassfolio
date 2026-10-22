@@ -43,7 +43,8 @@ test("the page has no inline scripts, inline styles or inline event handlers", (
 });
 
 test("the only outside addresses the page mentions are Google Fonts and the GitHub token page", () => {
-  const urls = [...html.matchAll(/(?:href|src)="(https?:\/\/[^"]+)"/g)].map((m) => new URL(m[1].replace(/&amp;/g, "&")).host);
+  // the canonical link names the site's own address, which isn't an outside one
+  const urls = [...html.replace(/<link rel="canonical" href="https:\/\/readme-glassfolio\.in\/">/, "").matchAll(/(?:href|src)="(https?:\/\/[^"]+)"/g)].map((m) => new URL(m[1].replace(/&amp;/g, "&")).host);
   const allowed = ["fonts.googleapis.com", "github.com"];
   urls.forEach((h) => assert.ok(allowed.includes(h), "unexpected host " + h));
 });

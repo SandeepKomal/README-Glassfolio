@@ -94,3 +94,31 @@ test("share links and the daily update keep every employer field", () => {
   const cfg = JSON.parse(auto.buildAutomationFiles("DevopsNimbus", o, sources).find((f) => f.name === ".readme-patch/config.json").data);
   Object.keys(o).forEach((k) => assert.deepStrictEqual(cfg[k], o[k], "config.json keeps " + k));
 });
+
+test("text from a share link or a GitHub profile can't add HTML, links or images to a text-only README", () => {
+  const evil = '<img src=x onerror=alert(1)> [click](https://evil.example) ![pic](https://evil.example/p.png) <a href="https://evil.example">x</a>';
+  const m = core.buildModel({ login: "your-username", name: evil, bio: evil, created_at: "2015-01-01T00:00:00Z" },
+    [{ name: "repo1", html_url: "https://github.com/your-username/repo1", description: evil, language: "Go", stargazers_count: 5, pushed_at: "2026-01-01T00:00:00Z", created_at: "2016-01-01T00:00:00Z" }], null);
+  for (const style of ["showcase", "changelog"]) {
+    const md = core.buildReadme(m, { cards: false, banner: false, style, summary: true, role: evil, tagline: evil, openTo: evil, certs: evil, siteUrl: "javascript:alert(1)", credit: true });
+    assert.doesNotMatch(md, /<img src=x|<a href="https:\/\/evil/, style + ": raw HTML");
+    assert.doesNotMatch(md, /(?<!\\)\]\(https:\/\/evil/, style + ": a link or image");
+    assert.doesNotMatch(md, /href="javascript:/i, style + ": the footer credit only links to http(s)");
+    assert.match(md, /\*\*Open to:\*\* &lt;img/);
+  }
+});
+
+test("impact numbers for a repo called __proto__ stay ordinary data", () => {
+  const map = core.parseImpact("__proto__: 9x; constructor: 2x");
+  assert.strictEqual(Object.getPrototypeOf(map), null);
+  assert.deepStrictEqual(map["__proto__"], [{ value: "9x", label: "" }]);
+  assert.deepStrictEqual(core.impactFor({ impact: "x: 1x" }, "constructor"), [], "no inherited property answers for a repo name");
+});
+
+test("a backslash in a repo description can't unescape the table's pipe or a bracket", () => {
+  const m = core.buildModel({ login: "your-username", name: "N", created_at: "2015-01-01T00:00:00Z" },
+    [{ name: "r", html_url: "https://github.com/your-username/r", description: "a \\| b \\[x](https://e.example)", language: "Go", stargazers_count: 1, pushed_at: "2026-01-01T00:00:00Z", created_at: "2016-01-01T00:00:00Z" }], null);
+  const row = core.buildReadme(m, { cards: false }).split("\n").find((l) => l.startsWith("| [r]"));
+  assert.strictEqual(row.split(/(?<!\\)\|/).length, 6, "still four columns");
+  assert.strictEqual(row.split(" | ")[1], "a \\\\\\| b \\\\\\[x\\](https://e.example)");
+});

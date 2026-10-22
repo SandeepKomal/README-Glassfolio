@@ -70,7 +70,10 @@
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
-  function cell(s) { return String(s).replace(/\|/g, "\\|").replace(/\r?\n/g, " "); }
+  /* a table cell is markdown prose too, and a "|" would end it */
+  function cell(s) { return String(s).replace(/\\/g, "\\\\").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/[[\]|]/g, "\\$&").replace(/\r?\n/g, " "); }
+  /* profile and share-link text written as markdown prose: no raw HTML, and no [..](..) links or ![..](..) images */
+  function mdText(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\/g, "\\\\").replace(/[[\]]/g, "\\$&"); }
   function fence(s) { return String(s).replace(/```/g, "'''"); }
   function url(s) { return /^https?:\/\//i.test(s) ? s : "https://" + s; }
   function bar(p) { var n = Math.max(1, Math.min(20, Math.round(p / 5))); return "█".repeat(n) + "░".repeat(20 - n); }
@@ -427,9 +430,9 @@
       out.push(pic(o, "banner.svg", 'alt="' + esc(m.name + (designation(m, o) ? ", " + designation(m, o) : "")) + '" width="100%"'), "");
     } else {
       var sub = subtitle(m, o);
-      out.push("# " + m.name, "");
-      if (sub.main) out.push("**" + sub.main.replace(/[*`]/g, "") + "**", "");
-      if (sub.extra) out.push(sub.extra.replace(/[*`]/g, ""), "");
+      out.push("# " + mdText(m.name), "");
+      if (sub.main) out.push("**" + mdText(sub.main.replace(/[*`]/g, "")) + "**", "");
+      if (sub.extra) out.push(mdText(sub.extra.replace(/[*`]/g, "")), "");
       var chips = chipNames(m, o);
       if (chips.length) out.push(chips.map(function (c) { return "`" + c + "`"; }).join(" "), "");
     }
@@ -493,7 +496,7 @@
     Object.keys(byYear).sort(function (a, b) { return b - a; }).slice(0, 4).forEach(function (y) {
       out.push("### " + y, "");
       byYear[y].sort(function (a, b) { return b.stars - a.stars; }).slice(0, 5).forEach(function (r) {
-        out.push("- **Added** [`" + r.name + "`](" + r.url + ")" + (r.desc ? ": " + r.desc : "") + (r.stars ? " (" + r.stars + " stars)" : ""));
+        out.push("- **Added** [`" + r.name + "`](" + r.url + ")" + (r.desc ? ": " + mdText(r.desc) : "") + (r.stars ? " (" + r.stars + " stars)" : ""));
       });
       out.push("");
     });
@@ -567,7 +570,7 @@
    * Repo names can't contain ":" or ";", so those separate the entries. Each metric splits into its number and label.
    */
   function parseImpact(text) {
-    var out = {};
+    var out = Object.create(null);  // repo names come from the user, so "__proto__" must stay an ordinary key
     String(text || "").split(";").forEach(function (entry) {
       var at = entry.indexOf(":");
       if (at < 1) return;
@@ -640,9 +643,9 @@
       out.push(res ? '<a href="' + esc(res) + '">' + img + "</a>" : img, "");
       if (res) out.push('<a href="' + esc(res) + '"><b>View my résumé</b></a>', "");
     } else {
-      if (oneLine(o.openTo)) out.push("**Open to:** " + plain(o.openTo).replace(/[*_]/g, ""), "");
-      if (certList(o).length) out.push("**Certified:** " + certList(o).map(function (c) { return c.replace(/[*_|]/g, ""); }).join(" · "), "");
-      if (o.summary) recruiterSummary(m, o).forEach(function (l) { out.push(l.replace(/[*_]/g, ""), ""); });
+      if (oneLine(o.openTo)) out.push("**Open to:** " + mdText(plain(o.openTo).replace(/[*_]/g, "")), "");
+      if (certList(o).length) out.push("**Certified:** " + certList(o).map(function (c) { return mdText(c.replace(/[*_|]/g, "")); }).join(" · "), "");
+      if (o.summary) recruiterSummary(m, o).forEach(function (l) { out.push(mdText(l.replace(/[*_]/g, "")), ""); });
       if (res) out.push('<a href="' + esc(res) + '"><b>View my résumé</b></a>', "");
     }
     out.push("</div>", "");
@@ -788,7 +791,7 @@
   function footer(o) {
     var base = "Patched together from public GitHub data";
     if (!o.credit) return '<sub><span>' + base + '.</span></sub>';
-    return '<sub><span>' + base + '</span><span> · made with ' + (o.siteUrl ? '<a href="' + esc(o.siteUrl) + '">README Glassfolio</a>' : 'README Glassfolio') + '</span></sub>';
+    return '<sub><span>' + base + '</span><span> · made with ' + (/^https?:\/\//i.test(o.siteUrl || "") ? '<a href="' + esc(o.siteUrl) + '">README Glassfolio</a>' : 'README Glassfolio') + '</span></sub>';
   }
 
   function buildReadme(m, options) {
