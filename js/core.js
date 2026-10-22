@@ -570,7 +570,7 @@
    * Repo names can't contain ":" or ";", so those separate the entries. Each metric splits into its number and label.
    */
   function parseImpact(text) {
-    var out = Object.create(null);  // repo names come from the user, so "__proto__" must stay an ordinary key
+    var out = new Map();  // repo names come from the user, so they're map keys, never object properties
     String(text || "").split(";").forEach(function (entry) {
       var at = entry.indexOf(":");
       if (at < 1) return;
@@ -581,11 +581,11 @@
         var mm = /^([~<>≈]?\$?[\d][\d.,]*\s?(?:[%+×x]|[kKmMbB](?![a-z])|ms\b|s\b|h\b)*\+?)\s*(.*)$/.exec(t);
         metrics.push(mm ? { value: mm[1].replace(/\s+$/, ""), label: mm[2] } : { value: t, label: "" });
       });
-      if (repo && metrics.length) out[repo] = metrics.slice(0, 3);
+      if (repo && metrics.length) out.set(repo, metrics.slice(0, 3));
     });
     return out;
   }
-  function impactFor(o, repo) { return (parseImpact(o && o.impact)[String(repo && repo.name || repo).toLowerCase()]) || []; }
+  function impactFor(o, repo) { return parseImpact(o && o.impact).get(String(repo && repo.name || repo).toLowerCase()) || []; }
   /** Projects shown in the README with impact numbers attached. */
   function anyImpact(m, o) { return pickProjects(m, o).some(function (r) { return impactFor(o, r).length; }); }
 

@@ -3,7 +3,7 @@
   "use strict";
   var auto = window.ReadmeAutomation, core = window.ReadmeCore, gh = window.ReadmeGitHub, cardsLib = window.ReadmeCards, previewLib = window.ReadmePreview;
   var $ = function (s) { return document.querySelector(s); };
-  var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [], impact: {} };
+  var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [], impact: new Map() };
 
   var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe", wave: "o-wave", summary: "o-summary", proof: "o-proof" };
   var TEXTS = { style: "#style", world: "#world", showpiece: "#showpiece", openTo: "#openTo", resume: "#resume", certs: "#certs", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
@@ -49,9 +49,8 @@
     if (o.order !== undefined) state.order = core.sectionOrder({ order: o.order });
     if (o.featured !== undefined) state.featured = o.featured ? o.featured.split(",").map(function (x) { return x.trim(); }).filter(Boolean) : [];
     if (o.impact !== undefined) {
-      state.impact = {};
-      var parsed = core.parseImpact(o.impact);
-      Object.keys(parsed).forEach(function (k) { state.impact[k] = parsed[k].map(function (x) { return x.value + (x.label ? " " + x.label : ""); }).join(", "); });
+      state.impact = new Map();
+      core.parseImpact(o.impact).forEach(function (list, k) { state.impact.set(k, list.map(function (x) { return x.value + (x.label ? " " + x.label : ""); }).join(", ")); });
       impactKey = "";
     }
     syncCustom(); syncWorld(); syncShowpiece(); syncResume(); renderImpact();
@@ -214,8 +213,8 @@
   /** The impact boxes: one per project the README shows, re-drawn only when that list changes so typing keeps focus. */
   var impactKey = "";
   function impactText() {
-    return Object.keys(state.impact).filter(function (k) { return state.impact[k].trim(); }).map(function (k) {
-      return k + ": " + state.impact[k].replace(/[;:]/g, " ").replace(/\s+/g, " ").trim();
+    return Array.from(state.impact).filter(function (e) { return e[1].trim(); }).map(function (e) {
+      return e[0] + ": " + e[1].replace(/[;:]/g, " ").replace(/\s+/g, " ").trim();
     }).join("; ");
   }
   function renderImpact() {
@@ -232,9 +231,9 @@
       nm.textContent = r.name; st.textContent = r.stars ? "\u2605 " + r.stars : "";
       head.appendChild(nm); head.appendChild(st);
       var input = document.createElement("input");
-      input.type = "text"; input.maxLength = 120; input.value = state.impact[k] || ""; input.placeholder = "40+ users, 99.9% uptime, 3× faster";
+      input.type = "text"; input.maxLength = 120; input.value = state.impact.get(k) || ""; input.placeholder = "40+ users, 99.9% uptime, 3× faster";
       input.setAttribute("aria-label", "Impact numbers for " + r.name);
-      input.addEventListener("input", function () { state.impact[k] = input.value; refreshSoon(); });
+      input.addEventListener("input", function () { state.impact.set(k, input.value); refreshSoon(); });
       label.appendChild(head); label.appendChild(input); box.appendChild(label);
     });
   }
