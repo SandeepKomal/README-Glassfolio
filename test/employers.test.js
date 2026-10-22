@@ -19,10 +19,10 @@ test("nothing changes for anyone who leaves the employer fields empty", () => {
 
 test("impact numbers: split into number and label, three per project, repo names matched without case", () => {
   const im = core.parseImpact("Drift-Radar: 40+ accounts watched, 99.9% uptime, 3× faster plans, one too many; tf-modules: $2.4M saved, 120ms p99; bad entry; : nothing");
-  assert.deepStrictEqual(im["drift-radar"], [{ value: "40+", label: "accounts watched" }, { value: "99.9%", label: "uptime" }, { value: "3×", label: "faster plans" }]);
-  assert.deepStrictEqual(im["tf-modules"], [{ value: "$2.4M", label: "saved" }, { value: "120ms", label: "p99" }]);
-  assert.deepStrictEqual(core.parseImpact("x: battle tested")["x"], [{ value: "battle tested", label: "" }], "words without a number stay whole");
-  assert.strictEqual(Object.keys(im).length, 2);
+  assert.deepStrictEqual(im.get("drift-radar"), [{ value: "40+", label: "accounts watched" }, { value: "99.9%", label: "uptime" }, { value: "3×", label: "faster plans" }]);
+  assert.deepStrictEqual(im.get("tf-modules"), [{ value: "$2.4M", label: "saved" }, { value: "120ms", label: "p99" }]);
+  assert.deepStrictEqual(core.parseImpact("x: battle tested").get("x"), [{ value: "battle tested", label: "" }], "words without a number stay whole");
+  assert.strictEqual(im.size, 2);
 });
 
 test("impact numbers make every project card taller with a metrics strip, and show on the right card", () => {
@@ -110,8 +110,9 @@ test("text from a share link or a GitHub profile can't add HTML, links or images
 
 test("impact numbers for a repo called __proto__ stay ordinary data", () => {
   const map = core.parseImpact("__proto__: 9x; constructor: 2x");
-  assert.strictEqual(Object.getPrototypeOf(map), null);
-  assert.deepStrictEqual(map["__proto__"], [{ value: "9x", label: "" }]);
+  assert.ok(map instanceof Map);
+  assert.deepStrictEqual(map.get("__proto__"), [{ value: "9x", label: "" }]);
+  assert.strictEqual({}.length, undefined, "Object.prototype is untouched");
   assert.deepStrictEqual(core.impactFor({ impact: "x: 1x" }, "constructor"), [], "no inherited property answers for a repo name");
 });
 
