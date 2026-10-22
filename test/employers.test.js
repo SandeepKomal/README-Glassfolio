@@ -120,5 +120,5 @@ test("a backslash in a repo description can't unescape the table's pipe or a bra
     [{ name: "r", html_url: "https://github.com/your-username/r", description: "a \\| b \\[x](https://e.example)", language: "Go", stargazers_count: 1, pushed_at: "2026-01-01T00:00:00Z", created_at: "2016-01-01T00:00:00Z" }], null);
   const row = core.buildReadme(m, { cards: false }).split("\n").find((l) => l.startsWith("| [r]"));
   assert.strictEqual(row.split(/(?<!\\)\|/).length, 6, "still four columns");
-  assert.ok(row.includes("a \\\\\\| b \\\\\\[x\\](https://e.example)"));
+  assert.strictEqual(row.split(" | ")[1], "a \\\\\\| b \\\\\\[x\\](https://e.example)");
 });

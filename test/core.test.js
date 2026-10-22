@@ -143,7 +143,8 @@ test("user-supplied role, skills and LinkedIn fill the gaps", () => {
   assert.match(md, /\*\*Cloud Engineer\*\*/);
   assert.match(md, /`AWS` `Terraform`/);
   assert.strictEqual((md.match(/`AWS`/gi) || []).length, 1);      // de-duplicated, case-insensitive
-  assert.ok(md.includes("https://www.linkedin.com/in/new-person"));
+  const links = [...md.matchAll(/\]\(([^)\s]+)\)|href="([^"]+)"/g)].map((m) => m[1] || m[2]);
+  assert.ok(links.some((u) => u === "https://www.linkedin.com/in/new-person"), "links to the LinkedIn profile");
 });
 
 test("git graph ids are sanitised", () => {
