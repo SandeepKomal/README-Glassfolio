@@ -105,7 +105,7 @@ test("showpieces follow light and dark through the README's own surface", () => 
 test("showpieces are drawn from the profile: repos, stars and activity show up", () => {
   const top = core.pickProjects(core.SAMPLE, {})[0];
   // split-flap tiles hold one letter each, and a moving tile repeats it on its two folding halves
-  const textOf = (svg) => svg.replace(/<style>.*?<\/style>/, "").replace(/<g class="f[ud]"[^>]*><svg[^>]*>.*?<\/svg><\/g>/g, "").replace(/<[^>]+>/g, "").toUpperCase();
+  const textOf = (svg) => svg.replace(/<style>.*?<\/style>/, "").replace(/<g class="f[ud]"[^>]*><svg[^>]*>.*?<\/svg><\/g>/g, "").split(/<[^>]*>/).join("").toUpperCase();
   for (const key of ["departures", "holo", "vinyl", "garden"]) assert.ok(textOf(showpieces.build(core.SAMPLE, { showpiece: key })).includes(top.name.toUpperCase().slice(0, 12)), key + " shows the top project");
   assert.match(showpieces.build(core.SAMPLE, { showpiece: "metro" }), />Go line /, "a line per language");
   const vit = showpieces.build(core.SAMPLE, { showpiece: "vitals" });

@@ -118,8 +118,9 @@ function git(cwd, args, env) {
 /** Runs a shell script WITHOUT blocking this process (the fake GitHub is served from here), with a hard time limit. */
 function sh(script, cwd, env, ms) {
   return new Promise((resolve) => {
-    const c = spawn("bash", ["-c", script], { cwd, env: Object.assign({}, process.env, env, { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_SYSTEM: "/dev/null" }) });
+    const c = spawn("bash", ["-s"], { cwd, env: Object.assign({}, process.env, env, { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_SYSTEM: "/dev/null" }) });
     let stdout = "", stderr = "", timedOut = false;
+    c.stdin.end(script);
     c.stdout.on("data", (d) => { stdout += d; }); c.stderr.on("data", (d) => { stderr += d; });
     const timer = setTimeout(() => { timedOut = true; c.kill("SIGKILL"); }, ms || 60000);
     c.on("close", (status) => { clearTimeout(timer); resolve({ status: timedOut ? 124 : status, stdout, stderr: timedOut ? stderr + "\n[timed out]" : stderr }); });

@@ -21,13 +21,13 @@ const DOCS = path.join(__dirname, "..", "docs");
 const SRC = path.join(DOCS, "HOW_TO_USE.md");
 const OUT = path.join(DOCS, "README-Glassfolio-guide.pdf");
 
-const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 function inline(s) {
   return esc(s)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, href) => '<a href="' + (/^https?:/.test(href) ? href : "https://readme-glassfolio.in/") + '">' + text + "</a>");
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, href) => '<a href="' + (/^https?:/.test(href) ? esc(href) : "https://readme-glassfolio.in/") + '">' + text + "</a>");
 }
 function image(alt, src) {
   const data = fs.readFileSync(path.join(DOCS, src)).toString("base64");

@@ -70,9 +70,10 @@
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
-  function cell(s) { return String(s).replace(/\|/g, "\\|").replace(/\r?\n/g, " "); }
+  /* a table cell is markdown prose too, and a "|" would end it */
+  function cell(s) { return String(s).replace(/\\/g, "\\\\").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/[[\]|]/g, "\\$&").replace(/\r?\n/g, " "); }
   /* profile and share-link text written as markdown prose: no raw HTML, and no [..](..) links or ![..](..) images */
-  function mdText(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/([\\[\]])/g, "\\$1"); }
+  function mdText(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\/g, "\\\\").replace(/[[\]]/g, "\\$&"); }
   function fence(s) { return String(s).replace(/```/g, "'''"); }
   function url(s) { return /^https?:\/\//i.test(s) ? s : "https://" + s; }
   function bar(p) { var n = Math.max(1, Math.min(20, Math.round(p / 5))); return "█".repeat(n) + "░".repeat(20 - n); }
@@ -481,7 +482,7 @@
     }
     var out = [head(o, "projects", "Projects"), "", "| Repo | What it does | Lang | Stars |", "| --- | --- | --- | ---: |"];
     shown.forEach(function (r) {
-      out.push("| [" + cell(r.name) + "](" + r.url + ") | " + cell(mdText(r.desc || "-")) + " | " + cell(r.lang || "-") + " | " + r.stars + " |");
+      out.push("| [" + cell(r.name) + "](" + r.url + ") | " + cell(r.desc || "-") + " | " + cell(r.lang || "-") + " | " + r.stars + " |");
     });
     out.push("");
     return out;
@@ -569,7 +570,7 @@
    * Repo names can't contain ":" or ";", so those separate the entries. Each metric splits into its number and label.
    */
   function parseImpact(text) {
-    var out = {};
+    var out = Object.create(null);  // repo names come from the user, so "__proto__" must stay an ordinary key
     String(text || "").split(";").forEach(function (entry) {
       var at = entry.indexOf(":");
       if (at < 1) return;

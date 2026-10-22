@@ -52,7 +52,7 @@ test("table cells escape pipes and newlines", () => {
 test("banner escapes markup in names and bios", () => {
   const model = core.buildModel({ login: "evil", name: '<script>"&', bio: "</text><x>", created_at: "2024-01-01T00:00:00Z" }, []);
   const svg = core.buildBanner(model, {});
-  assert.doesNotMatch(svg, /<script>/);
+  assert.doesNotMatch(svg, /<script\b/i);
   assert.doesNotMatch(svg, /<x>/);
   assert.match(svg, /^<svg[\s\S]*<\/svg>$/);
 });
@@ -143,7 +143,7 @@ test("user-supplied role, skills and LinkedIn fill the gaps", () => {
   assert.match(md, /\*\*Cloud Engineer\*\*/);
   assert.match(md, /`AWS` `Terraform`/);
   assert.strictEqual((md.match(/`AWS`/gi) || []).length, 1);      // de-duplicated, case-insensitive
-  assert.match(md, /linkedin\.com\/in\/new-person/);
+  assert.ok(md.includes("https://www.linkedin.com/in/new-person"));
 });
 
 test("git graph ids are sanitised", () => {
@@ -157,7 +157,7 @@ test("zip writer output is a valid archive", () => {
   const { makeZip, crc32 } = require("../js/zip.js");
   assert.strictEqual(crc32(new TextEncoder().encode("123456789")), 0xCBF43926);
   const bytes = makeZip([{ name: "README.md", data: "héllo" }, { name: "banner.svg", data: "<svg/>" }]);
-  const tmp = require("path").join(require("os").tmpdir(), "rd-test.zip");
+  const tmp = require("path").join(require("fs").mkdtempSync(require("path").join(require("os").tmpdir(), "rd-")), "test.zip");
   require("fs").writeFileSync(tmp, bytes);
   const out = require("child_process").execSync("unzip -p " + tmp + " README.md").toString();
   assert.strictEqual(out, "héllo");
@@ -342,7 +342,7 @@ test("stats card shows years unabbreviated and puts real numbers before zeros", 
   const svg = cards.buildCards(model, {}).find((f) => f.name === "cards/stats.svg").data;
   assert.match(svg, />2026</);
   assert.doesNotMatch(svg, />2k</);
-  const labels = (svg.match(/fill-opacity="0\.62">([^<]+)</g) || []).map((m) => m.replace(/.*">/, "").replace("<", ""));
+  const labels = (svg.match(/fill-opacity="0\.62">([^<]+)</g) || []).map((m) => m.replace(/.*">/, "").replace(/<$/, ""));
   assert.deepStrictEqual(labels.slice(0, 3), ["Repositories", "Following", "Member since"]);
 });
 
@@ -1044,7 +1044,7 @@ test("share image: long text shrinks and shortens so it stays clear of the orbit
 test("share image: hostile text is escaped, and a profile with no activity still gets four numbers", () => {
   const evil = core.buildModel({ login: "evil", name: '<script>alert(1)</script>"&', bio: "</text><x>", created_at: "2020-01-01T00:00:00Z", followers: 9 }, []);
   const d = social(evil, { role: "<b>boss</b>" }).data;
-  assert.doesNotMatch(d, /<script|<x>|<b>/);
+  assert.doesNotMatch(d, /<script\b|<x>|<b>/i);
   assert.match(d, /&lt;script&gt;/);
   assert.strictEqual((d.match(/font-size="58"/g) || []).length, 4);
 });
@@ -1064,7 +1064,7 @@ test("zip writer stores raw bytes exactly, alongside text", () => {
   const bytes = Uint8Array.from({ length: 256 }, (_, i) => i);
   const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0xff, 0xfe]);
   const zip = makeZip([{ name: "a/bytes.bin", data: bytes }, { name: "x.png", data: png }, { name: "t.txt", data: "héllo ★" }]);
-  const tmp = require("path").join(require("os").tmpdir(), "rd-bin.zip");
+  const tmp = require("path").join(require("fs").mkdtempSync(require("path").join(require("os").tmpdir(), "rd-")), "bin.zip");
   require("fs").writeFileSync(tmp, zip);
   const cp = require("child_process");
   assert.doesNotThrow(() => cp.execSync("unzip -tq " + tmp));
@@ -1114,7 +1114,7 @@ test("changelog card: stars hidden at zero and shortened when large; topics stan
 test("changelog card: hostile text is escaped, and repos without a creation year are left out", () => {
   const evil = modelOf([mkRepo('<script>x</script>"&', 2025, "01", { description: "</text><tspan>" }), mkRepo("nodate", 2025, "01", { created_at: "" })]);
   const svg = cardOf(evil, {}, "changelog");
-  assert.doesNotMatch(svg, /<script|<tspan>/);
+  assert.doesNotMatch(svg, /<script\b|<tspan>/i);
   assert.match(svg, /&lt;script&gt;/);
   assert.ok(!svg.includes(">nodate<"));
   assert.strictEqual(cardOf(modelOf([mkRepo("a", 2025, "01", { created_at: "" })]), {}, "changelog"), undefined);

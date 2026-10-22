@@ -107,3 +107,18 @@ test("text from a share link or a GitHub profile can't add HTML, links or images
     assert.match(md, /\*\*Open to:\*\* &lt;img/);
   }
 });
+
+test("impact numbers for a repo called __proto__ stay ordinary data", () => {
+  const map = core.parseImpact("__proto__: 9x; constructor: 2x");
+  assert.strictEqual(Object.getPrototypeOf(map), null);
+  assert.deepStrictEqual(map["__proto__"], [{ value: "9x", label: "" }]);
+  assert.deepStrictEqual(core.impactFor({ impact: "x: 1x" }, "constructor"), [], "no inherited property answers for a repo name");
+});
+
+test("a backslash in a repo description can't unescape the table's pipe or a bracket", () => {
+  const m = core.buildModel({ login: "your-username", name: "N", created_at: "2015-01-01T00:00:00Z" },
+    [{ name: "r", html_url: "https://github.com/your-username/r", description: "a \\| b \\[x](https://e.example)", language: "Go", stargazers_count: 1, pushed_at: "2026-01-01T00:00:00Z", created_at: "2016-01-01T00:00:00Z" }], null);
+  const row = core.buildReadme(m, { cards: false }).split("\n").find((l) => l.startsWith("| [r]"));
+  assert.strictEqual(row.split(/(?<!\\)\|/).length, 6, "still four columns");
+  assert.ok(row.includes("a \\\\\\| b \\\\\\[x\\](https://e.example)"));
+});

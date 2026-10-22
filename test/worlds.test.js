@@ -86,7 +86,7 @@ test("worlds keep profile text as text, whatever it contains", () => {
   for (const w of WORLDS) {
     cards.buildFiles(evil, { world: w, role: "<b>", stack: "<i>, &" }).filter((f) => /\.svg$/.test(f.name)).forEach((f) => {
       wellFormed(f.data, w + "/" + f.name);
-      assert.doesNotMatch(f.data, /<script|<img|<b>|<i>/, w + "/" + f.name);
+      assert.doesNotMatch(f.data, /<script\b|<img\b|<b>|<i>/i, w + "/" + f.name);
     });
   }
 });
