@@ -17,11 +17,16 @@ permissions:
 jobs:
   browsers:
     name: Browsers (${{ matrix.engine }})
-    # Playwright installs each engine's system libraries with apt for a named Ubuntu release, so the runner image is
-    # pinned rather than following ubuntu-latest onto a release this Playwright version may not support yet.
     runs-on: ubuntu-24.04
-    # the apt mirror is sometimes slow enough that installing WebKit's libraries alone takes over 15 minutes
-    timeout-minutes: 40
+    # Playwright's own image already has every engine's system libraries, so nothing is installed with apt: twice the
+    # WebKit job ran out of time inside "playwright install --with-deps" on a slow Ubuntu mirror. Pinned by digest;
+    # keep the tag on the Playwright version in tools/package-lock.json (a mismatch still works, it just downloads
+    # that version's browsers, but the libraries may lag).
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:47b510dd9230bf0b9bfc9b20102241e577ea7a99334ab4c3ca19f19770e9b8ea
+      # the image's non-root user, which owns the checkout; Firefox refuses to run as root under another user's home
+      options: --user 1001
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -31,16 +36,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: Set up Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 22
-      - name: Install Playwright and the browser
+      - name: Install Playwright
         env:
           ENGINE: ${{ matrix.engine }}
+        # the image's Node runs the check; the browser is already in the image, so this only downloads one if the
+        # lockfile's Playwright is newer than the image
         run: |
           npm ci --prefix tools --ignore-scripts
-          npx --prefix tools --no-install playwright install --with-deps "$ENGINE"
+          npx --prefix tools --no-install playwright install "$ENGINE"
       - name: Check every page
         env:
           ENGINE: ${{ matrix.engine }}
