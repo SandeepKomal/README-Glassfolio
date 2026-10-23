@@ -42,6 +42,15 @@ test("the page has no inline scripts, inline styles or inline event handlers", (
   [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].forEach(([, src]) => assert.match(src, /^js\/[\w.-]+\.js\?v=dev$/, "scripts come from this site only, with the version the deploy stamps: " + src));
 });
 
+test("the page has no <select>, which WebKit draws with inline styles the policy refuses", () => {
+  assert.doesNotMatch(html, /<select/i, "use a radio group (see CHOICES in js/app.js) for an either-or choice");
+  for (const name of ["style", "universe-style"]) {
+    const group = html.match(new RegExp('<input type="radio" name="' + name + '"[^>]*>', "g")) || [];
+    assert.ok(group.length >= 2, name + " is a radio group");
+    assert.strictEqual(group.filter((r) => / checked/.test(r)).length, 1, name + " starts with exactly one choice made");
+  }
+});
+
 test("the only outside address the page links to is GitHub", () => {
   // the canonical link names the site's own address, which isn't an outside one
   const urls = [...html.replace(/<link rel="canonical" href="https:\/\/readme-glassfolio\.in\/">/, "").matchAll(/(?:href|src)="(https?:\/\/[^"]+)"/g)].map((m) => new URL(m[1].replace(/&amp;/g, "&")).host);

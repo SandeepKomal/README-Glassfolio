@@ -59,11 +59,22 @@ async function checkPage(context, base, url) {
   // the init script is injected by the browser's automation channel, so the page's own policy doesn't block it
   await page.addInitScript(() => {
     window.__csp = [];
-    document.addEventListener("securitypolicyviolation", (e) => window.__csp.push(e.violatedDirective + " " + e.blockedURI));
+    document.addEventListener("securitypolicyviolation", (e) => window.__csp.push(e.violatedDirective + " " + e.blockedURI +
+      (e.sourceFile ? " in " + e.sourceFile.slice(0, 80) + ":" + e.lineNumber : "") + (e.sample ? " (" + e.sample.slice(0, 60) + ")" : "") +
+      (window.__step ? " during " + window.__step : "") + where(e)));
+    // the element and document the browser blames, for violations no script line explains (an image, a stylesheet)
+    function where(e) {
+      const t = e.target, doc = e.documentURI && e.documentURI !== location.href ? " from " + e.documentURI.slice(0, 60) : "";
+      if (!t || !t.nodeName) return doc;
+      const src = t.getAttribute && (t.getAttribute("src") || t.getAttribute("href"));
+      return doc + " at <" + t.nodeName.toLowerCase() + (t.id ? "#" + t.id : "") + (t.className && typeof t.className === "string" ? "." + t.className.split(" ")[0] : "") +
+        (src ? " " + src.slice(0, 50) : "") + (t.parentElement ? " in " + (t.parentElement.id || t.parentElement.className || t.parentElement.nodeName) : "") + ">";
+    }
   });
   await page.goto(base + url, { waitUntil: "load" });
   await page.waitForTimeout(400);
   if (url === "/") {
+    await page.evaluate(() => { window.__step = "sample build"; });
     await page.click("#sample");
     await page.waitForFunction(() => document.querySelector("#ghBody") && document.querySelector("#ghBody").children.length > 3, null, { timeout: 15000 });
   }

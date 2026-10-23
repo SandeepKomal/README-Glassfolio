@@ -104,10 +104,12 @@ form.ask{max-width:640px;margin:0}
 @media (max-width:900px){.grid{grid-template-columns:1fr}}
 aside,.diff{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-media)}
 aside{padding:var(--s2) var(--s5) var(--s5)}
-aside label.f{display:block;font-size:.84rem;font-weight:600;color:var(--ink);margin:var(--s4) 0 6px}
-aside input[type=text],aside input[type=url],aside input[type=password],aside select{
+aside label.f,aside legend.f{display:block;font-size:.84rem;font-weight:600;color:var(--ink);margin:var(--s4) 0 6px;padding:0}
+fieldset.pick{border:0;margin:0;padding:0;min-width:0}
+fieldset.pick .chk{margin:6px 0}
+aside input[type=text],aside input[type=url],aside input[type=password]{
   width:100%;min-height:40px;padding:8px 12px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);background:#fff;color:var(--ink);font:inherit;font-size:.92rem}
-aside input:focus,aside select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+aside input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
 .chk{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:.92rem;line-height:1.4}
 .chk input{accent-color:var(--accent);width:17px;height:17px;margin:2px 0 0;flex:none}
 aside .grp{border-bottom:1px solid var(--line);padding:0 0 var(--s4)}

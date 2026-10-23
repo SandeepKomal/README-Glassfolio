@@ -17,8 +17,11 @@ permissions:
 jobs:
   browsers:
     name: Browsers (${{ matrix.engine }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Playwright installs each engine's system libraries with apt for a named Ubuntu release, so the runner image is
+    # pinned rather than following ubuntu-latest onto a release this Playwright version may not support yet.
+    runs-on: ubuntu-24.04
+    # the apt mirror is sometimes slow enough that installing WebKit's libraries alone takes over 15 minutes
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:

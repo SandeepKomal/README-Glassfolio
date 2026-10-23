@@ -6,7 +6,10 @@
   var state = { model: null, readme: "", files: [], user: "", tab: "profile", scheme: "light", device: "desktop", order: core.SECTIONS.slice(), featured: [], impact: new Map() };
 
   var FLAGS = { animate: "o-animate", adaptive: "o-adaptive", heatmap: "o-heatmap", credit: "o-credit", banner: "o-banner", cards: "o-cards", bars: "o-bars", pie: "o-pie", timeline: "o-timeline", proj: "o-proj", recent: "o-recent", links: "o-links", universe: "o-universe", wave: "o-wave", summary: "o-summary", proof: "o-proof" };
-  var TEXTS = { style: "#style", world: "#world", showpiece: "#showpiece", openTo: "#openTo", resume: "#resume", certs: "#certs", universeStyle: "#universe-style", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
+  var TEXTS = { world: "#world", showpiece: "#showpiece", openTo: "#openTo", resume: "#resume", certs: "#certs", role: "#role", tagline: "#tagline", stack: "#stack", linkedin: "#linkedin" };
+  // short either-or choices are radio groups, keyed by their name (WebKit styles a <select> with inline styles the CSP refuses)
+  var CHOICES = { style: "style", universeStyle: "universe-style" };
+  function radios(name) { return document.querySelectorAll('input[type="radio"][name="' + name + '"]'); }
   // the project was first called "Patch your profile"; the key keeps that name so saved choices survive the rename
   var STORE_KEY = "patch-your-profile.v1";
 
@@ -36,12 +39,14 @@
     var o = { theme: th, siteUrl: siteUrl(), order: isDefaultOrder() ? "" : state.order.join(","), featured: state.featured.join(","), impact: impactText() };
     if (th === "custom") { o.accent1 = $("#accent1").value; o.accent2 = $("#accent2").value; }
     Object.keys(TEXTS).forEach(function (k) { o[k] = $(TEXTS[k]).value.trim(); });
+    Object.keys(CHOICES).forEach(function (k) { var on = document.querySelector('input[name="' + CHOICES[k] + '"]:checked'); o[k] = on ? on.value : core.DEFAULTS[k]; });
     Object.keys(FLAGS).forEach(function (k) { o[k] = document.getElementById(FLAGS[k]).checked; });
     return o;
   }
 
   function applyOptions(o) {
     Object.keys(TEXTS).forEach(function (k) { if (o[k] !== undefined) $(TEXTS[k]).value = o[k]; });
+    Object.keys(CHOICES).forEach(function (k) { radios(CHOICES[k]).forEach(function (r) { if (o[k] !== undefined && r.value === o[k]) r.checked = true; }); });
     Object.keys(FLAGS).forEach(function (k) { if (o[k] !== undefined) document.getElementById(FLAGS[k]).checked = !!o[k]; });
     if (o.theme) { var r = document.querySelector('input[name="theme"][value="' + o.theme + '"]'); if (r) r.checked = true; }
     if (o.accent1) $("#accent1").value = o.accent1;
@@ -64,6 +69,7 @@
   function resetOptions() {
     var d = {};
     Object.keys(TEXTS).forEach(function (k) { d[k] = typeof core.DEFAULTS[k] === "string" ? core.DEFAULTS[k] : ""; });
+    Object.keys(CHOICES).forEach(function (k) { d[k] = core.DEFAULTS[k]; });
     Object.keys(FLAGS).forEach(function (k) { d[k] = core.DEFAULTS[k]; });
     d.theme = "auto"; d.order = ""; d.featured = ""; d.impact = ""; d.accent1 = "#38e8ff"; d.accent2 = "#8b5cf6";
     applyOptions(d);
@@ -639,9 +645,10 @@
 
   Object.keys(TEXTS).map(function (k) { return TEXTS[k]; }).concat(Object.keys(FLAGS).map(function (k) { return FLAGS[k]; })).forEach(function (idOrSel) {
     var el = document.querySelector(idOrSel.charAt(0) === "#" ? idOrSel : "#" + idOrSel);
-    var instant = el.tagName === "SELECT" || el.type === "checkbox";
+    var instant = el.type === "checkbox";
     el.addEventListener(instant ? "change" : "input", instant ? refresh : refreshSoon);
   });
+  Object.keys(CHOICES).forEach(function (k) { radios(CHOICES[k]).forEach(function (r) { r.addEventListener("change", refresh); }); });
 
   $("#reset").addEventListener("click", resetOptions);
   ["#accent1", "#accent2"].forEach(function (sel) { $(sel).addEventListener("input", function () { syncCustom(); refreshSoon(); repaintThumbs(); }); });
