@@ -23,15 +23,15 @@ Node 18 or later. CI runs the suite on Node 18, 20 and 22.
 - `js/github.js`, `js/publish.js`: GitHub API reads and publishing; `js/automation.js`: the daily-update workflows
 - `js/canonical.js`: runs first in the head (the `/index.html` redirect and the anti-framing check)
 - `privacy/`, `terms/`, `how-to-use/`, `license/`: the other pages (the `.html` files beside `index.html` only redirect to them)
-- `test/`: the suite; `tools/`: optional Playwright helpers, not shipped to users
+- `test/`: the suite; `tools/`: optional Playwright helpers (pinned in `tools/package-lock.json`), not shipped to users
 
 ## Security rules (non-negotiable)
 
 These protect a live site where people paste GitHub tokens. `test/page.test.js` and `test/preview.test.js` enforce most of them; change the policy, `SECURITY.md` and the tests together, and say why in the pull request.
 
 - **Content-Security-Policy stays strict.** No inline scripts, inline styles, `style=""` attributes, inline event handlers, `eval`, `new Function`, `innerHTML` or `document.write`. Scripts come from this site only, as `js/<file>.js?v=dev` (the deploy stamps the version).
-- **No new network destinations.** The homepage may talk to `api.github.com` only, and fonts from Google Fonts are allowed by the policy. Adding a host needs a strong reason.
-- **Tokens are never stored or shared:** not in `localStorage`, share links, options, logs, commits or test fixtures. They are sent only to `api.github.com`, and publishing writes only to the signed-in user's own `<user>/<user>` repository.
+- **No new network destinations.** The homepage may talk to `api.github.com` only; everything else (scripts, styles, images) comes from this site, and there are no web fonts. Adding a host needs a strong reason.
+- **Tokens are never stored or shared:** not in `localStorage`, share links, options, logs, commits or test fixtures. They are sent only to `api.github.com`, in the `Authorization` header (never a URL), and publishing writes only to the signed-in user's own `<user>/<user>` repository. A token must look like one (`[A-Za-z0-9_]{20,255}`) before any request is made, and both token boxes are emptied when the page is hidden. Test fixtures use obviously fake tokens of that shape.
 - **Untrusted text is escaped where it lands.** Profile data, repo descriptions and share-link fields (`role`, `tagline`, `stack`, `openTo`, `certs`, `impact`, …) can be hostile:
   - Markdown prose goes through `mdText()`, table cells through `cell()`, HTML attributes and SVG through `esc()`.
   - Links must be `https?:` (or `mailto:` in the preview).
@@ -43,6 +43,7 @@ These protect a live site where people paste GitHub tokens. `test/page.test.js` 
 
 - `ci.yml`: tests on every PR and push to `main`, plus a zizmor audit of the workflows.
 - `codeql.yml`: CodeQL `security-extended` for JavaScript and Actions.
+- `browsers.yml`: `tools/browser-check.js` in Chromium, Firefox and WebKit on desktop, tablet and phone profiles: no script or console errors, no policy violations, no requests to other sites, no sideways scroll or wrapping header, images load, the sample README builds, and the page hides itself when framed.
 - `pages.yml`: runs the tests, then deploys. Only the deploy job holds `pages: write` / `id-token: write`.
 
 When editing workflows:
@@ -56,6 +57,6 @@ When editing workflows:
 ## Before a change reaches users
 
 1. `npm test` passes locally (all of it, not a filtered subset).
-2. For page or CSS changes: look at the page at desktop and phone widths, check there's no horizontal scroll and no console errors.
+2. For page or CSS changes: run `node tools/browser-check.js` (after `npm ci --prefix tools`), and look at the page at desktop and phone widths.
 3. For anything touching input, output, tokens, network or workflows, re-read the diff against the security rules above, and add a test for any new rule or fixed hole.
-4. Open a pull request; CI (tests, zizmor, CodeQL) must be green before merging. The deploy runs the tests again and won't publish on failure.
+4. Open a pull request; CI (tests, browsers, zizmor, CodeQL) must be green before merging. The deploy runs the tests again and won't publish on failure.

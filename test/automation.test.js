@@ -178,7 +178,7 @@ test("a whole day, and several days: first run, quiet day, busy day, outage, set
     assert.deepStrictEqual(Object.keys(steps), ["Get this repository", "Rebuild the README and images", "Commit if anything changed"]);
     /** One day's run: a fresh checkout (the clone step needs github.com, so it's replaced by a local clone), then the REAL second and third steps. */
     const day = async () => {
-      const work = tmp("day"), env = Object.assign({ HOME: work, GITHUB_API_URL: fake.url, GITHUB_TOKEN: "automatic-token", GITHUB_REPOSITORY_OWNER: "DevopsNimbus", GITHUB_REPOSITORY: "DevopsNimbus/DevopsNimbus" });   // no author variables: the workflow must set its own git identity, as on a real runner
+      const work = tmp("day"), env = Object.assign({ HOME: work, GITHUB_API_URL: fake.url, GITHUB_TOKEN: "ghs_TESTautomatic000000000000000", GITHUB_REPOSITORY_OWNER: "DevopsNimbus", GITHUB_REPOSITORY: "DevopsNimbus/DevopsNimbus" });   // no author variables: the workflow must set its own git identity, as on a real runner
       git(base, ["clone", "-b", "main", remote, work]);
       const build = await sh(steps["Rebuild the README and images"], work, env);
       const commit = build.status === 0 ? await sh(steps["Commit if anything changed"], work, env) : null;
@@ -286,7 +286,7 @@ const PACKAGE = () => cards.buildFiles(core.SAMPLE, {}).concat(auto.buildAutomat
 
 test("publishing the daily-update files: one commit with everything, workflow included", async () => {
   const f = fakeGit(), files = PACKAGE();
-  const res = await publish(files, { token: "t", owner: "DevopsNimbus", fetch: f });
+  const res = await publish(files, { token: "github_pat_TEST00000000000000000000", owner: "DevopsNimbus", fetch: f });
   assert.strictEqual(res.mode, "commit");
   assert.strictEqual(f.log.refUpdates, 1, "a single commit moves the branch once");
   assert.deepStrictEqual(f.log.trees[0].slice().sort(), files.map((x) => x.name).sort());
@@ -295,7 +295,7 @@ test("publishing the daily-update files: one commit with everything, workflow in
 
 test("a token that may not write workflows: the README and cards still go out, and daily updates are reported as skipped", async () => {
   const f = fakeGit({ refuseWorkflows: true });
-  const res = await publish(PACKAGE(), { token: "t", owner: "DevopsNimbus", fetch: f });
+  const res = await publish(PACKAGE(), { token: "github_pat_TEST00000000000000000000", owner: "DevopsNimbus", fetch: f });
   assert.strictEqual(res.skipped, "daily");
   assert.strictEqual(f.log.refUpdates, 1, "one commit lands: the profile is updated, never half-published");
   const landed = f.log.trees[f.log.trees.length - 1];
@@ -305,7 +305,7 @@ test("a token that may not write workflows: the README and cards still go out, a
 
 test("the workflow message only appears when a workflow was actually part of the update", async () => {
   const f = async (url) => { const p = String(url).replace(/^https?:\/\/[^/]+/, ""); return p === "/user" ? { status: 200, ok: true, json: async () => ({ login: "DevopsNimbus" }) } : { status: 404, ok: false, json: async () => ({ message: "Not Found" }) }; };
-  await assert.rejects(publish(cards.buildFiles(core.SAMPLE, {}), { token: "t", owner: "DevopsNimbus", fetch: f }), (e) => !/workflow/i.test(e.message));
+  await assert.rejects(publish(cards.buildFiles(core.SAMPLE, {}), { token: "github_pat_TEST00000000000000000000", owner: "DevopsNimbus", fetch: f }), (e) => !/workflow/i.test(e.message));
 });
 
 test("the CLI's --daily --publish sends the same single commit, and explains a refused token", { timeout: 120000 }, async () => {
@@ -325,7 +325,7 @@ test("the CLI's --daily --publish sends the same single commit, and explains a r
   });
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   try {
-    const env = { GITHUB_API_URL: "http://127.0.0.1:" + server.address().port, GITHUB_TOKEN: "classic-token" }, out = tmp("clidaily");
+    const env = { GITHUB_API_URL: "http://127.0.0.1:" + server.address().port, GITHUB_TOKEN: "ghp_TESTclassic00000000000000000" }, out = tmp("clidaily");
     const run = (extra) => sh(["node", JSON.stringify(path.join(ROOT, "cli.js")), "DevopsNimbus", "--daily", "--publish", "--out", JSON.stringify(out)].concat(extra || []).join(" "), ROOT, env);
     const ok = await run();
     assert.strictEqual(ok.status, 0, ok.stderr);

@@ -27,8 +27,8 @@ test("the page declares a strict Content-Security-Policy before anything else lo
   assert.strictEqual(directive("base-uri"), "'none'");
   assert.strictEqual(directive("form-action"), "'none'");
   assert.strictEqual(directive("object-src"), "'none'");
-  assert.strictEqual(directive("style-src"), "'self' https://fonts.googleapis.com");
-  assert.strictEqual(directive("font-src"), "https://fonts.gstatic.com");
+  assert.strictEqual(directive("style-src"), "'self'");
+  assert.strictEqual(directive("font-src"), "", "no web fonts: the page uses the device's own, so default-src 'none' blocks font loads");
   assert.doesNotMatch(csp, /unsafe-|\*|http:\/\//, "no unsafe keywords, wildcards or plain http");
   assert.match(html, /<meta name="referrer" content="no-referrer">/);
 });
@@ -42,10 +42,10 @@ test("the page has no inline scripts, inline styles or inline event handlers", (
   [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].forEach(([, src]) => assert.match(src, /^js\/[\w.-]+\.js\?v=dev$/, "scripts come from this site only, with the version the deploy stamps: " + src));
 });
 
-test("the only outside addresses the page mentions are Google Fonts and the GitHub token page", () => {
+test("the only outside address the page links to is GitHub", () => {
   // the canonical link names the site's own address, which isn't an outside one
   const urls = [...html.replace(/<link rel="canonical" href="https:\/\/readme-glassfolio\.in\/">/, "").matchAll(/(?:href|src)="(https?:\/\/[^"]+)"/g)].map((m) => new URL(m[1].replace(/&amp;/g, "&")).host);
-  const allowed = ["fonts.googleapis.com", "github.com"];
+  const allowed = ["github.com"];
   urls.forEach((h) => assert.ok(allowed.includes(h), "unexpected host " + h));
 });
 
@@ -133,5 +133,22 @@ test("every page uses the site's own favicon files, which exist", () => {
     const page = fs.readFileSync(path.join(ROOT, f), "utf8");
     assert.match(page, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml">/, f);
     assert.match(page, /<link rel="apple-touch-icon" href="\/apple-touch-icon\.png">/, f);
+  });
+});
+
+test("token boxes: masked, never autofilled or spell-checked, and emptied when the page is hidden", () => {
+  ["token", "pubToken"].forEach((id) => assert.match(html, new RegExp(`<input type="password" id="${id}" autocomplete="off" spellcheck="false" autocapitalize="off"`), id));
+  assert.match(read("app.js"), /addEventListener\("pagehide", function \(\) \{ \$\("#token"\)\.value = ""; \$\("#pubToken"\)\.value = ""; \}\)/);
+});
+
+test("the brand mark in every header and footer is the gradient paper plane, with ids unique on each page", () => {
+  ["index.html", "privacy/index.html", "terms/index.html", "how-to-use/index.html", "license/index.html"].forEach((f) => {
+    const page = fs.readFileSync(path.join(ROOT, f), "utf8");
+    assert.doesNotMatch(page, /class="m[1-4]"/, f + " has no trace of the old four-square mark");
+    const header = page.slice(page.indexOf("<header"), page.indexOf("</header>")), footer = page.slice(page.indexOf("<footer"));
+    assert.match(header, /<svg class="mark"[^>]*>.*fill="url\(#plane-top\)"/s, f + " header");
+    assert.match(footer, /<svg class="mark"[^>]*>.*fill="url\(#plane-foot\)"/s, f + " footer");
+    const ids = [...page.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    assert.strictEqual(new Set(ids).size, ids.length, f + " repeats an id");
   });
 });

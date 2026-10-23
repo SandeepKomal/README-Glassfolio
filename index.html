@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- The browser enforces this: scripts only from this site, network requests only to this site and api.github.com, no frames, no plugins, no form posts. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.github.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#f5f3ee">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -27,7 +27,7 @@
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="/" aria-label="README Glassfolio, back to top">
-      <svg class="mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="1.5" class="m1"/><rect x="11" y="1" width="8" height="8" rx="1.5" class="m4"/><rect x="1" y="11" width="8" height="8" rx="1.5" class="m3"/><rect x="11" y="11" width="8" height="8" rx="1.5" class="m2"/></svg>
+      <svg class="mark" viewBox="-1 -10 102 102" aria-hidden="true"><defs><linearGradient id="plane-top" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#9a5cc6"/><stop offset=".3" stop-color="#7a6bd1"/><stop offset=".55" stop-color="#4f7fcb"/><stop offset=".8" stop-color="#3d8a8f"/><stop offset="1" stop-color="#4c9437"/></linearGradient></defs><path d="M2 33 L98 2 L64 78 L45 58 Z" fill="url(#plane-top)"/><path d="M98 2 L28 46 L33 80 Z" fill="#2f4f9e"/><path d="M33 80 L45 58 L38 54 Z" fill="#223b78"/></svg>
       <span>Glassfolio</span>
     </a>
     <div class="nav-meta">
@@ -128,7 +128,7 @@
         <details class="grp" id="dataGrp">
           <summary>Exact data: add a token</summary>
           <label class="f" for="token">GitHub token (optional, no scopes needed)</label>
-          <input type="password" id="token" autocomplete="off" placeholder="Stays in your browser, never stored">
+          <input type="password" id="token" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="Stays in your browser, never stored">
           <p class="hint">Optional. Without a token, streaks use your recent public activity. With a token, you get a full-year heatmap and a higher rate limit. Add it here before building your README. A token with repository write access can also be used when publishing.</p>
         </details>
         <div class="studio-readme-row">
@@ -145,7 +145,7 @@
           <p>Commit the README, banner and cards to <span class="mono" id="pubRepo"></span> in one go. Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> limited to that repository with <strong>Contents: Read and write</strong>, or a classic token with the <strong>public_repo</strong> scope. It's sent only to GitHub and never stored. If you already added a token under <strong>Exact data</strong>, it's used here too, so leave this box empty; it just needs the write access above.</p>
           <p class="hint" id="pubWfNote" hidden><strong>Daily updates are on,</strong> so the token must also be allowed to write workflows: <strong>Workflows: Read and write</strong> for a fine-grained token, or the <strong>workflow</strong> scope for a classic one.</p>
           <div class="pubrow">
-            <input type="password" id="pubToken" autocomplete="off" placeholder="github_pat_…" aria-label="GitHub token for publishing">
+            <input type="password" id="pubToken" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="github_pat_…" aria-label="GitHub token for publishing">
             <button type="button" id="pubGo">Publish</button>
           </div>
           <div class="msg" id="pubMsg" role="status" aria-live="polite"></div>
@@ -408,7 +408,7 @@
 <footer class="foot">
   <div class="foot-in">
     <div class="foot-brand">
-      <svg class="mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="1.5" class="m1"/><rect x="11" y="1" width="8" height="8" rx="1.5" class="m4"/><rect x="1" y="11" width="8" height="8" rx="1.5" class="m3"/><rect x="11" y="11" width="8" height="8" rx="1.5" class="m2"/></svg>
+      <svg class="mark" viewBox="-1 -10 102 102" aria-hidden="true"><defs><linearGradient id="plane-foot" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#9a5cc6"/><stop offset=".3" stop-color="#7a6bd1"/><stop offset=".55" stop-color="#4f7fcb"/><stop offset=".8" stop-color="#3d8a8f"/><stop offset="1" stop-color="#4c9437"/></linearGradient></defs><path d="M2 33 L98 2 L64 78 L45 58 Z" fill="url(#plane-foot)"/><path d="M98 2 L28 46 L33 80 Z" fill="#2f4f9e"/><path d="M33 80 L45 58 L38 54 Z" fill="#223b78"/></svg>
       <span>README Glassfolio</span>
     </div>
     <p>Free and open source under the MIT licence. Not affiliated with or endorsed by GitHub.</p>

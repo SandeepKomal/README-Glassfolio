@@ -753,6 +753,10 @@
     }).then(function () { btn.disabled = false; });
   });
 
+  /* tokens live only in these two boxes: empty them when the page is hidden, so a page the browser keeps in its
+     back/forward cache doesn't keep a token in it either */
+  window.addEventListener("pagehide", function () { $("#token").value = ""; $("#pubToken").value = ""; });
+
   /* ---------- stay current ----------
    * GitHub Pages lets browsers keep index.html for a while, so a visitor can get yesterday's page (and its old scripts)
    * right after a deploy. The deploy stamps its build into the page and into version.txt; if they differ, this page is

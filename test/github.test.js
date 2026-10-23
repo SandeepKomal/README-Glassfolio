@@ -25,11 +25,11 @@ const GQL_OK = { body: { data: { user: { contributionsCollection: { totalCommitC
 
 test("with a token, activity comes from GraphQL", async () => {
   const f = fake((u, m) => base(u) || (m === "POST" ? GQL_OK : { status: 500, body: {} }));
-  const m = await fetchProfile("DevopsNimbus", { fetch: f, token: "t" });
+  const m = await fetchProfile("DevopsNimbus", { fetch: f, token: "github_pat_TEST00000000000000000000" });
   assert.strictEqual(m.activity.source, "graphql");
   assert.strictEqual(m.activity.total, 40);
   assert.deepStrictEqual([m.activity.commits, m.activity.prs, m.activity.issues, m.activity.reviews], [9, 3, 1, 5], "the contribution mix's four totals");
-  assert.ok(f.seen.every((s) => s.auth === "Bearer t"));
+  assert.ok(f.seen.every((s) => s.auth === "Bearer github_pat_TEST00000000000000000000"));
 });
 
 test("without a token, code reviews come from a reviewed-by search, like the other totals", async () => {
@@ -43,7 +43,7 @@ test("without a token, code reviews come from a reviewed-by search, like the oth
 test("a token that GraphQL won't accept falls back to the public activity instead of losing it", async () => {
   const f = fake((u, m) => base(u) || (m === "POST" ? { status: 403, body: {} }
     : u.startsWith("/search/") ? { body: { total_count: 12 } } : u.startsWith("/users/DevopsNimbus/events") ? { body: [{ created_at: today() }] } : { status: 500, body: {} }));
-  const m = await fetchProfile("DevopsNimbus", { fetch: f, token: "automatic-actions-token" });
+  const m = await fetchProfile("DevopsNimbus", { fetch: f, token: "ghs_TESTactions0000000000000000000" });
   assert.strictEqual(m.activity.source, "public");
   assert.strictEqual(m.activity.prs, 12);
   assert.ok(m.activity.current >= 1);
@@ -61,7 +61,7 @@ test("some activity requests failing still gives a useful picture; the missing n
 test("when every activity request fails, activity is null, so nobody ever sees or commits fake zeros", async () => {
   const f = fake((u) => base(u) || { status: 500, body: {} });
   assert.strictEqual(await fetchActivity("DevopsNimbus", { fetch: f }), null);
-  assert.strictEqual(await fetchActivity("DevopsNimbus", { fetch: f, token: "t" }), null);
+  assert.strictEqual(await fetchActivity("DevopsNimbus", { fetch: f, token: "github_pat_TEST00000000000000000000" }), null);
   const m = await fetchProfile("DevopsNimbus", { fetch: f });
   assert.strictEqual(m.login, "DevopsNimbus"); assert.strictEqual(m.activity, null);
 });

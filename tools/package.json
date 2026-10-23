@@ -1,0 +1,9 @@
+{
+  "name": "readme-glassfolio-tools",
+  "private": true,
+  "description": "Optional developer tools (browser checks, guide PDF, layout fuzzing). Not part of the site, CLI or Action, which have no dependencies.",
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}
