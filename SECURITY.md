@@ -48,7 +48,7 @@ The current page security posture includes:
 - no string evaluation such as `eval`
 - restricted network destinations
 - protection against arbitrary HTML injection in the profile preview
-- no token storage in browser local storage
+- no token storage in browser local storage; tokens are checked to look like GitHub tokens before any request, and the token boxes are emptied when the page is hidden
 - no token inclusion in share links
 - a no-referrer policy
 - refusing to be framed: GitHub Pages can't send `X-Frame-Options` or `frame-ancestors`, so `js/canonical.js` hides the page and breaks out when another site loads it in a frame (clickjacking)
@@ -72,6 +72,7 @@ The Pages workflow in `.github/workflows/pages.yml`:
 Every pull request and every push to `main` runs:
 
 - `.github/workflows/ci.yml`: the full test suite on Node 18, 20 and 22, and a zizmor audit of the workflow files
+- `.github/workflows/browsers.yml`: every page in Chromium, Firefox and WebKit on desktop, tablet and phone profiles, failing on script errors, policy violations, requests to other sites, layout breakage, or a page that stays visible inside another site's frame
 - `.github/workflows/codeql.yml`: CodeQL with the `security-extended` queries, for the JavaScript and for the workflows
 
 CodeQL also runs weekly. Dependabot proposes updates to the pinned actions.

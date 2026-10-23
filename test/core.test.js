@@ -119,10 +119,10 @@ test("fetchProfile builds a model from API responses and sends the token", async
       : { login: "DevopsNimbus", name: "DevopsNimbus", created_at: "2020-01-01T00:00:00Z" };
     return { status: 200, ok: true, json: async () => body };
   };
-  const model = await fetchProfile("DevopsNimbus", { fetch: fakeFetch, token: "t0k" });
+  const model = await fetchProfile("DevopsNimbus", { fetch: fakeFetch, token: "ghp_TESTt0k000000000000000000000" });
   assert.strictEqual(model.login, "DevopsNimbus");
   assert.strictEqual(model.langs[0].name, "Go");
-  assert.ok(seen.every((s) => s.auth === "Bearer t0k"));
+  assert.ok(seen.every((s) => s.auth === "Bearer ghp_TESTt0k000000000000000000000"));
 });
 
 test("sparse account: no empty table cells, no redundant sections", () => {
@@ -294,7 +294,7 @@ test("with a token, activity comes from one GraphQL call", async () => {
     else body = { login: "DevopsNimbus", created_at: "2020-01-01T00:00:00Z" };
     return { status: 200, ok: true, json: async () => body };
   };
-  const model = await fetchProfile("DevopsNimbus", { fetch: fakeFetch, token: "t" });
+  const model = await fetchProfile("DevopsNimbus", { fetch: fakeFetch, token: "github_pat_TEST00000000000000000000" });
   assert.strictEqual(model.activity.source, "graphql");
   assert.strictEqual(model.activity.total, 620);
   assert.strictEqual(model.activity.commits, 500);

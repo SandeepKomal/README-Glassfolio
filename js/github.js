@@ -21,6 +21,10 @@
 
   var API = ((typeof process === "object" && process.env && process.env.GITHUB_API_URL) || "https://api.github.com").replace(/\/+$/, "");
 
+  /* every GitHub token (github_pat_…, ghp_…, ghs_…, or a legacy 40-character one) is letters, digits and underscores,
+     so anything else is refused before it can reach a request header */
+  var TOKEN = /^[A-Za-z0-9_]{20,255}$/;
+
   function headers(opts) {
     var h = { Accept: "application/vnd.github+json" };
     if (opts.token) h.Authorization = "Bearer " + opts.token;
@@ -99,6 +103,7 @@
   /** Resolves with a model ready for core.buildReadme and the card builders. */
   function fetchProfile(username, opts) {
     opts = opts || {};
+    if (opts.token && !TOKEN.test(opts.token)) return Promise.reject(new Error("That doesn't look like a GitHub token. Copy it again from GitHub: it's one line of letters, numbers and underscores."));
     var u = encodeURIComponent(username);
     return Promise.all([
       request("/users/" + u, opts),
@@ -107,5 +112,5 @@
     ]).then(function (res) { return core.buildModel(res[0], res[1], res[2]); });
   }
 
-  return { fetchProfile: fetchProfile, fetchActivity: fetchActivity };
+  return { fetchProfile: fetchProfile, fetchActivity: fetchActivity, TOKEN: TOKEN };
 });

@@ -1,0 +1,44 @@
+name: Browsers
+# Opens every page in Chromium, Firefox and WebKit (Safari's engine) on desktop, tablet and phone profiles, and fails
+# on script errors, security-policy violations, requests to other sites, sideways scrolling or a wrapping header.
+# Playwright comes from tools/package-lock.json (exact versions and integrity hashes); the project itself has no dependencies.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browsers:
+    name: Browsers (${{ matrix.engine }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, firefox, webkit]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+      - name: Install Playwright and the browser
+        env:
+          ENGINE: ${{ matrix.engine }}
+        run: |
+          npm ci --prefix tools --ignore-scripts
+          npx --prefix tools --no-install playwright install --with-deps "$ENGINE"
+      - name: Check every page
+        env:
+          ENGINE: ${{ matrix.engine }}
+        run: node tools/browser-check.js "$ENGINE"

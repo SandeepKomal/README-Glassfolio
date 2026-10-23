@@ -16,3 +16,10 @@ updates:
       github-actions:
         patterns:
           - "*"
+  # Playwright for the optional developer tools and the browser checks in CI (tools/package-lock.json)
+  - package-ecosystem: "npm"
+    directory: "/tools"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7

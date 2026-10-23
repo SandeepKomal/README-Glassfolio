@@ -61,6 +61,8 @@
   function publishAll(files, opts) {
     opts = opts || {};
     if (!opts.token) return Promise.reject(new Error("Paste a GitHub token first."));
+    // letters, digits and underscores only, like every GitHub token: nothing else reaches the Authorization header
+    if (!/^[A-Za-z0-9_]{20,255}$/.test(opts.token)) return Promise.reject(new Error("That doesn't look like a GitHub token. Copy it again from GitHub: it's one line of letters, numbers and underscores."));
     if (!files || !files.length) return Promise.reject(new Error("Nothing to publish yet. Generate a README first."));
     var owner = opts.owner, repoPath = "/repos/" + encodeURIComponent(owner) + "/" + encodeURIComponent(owner);
     var message = opts.message || "Update profile README";
