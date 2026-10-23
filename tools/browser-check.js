@@ -61,7 +61,15 @@ async function checkPage(context, base, url) {
     window.__csp = [];
     document.addEventListener("securitypolicyviolation", (e) => window.__csp.push(e.violatedDirective + " " + e.blockedURI +
       (e.sourceFile ? " in " + e.sourceFile.slice(0, 80) + ":" + e.lineNumber : "") + (e.sample ? " (" + e.sample.slice(0, 60) + ")" : "") +
-      (window.__step ? " during " + window.__step : "")));
+      (window.__step ? " during " + window.__step : "") + where(e)));
+    // the element and document the browser blames, for violations no script line explains (an image, a stylesheet)
+    function where(e) {
+      const t = e.target, doc = e.documentURI && e.documentURI !== location.href ? " from " + e.documentURI.slice(0, 60) : "";
+      if (!t || !t.nodeName) return doc;
+      const src = t.getAttribute && (t.getAttribute("src") || t.getAttribute("href"));
+      return doc + " at <" + t.nodeName.toLowerCase() + (t.id ? "#" + t.id : "") + (t.className && typeof t.className === "string" ? "." + t.className.split(" ")[0] : "") +
+        (src ? " " + src.slice(0, 50) : "") + (t.parentElement ? " in " + (t.parentElement.id || t.parentElement.className || t.parentElement.nodeName) : "") + ">";
+    }
   });
   await page.goto(base + url, { waitUntil: "load" });
   await page.waitForTimeout(400);
