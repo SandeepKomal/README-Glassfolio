@@ -35,8 +35,10 @@ function collect(re, group) {
 
 // the real addresses the project links to: its own repository, and Git3D Universe, which the 3D universe is ported from
 const PROJECT_REPOS = ["SandeepKomal/README-Glassfolio", "SandeepKomal/Git3D-Universe"];
+// and the author's profile, linked from the copyright line (exactly the profile: a quote ends the address)
+const AUTHOR_PROFILE = 'https://github.com/SandeepKomal"';
 test("every github.com/<name> in the project is the sample identity, a placeholder or a GitHub page", () => {
-  collect(new RegExp("github\\.com\\/(?!(?:" + PROJECT_REPOS.map((r) => r.replace(/[.*+?^${}()|[\]\\/-]/g, "\\$&")).join("|") + ")\\b)([A-Za-z0-9_-]+)", "g"), 1).forEach(({ file, value }) =>
+  collect(new RegExp("github\\.com\\/(?!(?:" + PROJECT_REPOS.map((r) => r.replace(/[.*+?^${}()|[\]\\/-]/g, "\\$&")).join("|") + ")\\b|SandeepKomal\")([A-Za-z0-9_-]+)", "g"), 1).forEach(({ file, value }) =>
     assert.ok(PLACEHOLDER_USERS.has(value) || GITHUB_PAGES.has(value), file + " mentions github.com/" + value + ", which isn't the sample identity or a known placeholder"));
 });
 
@@ -62,5 +64,5 @@ test("the examples in the README and the page use the sample identity", () => {
   assert.match(readme, new RegExp("node cli\\.js https://github\\.com/" + SAMPLE_USER));
   assert.match(readme, new RegExp("\\?user=" + SAMPLE_USER));
   // the only account the page links to is the project's own repository (and pages in it, such as the footer's commit)
-  assert.doesNotMatch(page.replace(/https:\/\/github\.com\/SandeepKomal\/README-Glassfolio(\/[^"]*)?"/g, ""), /(?:^|[^\w.-])github\.com\/(?!settings|your-username)/, "the page names no other account in its text");
+  assert.doesNotMatch(page.replace(/https:\/\/github\.com\/SandeepKomal\/README-Glassfolio(\/[^"]*)?"/g, "").split(AUTHOR_PROFILE).join(""), /(?:^|[^\w.-])github\.com\/(?!settings|your-username)/, "the page names no other account in its text");
 });
