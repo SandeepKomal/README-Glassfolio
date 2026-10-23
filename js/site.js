@@ -5,6 +5,7 @@
  *   - the showcase: six designs on stands, the front one changing every few seconds (pausable, never for reduced motion)
  *   - the showcase lifts into place as you scroll toward it
  *   - the story: one sample profile shown through several designs, changing as you scroll past a pinned stage
+ *   - the footer counts, live, the requests this page has made to other sites, and names them on hover
  * Visitors who prefer reduced motion get every piece shown plainly, with nothing moving.
  */
 (function () {
@@ -186,6 +187,29 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
   onScroll(); updateStory(); updateShot(); updateFills();
+
+  /* ---------- requests to other sites: read from the browser's own record of what this page fetched ---------- */
+  (function () {
+    var pill = document.getElementById("netPill"), count = document.getElementById("netCount"), label = document.getElementById("netLabel");
+    if (!pill || !window.performance || !performance.getEntriesByType) return;
+    var hosts = {}, total = 0, intro = pill.title;
+    function add(list) {
+      list.forEach(function (e) {
+        var u; try { u = new URL(e.name, location.href); } catch (err) { return; }
+        if (!/^https?:$/.test(u.protocol) || u.origin === location.origin) return;
+        hosts[u.host] = (hosts[u.host] || 0) + 1; total++;
+      });
+      var names = Object.keys(hosts);
+      count.textContent = String(total);
+      label.textContent = total === 1 ? "request to other sites" : "requests to other sites";
+      pill.dataset.state = !total ? "none" : names.every(function (h) { return h === "api.github.com"; }) ? "github" : "other";
+      pill.title = intro + (names.length ? "\n\n" + names.map(function (h) { return h + ": " + hosts[h]; }).join("\n") : "");
+    }
+    add(performance.getEntriesByType("resource"));
+    if ("PerformanceObserver" in window) {
+      try { new PerformanceObserver(function (l) { add(l.getEntries()); }).observe({ type: "resource", buffered: false }); } catch (err) { /* older browsers: the count stays at its first reading */ }
+    }
+  })();
 
   /* ---------- arrivals ---------- */
   if (reduce || !("IntersectionObserver" in window)) return;

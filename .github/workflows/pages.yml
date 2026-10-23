@@ -37,8 +37,13 @@ jobs:
           set -euo pipefail
           build="${GITHUB_SHA::12}"
           sed -i "s/?v=dev\"/?v=${build}\"/g; s/<meta name=\"build\" content=\"dev\">/<meta name=\"build\" content=\"${build}\">/" index.html
-          sed -i "s/?v=dev\"/?v=${build}\"/g" privacy.html terms.html how-to-use.html
+          # the pages people read live in their own folders (the .html files beside index.html only redirect to them)
+          pages="index.html privacy/index.html terms/index.html how-to-use/index.html license/index.html"
+          sed -i "s/?v=dev\"/?v=${build}\"/g" privacy/index.html terms/index.html how-to-use/index.html license/index.html
+          # the footer's version pill names the commit each page was built from, linked to it on GitHub
+          sed -i "s|/commits/main\" title=\"The commit this page was built from\">dev<|/commit/${GITHUB_SHA}\" title=\"The commit this page was built from\">${GITHUB_SHA::7}<|" $pages
           grep -q "<meta name=\"build\" content=\"${build}\">" index.html
+          for f in $pages; do grep -q ">${GITHUB_SHA::7}</a>" "$f"; done
           printf '%s\n' "$build" > version.txt
 
       - name: Upload Pages artifact
