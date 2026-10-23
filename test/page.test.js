@@ -101,7 +101,7 @@ test("a page kept from an older deploy notices and reloads once: build stamp, ve
   assert.match(app, /build === "dev"/, "local copies skip the check");
 });
 
-test("every page's footer shows the package version and a commit the deploy stamps, plus the requests pill", () => {
+test("every page's header shows the package version and a commit the deploy stamps, plus the requests pill", () => {
   const version = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
   const wf = fs.readFileSync(path.join(ROOT, ".github", "workflows", "pages.yml"), "utf8");
   ["index.html", "privacy/index.html", "terms/index.html", "how-to-use/index.html", "license/index.html"].forEach((f) => {
@@ -109,6 +109,9 @@ test("every page's footer shows the package version and a commit the deploy stam
     assert.ok(page.includes(`class="pill pill-ver">v${version} · `), f + " shows v" + version);
     assert.match(page, /\/commits\/main" title="The commit this page was built from">dev</, f + " has the commit marker the deploy replaces");
     assert.match(page, /class="pill pill-net"[^>]*><span class="dot"/, f + " has the requests pill");
+    const header = page.slice(page.indexOf("<header"), page.indexOf("</header>"));
+    assert.match(header, /class="nav-meta"/, f + " carries the pills in its header");
+    assert.match(page, /<p class="foot-copy">© \d{4} README Glassfolio · <a href="https:\/\/github\.com\/SandeepKomal" rel="noopener">Sandeep Komal Pothu<\/a> · MIT License/, f + " has the copyright line");
     assert.ok(wf.includes(f), "the deploy stamps " + f);
   });
   assert.match(html, /id="netPill"[^>]*>.*id="netCount">0</, "the homepage counts live, starting at 0");
@@ -121,4 +124,14 @@ test("the homepage refuses to be framed, since GitHub Pages can't send X-Frame-O
   assert.match(js, /window\.top !== window\.self/);
   assert.match(js, /className \+= " framed"/);
   assert.match(css, /html\.framed\{display:none!important\}/, "a framed page hides itself");
+});
+
+test("every page uses the site's own favicon files, which exist", () => {
+  ["favicon.svg", "favicon-32.png", "apple-touch-icon.png"].forEach((f) => assert.ok(fs.existsSync(path.join(ROOT, f)), f + " exists"));
+  assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "favicon.svg"), "utf8"), /<script|\bon\w+=|href=/i, "the favicon is a plain drawing");
+  ["index.html", "privacy/index.html", "terms/index.html", "how-to-use/index.html", "license/index.html"].forEach((f) => {
+    const page = fs.readFileSync(path.join(ROOT, f), "utf8");
+    assert.match(page, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml">/, f);
+    assert.match(page, /<link rel="apple-touch-icon" href="\/apple-touch-icon\.png">/, f);
+  });
 });

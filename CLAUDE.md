@@ -37,7 +37,7 @@ These protect a live site where people paste GitHub tokens. `test/page.test.js` 
   - Links must be `https?:` (or `mailto:` in the preview).
   - Maps keyed by user input use `Map`, never a plain object (prototype pollution).
 - **SVG cards** use CSS animation only (no scripts), and a still frame that is the finished design, respecting `prefers-reduced-motion`.
-- **Use the sample identity** (`DevopsNimbus`) or placeholders (`your-username`) in examples, tests and docs, never a real person's account. `test/names.test.js` checks this.
+- **Use the sample identity** (`DevopsNimbus`) or placeholders (`your-username`) in examples, tests and docs, never a real person's account. `test/names.test.js` checks this (the only real accounts linked are the project's own repositories and the author's profile in the copyright line).
 
 ## Workflows
 
