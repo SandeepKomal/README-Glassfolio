@@ -8,9 +8,11 @@ Turn any GitHub username into a designed profile README: a banner, stats and str
 
 **Website:** [readme-glassfolio.in](https://readme-glassfolio.in/) · **Guide:** [step by step with screenshots](https://readme-glassfolio.in/how-to-use.html) (also [in this repository](docs/HOW_TO_USE.md) and as a [PDF](docs/README-Glassfolio-guide.pdf))
 
-![The README Glassfolio website](docs/website-preview.jpg)
+![The README Glassfolio website on a desktop](docs/website-preview.jpg)
 
-A README made with it (the sample profile, Royal theme), as GitHub shows it on its dark and light pages:
+<p align="center"><img src="docs/mobile-preview.jpg" width="320" alt="The README Glassfolio website on a phone"></p>
+
+A README made with it from the built-in sample profile, as GitHub shows it on its dark and light pages:
 
 ![An example README on GitHub's dark and light pages](docs/example-readme-dark-and-light.jpg)
 

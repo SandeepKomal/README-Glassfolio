@@ -10,4 +10,4 @@
 
 - `HOW_TO_USE.md` and `README-Glassfolio-guide.pdf`: the guide. The PDF is built from the Markdown with `node tools/build-guide-pdf.js`.
 - `guide/`: the guide's screenshots. Files starting with `site-` show the website; the numbered ones show GitHub.
-- `website-preview.jpg`, `mobile-preview.jpg`, `example-readme-dark-and-light.jpg`: the screenshots used in the main README.
+- `website-preview.jpg` (3840×2160), `mobile-preview.jpg` (an iPhone 14 at 3×) and `example-readme-dark-and-light.jpg` (the sample README at 2.6×): the screenshots used in the main README, taken in Chromium with reduced motion so every card shows its finished frame.
