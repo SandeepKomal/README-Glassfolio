@@ -141,13 +141,13 @@ test("token boxes: masked, never autofilled or spell-checked, and emptied when t
   assert.match(read("app.js"), /addEventListener\("pagehide", function \(\) \{ \$\("#token"\)\.value = ""; \$\("#pubToken"\)\.value = ""; \}\)/);
 });
 
-test("the brand mark in every header and footer is the gradient paper plane, with ids unique on each page", () => {
+test("the logo in every header and footer is the take-off lockup, with ids unique on each page", () => {
   ["index.html", "privacy/index.html", "terms/index.html", "how-to-use/index.html", "license/index.html"].forEach((f) => {
     const page = fs.readFileSync(path.join(ROOT, f), "utf8");
     assert.doesNotMatch(page, /class="m[1-4]"/, f + " has no trace of the old four-square mark");
     const header = page.slice(page.indexOf("<header"), page.indexOf("</header>")), footer = page.slice(page.indexOf("<footer"));
-    assert.match(header, /<svg class="mark"[^>]*>.*fill="url\(#plane-top\)"/s, f + " header");
-    assert.match(footer, /<svg class="mark"[^>]*>.*fill="url\(#plane-foot\)"/s, f + " footer");
+    assert.match(header, /<span class="lockup"><span class="lk-word"><span class="lk-kicker">README<\/span><span class="lk-name">Glassfolio<\/span><\/span><svg class="lk-flight"[^>]*>.*fill="url\(#plane-top\)"/s, f + " header");
+    assert.match(footer, /<span class="lockup">.*<svg class="lk-flight"[^>]*>.*fill="url\(#plane-foot\)"/s, f + " footer");
     const ids = [...page.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
     assert.strictEqual(new Set(ids).size, ids.length, f + " repeats an id");
   });

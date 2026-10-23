@@ -45,8 +45,13 @@ a:hover{color:var(--accent-hover)}
 .nav-in{max-width:var(--max);margin:0 auto;padding:0 var(--s5);height:56px;display:flex;align-items:center;gap:20px}
 .brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:650;font-size:1.02rem;letter-spacing:-.01em}
 .brand:hover{color:var(--ink)}
-.mark{width:24px;height:24px;flex:none}
-.nav nav{display:flex;gap:var(--s4);margin-left:auto}
+/* the logo: "README" over "Glassfolio", the paper plane taking off from the end of the word along a dotted trail */
+.lockup{display:inline-flex;align-items:flex-end;gap:1px;line-height:1}
+.lk-word{display:flex;flex-direction:column;gap:3px}
+.lk-kicker{font-size:.54rem;font-weight:600;letter-spacing:.32em;color:var(--ink-2)}
+.lk-name{font-size:1.14rem;font-weight:750;letter-spacing:-.02em;color:var(--ink)}
+.lk-flight{width:36px;height:28px;flex:none;margin-bottom:5px}
+.nav nav{display:flex;gap:var(--s4);margin:0 auto}
 .nav nav a{color:var(--ink-2);text-decoration:none;font-size:.84rem;white-space:nowrap}
 .nav nav a:hover{color:var(--ink)}
 @media (max-width:940px){.nav nav{display:none}.nav .btn-sm{margin-left:auto}}
@@ -579,6 +584,8 @@ aside .hint{font-size:.82rem;color:var(--ink-2);margin:4px 0 var(--s2);line-heig
 .g-layout>*{min-width:0}
 .guide code{overflow-wrap:anywhere}
 .nav-in>.btn-sm{margin-left:auto}
+/* with the section links showing, they take the free space equally on both sides, so the button needs none */
+@media (min-width:941px){.nav-in>nav ~ .btn-sm{margin-left:0}}
 
 /* Stack the source and generator credit into balanced lines on narrow previews. */
 @media (max-width:600px){
