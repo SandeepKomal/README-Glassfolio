@@ -9,6 +9,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    # wait a week after a release before proposing it, so a bad or compromised version is usually caught first
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns:
