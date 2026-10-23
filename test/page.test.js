@@ -122,3 +122,13 @@ test("the homepage refuses to be framed, since GitHub Pages can't send X-Frame-O
   assert.match(js, /className \+= " framed"/);
   assert.match(css, /html\.framed\{display:none!important\}/, "a framed page hides itself");
 });
+
+test("every page uses the site's own favicon files, which exist", () => {
+  ["favicon.svg", "favicon-32.png", "apple-touch-icon.png"].forEach((f) => assert.ok(fs.existsSync(path.join(ROOT, f)), f + " exists"));
+  assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "favicon.svg"), "utf8"), /<script|\bon\w+=|href=/i, "the favicon is a plain drawing");
+  ["index.html", "privacy/index.html", "terms/index.html", "how-to-use/index.html", "license/index.html"].forEach((f) => {
+    const page = fs.readFileSync(path.join(ROOT, f), "utf8");
+    assert.match(page, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml">/, f);
+    assert.match(page, /<link rel="apple-touch-icon" href="\/apple-touch-icon\.png">/, f);
+  });
+});
