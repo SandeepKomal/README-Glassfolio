@@ -1,5 +1,14 @@
 # README Glassfolio
 
+[![Try it](https://img.shields.io/badge/Try_it-readme--glassfolio.in-0a64cf?style=flat)](https://readme-glassfolio.in/)
+[![CI](https://github.com/SandeepKomal/README-Glassfolio/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SandeepKomal/README-Glassfolio/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/SandeepKomal/README-Glassfolio/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/SandeepKomal/README-Glassfolio/actions/workflows/codeql.yml)
+[![Deploy](https://github.com/SandeepKomal/README-Glassfolio/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/SandeepKomal/README-Glassfolio/actions/workflows/pages.yml)
+[![Release](https://img.shields.io/github/v/release/SandeepKomal/README-Glassfolio?color=0a64cf)](https://github.com/SandeepKomal/README-Glassfolio/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-0a64cf.svg)](LICENSE)
+[![Runs in your browser](https://img.shields.io/badge/Runs_in_your_browser-no_server-1c1c1e)](#quick-start)
+[![Sample works offline](https://img.shields.io/badge/Sample-works_offline-1c1c1e)](#quick-start)
+
 Turn any GitHub username into a designed profile README: a banner, stats and streak cards, a contribution heatmap, projects, a timeline and Connect buttons, plus an animated scene drawn from your own data. Pick one of eleven designs or the classic look, check it in a preview that matches GitHub, then publish it to your profile repository in one commit. Turn on daily updates and a small workflow in your own repository keeps the numbers current.
 
 - **Runs in your browser.** No server, no account, no third-party image or stats service. Data comes from `api.github.com` and every image is drawn locally as SVG.
