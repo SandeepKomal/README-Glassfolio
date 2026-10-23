@@ -61,6 +61,6 @@ test("the examples in the README and the page use the sample identity", () => {
   const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8"), page = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   assert.match(readme, new RegExp("node cli\\.js https://github\\.com/" + SAMPLE_USER));
   assert.match(readme, new RegExp("\\?user=" + SAMPLE_USER));
-  // the only account the page links to is the project's own repository
-  assert.doesNotMatch(page.replace(/https:\/\/github\.com\/SandeepKomal\/README-Glassfolio"/g, ""), /(?:^|[^\w.-])github\.com\/(?!settings|your-username)/, "the page names no other account in its text");
+  // the only account the page links to is the project's own repository (and pages in it, such as the footer's commit)
+  assert.doesNotMatch(page.replace(/https:\/\/github\.com\/SandeepKomal\/README-Glassfolio(\/[^"]*)?"/g, ""), /(?:^|[^\w.-])github\.com\/(?!settings|your-username)/, "the page names no other account in its text");
 });

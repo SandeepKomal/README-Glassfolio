@@ -51,6 +51,7 @@ The current page security posture includes:
 - no token storage in browser local storage
 - no token inclusion in share links
 - a no-referrer policy
+- refusing to be framed: GitHub Pages can't send `X-Frame-Options` or `frame-ancestors`, so `js/canonical.js` hides the page and breaks out when another site loads it in a frame (clickjacking)
 
 The existing `test/page.test.js` suite validates key parts of this posture. Security changes should update the documentation and tests together.
 
@@ -59,11 +60,21 @@ The existing `test/page.test.js` suite validates key parts of this posture. Secu
 The Pages workflow in `.github/workflows/pages.yml`:
 
 - runs only for pushes to `main` or manual dispatch
-- requests `contents: read`, `pages: write`, and `id-token: write`
+- runs the full test suite first; the deploy job starts only if it passes
+- grants `pages: write` and `id-token: write` to the deploy job only; everything else gets `contents: read`
 - uses the dedicated `github-pages` environment
 - does not require application secrets
 - does not execute profile-generated content
-- uses official GitHub Actions for checkout and Pages deployment
+- uses official GitHub Actions for checkout and Pages deployment, each pinned to a full commit SHA, with checkout credentials not persisted
+
+## Continuous checks
+
+Every pull request and every push to `main` runs:
+
+- `.github/workflows/ci.yml`: the full test suite on Node 18, 20 and 22, and a zizmor audit of the workflow files
+- `.github/workflows/codeql.yml`: CodeQL with the `security-extended` queries, for the JavaScript and for the workflows
+
+CodeQL also runs weekly. Dependabot proposes updates to the pinned actions.
 
 Do not place user tokens or other secrets into the Pages workflow.
 
@@ -96,7 +107,7 @@ Use GitHub's private security-reporting mechanisms when enabled for the reposito
 
 Before merging security-sensitive changes:
 
-- run `npm test`
+- run `npm test` (CI runs it too, and the deploy refuses to publish without it)
 - inspect changes to Content-Security-Policy directives
 - review every new network destination
 - verify tokens are not persisted
