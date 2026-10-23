@@ -24,6 +24,8 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0}
+/* set by canonical.js when another site loads this page in a frame */
+html.framed{display:none!important}
 html{scroll-padding-top:72px}
 body{background:var(--bg);color:var(--ink);font:17px/1.55 var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 img{max-width:100%}

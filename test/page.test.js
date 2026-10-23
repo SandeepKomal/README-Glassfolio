@@ -113,3 +113,12 @@ test("every page's footer shows the package version and a commit the deploy stam
   });
   assert.match(html, /id="netPill"[^>]*>.*id="netCount">0</, "the homepage counts live, starting at 0");
 });
+
+test("the homepage refuses to be framed, since GitHub Pages can't send X-Frame-Options or frame-ancestors", () => {
+  const head = html.slice(0, html.indexOf("</head>"));
+  assert.match(head, /<script src="js\/canonical\.js\?v=dev"><\/script>/, "the frame check runs in the head, before the page shows");
+  const js = read("canonical.js"), css = fs.readFileSync(path.join(ROOT, "css", "style.css"), "utf8");
+  assert.match(js, /window\.top !== window\.self/);
+  assert.match(js, /className \+= " framed"/);
+  assert.match(css, /html\.framed\{display:none!important\}/, "a framed page hides itself");
+});
