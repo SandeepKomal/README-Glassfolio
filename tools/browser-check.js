@@ -59,11 +59,14 @@ async function checkPage(context, base, url) {
   // the init script is injected by the browser's automation channel, so the page's own policy doesn't block it
   await page.addInitScript(() => {
     window.__csp = [];
-    document.addEventListener("securitypolicyviolation", (e) => window.__csp.push(e.violatedDirective + " " + e.blockedURI));
+    document.addEventListener("securitypolicyviolation", (e) => window.__csp.push(e.violatedDirective + " " + e.blockedURI +
+      (e.sourceFile ? " in " + e.sourceFile.slice(0, 80) + ":" + e.lineNumber : "") + (e.sample ? " (" + e.sample.slice(0, 60) + ")" : "") +
+      (window.__step ? " during " + window.__step : "")));
   });
   await page.goto(base + url, { waitUntil: "load" });
   await page.waitForTimeout(400);
   if (url === "/") {
+    await page.evaluate(() => { window.__step = "sample build"; });
     await page.click("#sample");
     await page.waitForFunction(() => document.querySelector("#ghBody") && document.querySelector("#ghBody").children.length > 3, null, { timeout: 15000 });
   }
