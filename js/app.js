@@ -427,7 +427,16 @@
     var st = $("#stage"), cs = getComputedStyle(st);
     var avail = st.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     if (avail <= 0) return;                                   // the tab is hidden: nothing to measure yet
-    st.style.setProperty("--z", Math.min(1, avail / FRAME[state.device]).toFixed(3));
+    var z = Math.min(1, avail / FRAME[state.device]).toFixed(3);
+    if (st.style.getPropertyValue("--z") !== z) st.style.setProperty("--z", z);
+  }
+  /* Scaling the preview can resize the stage being watched; refitting in the next frame (once) keeps the observer
+     from re-triggering itself, which Safari reports as a "ResizeObserver loop" error. */
+  var fitQueued = false;
+  function fitSoon() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function () { fitQueued = false; fitStage(); });
   }
   function setDevice(d) {
     state.device = d;
@@ -653,7 +662,7 @@
   });
   $("#dev-desktop").addEventListener("click", function () { setDevice("desktop"); });
   $("#dev-phone").addEventListener("click", function () { setDevice("phone"); });
-  if (window.ResizeObserver) new ResizeObserver(fitStage).observe($("#stage")); else window.addEventListener("resize", fitStage);
+  if (window.ResizeObserver) new ResizeObserver(fitSoon).observe($("#stage")); else window.addEventListener("resize", fitStage);
   $("#gh-light").addEventListener("click", function () { setScheme("light"); });
   $("#gh-dark").addEventListener("click", function () { setScheme("dark"); });
 
