@@ -1,4 +1,5 @@
-name: Deploy README-Glassfolio to GitHub Pages
+name: Deploy
+# Builds README-Glassfolio and publishes it to GitHub Pages (readme-glassfolio.in). The short name is what the README badge shows.
 
 on:
   push:

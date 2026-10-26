@@ -43,8 +43,9 @@ These protect a live site where people paste GitHub tokens. `test/page.test.js` 
 
 - `ci.yml`: tests on every PR and push to `main`, plus a zizmor audit of the workflows.
 - `codeql.yml`: CodeQL `security-extended` for JavaScript and Actions.
-- `browsers.yml`: `tools/browser-check.js` in Chromium, Firefox and WebKit on desktop, tablet and phone profiles: no script or console errors, no policy violations, no requests to other sites, no sideways scroll or wrapping header, images load, the sample README builds, and the page hides itself when framed.
-- `pages.yml`: runs the tests, then deploys. Only the deploy job holds `pages: write` / `id-token: write`.
+- `browsers.yml`: `tools/browser-check.js`, in Playwright's container image (pinned by digest; keep its tag on the Playwright version in `tools/`), in Chromium, Firefox and WebKit on desktop, tablet and phone profiles: no script or console errors, no policy violations, no requests to other sites, no sideways scroll or wrapping header, images load, the sample README builds, and the page hides itself when framed.
+- `pages.yml` ("Deploy"): runs the tests, then deploys. Only the deploy job holds `pages: write` / `id-token: write`.
+- `release.yml`: pushing a tag like `v1.0.0` (it must match `package.json`) runs the tests, then publishes a GitHub release with generated notes. Only the release job holds `contents: write`.
 
 When editing workflows:
 
